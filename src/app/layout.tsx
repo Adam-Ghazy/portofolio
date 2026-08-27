@@ -3,7 +3,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Adam Ghazy Al Falah - Mobile, Frontend & Backend Developer",
+  title: "Adam Ghazy - Portofolio",
   description: "Personal portfolio of Adam Ghazy Al Falah, a Junior Mobile, Frontend & Backend Developer specializing in Flutter, Laravel, React.js, and REST APIs with 1+ year of production experience.",
   keywords: [
     "Adam Ghazy Al Falah",
@@ -26,13 +26,13 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     url: "https://www.linkedin.com/in/adamghazy",
-    title: "Adam Ghazy Al Falah - Mobile, Frontend & Backend Developer",
+    title: "Adam Ghazy - Portofolio",
     description: "Junior Mobile, Frontend & Backend Developer building practical digital solutions with Flutter, Laravel, React.js, and REST APIs.",
     siteName: "Adam Ghazy Al Falah Portfolio",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Adam Ghazy Al Falah - Mobile, Frontend & Backend Developer",
+    title: "Adam Ghazy - Portofolio",
     description: "Junior Mobile, Frontend & Backend Developer building practical digital solutions with Flutter, Laravel, React.js, and REST APIs.",
   },
   icons: {

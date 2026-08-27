@@ -2,7 +2,7 @@
 
 export default function StatusBar({ settings }: { settings: any }) {
   const currentYear = new Date().getFullYear();
-  const defaultStatusRight = `designed & built by Adam Ghazy Al Falah · © ${currentYear}`;
+  const defaultStatusRight = `terms & service · © ${currentYear}`;
   const statusRight =
     settings?.status_right && settings.status_right !== 'Digital Automation Studio'
       ? settings.status_right
