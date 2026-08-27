@@ -35,6 +35,9 @@ export const metadata: Metadata = {
     title: "Adam Ghazy Al Falah - Mobile, Frontend & Backend Developer",
     description: "Junior Mobile, Frontend & Backend Developer building practical digital solutions with Flutter, Laravel, React.js, and REST APIs.",
   },
+  icons: {
+    icon: '/favicon.ico',
+  },
   robots: {
     index: true,
     follow: true,
