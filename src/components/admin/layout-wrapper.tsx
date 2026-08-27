@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { FileText, Briefcase, MessageSquare, Wrench, BarChart3, Settings, LayoutDashboard, LogOut, Menu } from 'lucide-react'
+import { FileText, Briefcase, Building2, Wrench, BarChart3, Settings, LayoutDashboard, LogOut, Menu } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
@@ -12,6 +12,7 @@ import { ErrorBoundary } from './error-boundary'
 const navigation = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
   { name: 'Sections', href: '/admin/sections', icon: FileText },
+  { name: 'Experience', href: '/admin/experiences', icon: Building2 },
   { name: 'Projects', href: '/admin/my-projects', icon: Briefcase },
   { name: 'Skills', href: '/admin/skills', icon: Wrench },
   { name: 'Stats', href: '/admin/stats', icon: BarChart3 },

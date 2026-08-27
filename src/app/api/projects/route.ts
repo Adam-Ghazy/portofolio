@@ -14,11 +14,23 @@ export async function POST(request: NextRequest) {
   
   const db = getDb();
   const body = await request.json();
-  const { title, description, image_url, year, role, tags, link, sort_order } = body;
+  const { title, description, problem, solution, impact, image_url, year, role, tags, link, sort_order } = body;
   
   const result = db.prepare(
-    'INSERT INTO projects (title, description, image_url, year, role, tags, link, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
-  ).run(title, description || '', image_url || '', year || '', role || '', tags || '', link || '', sort_order || 0);
+    'INSERT INTO projects (title, description, problem, solution, impact, image_url, year, role, tags, link, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+  ).run(
+    title,
+    description || '',
+    problem || '',
+    solution || '',
+    impact || '',
+    image_url || '',
+    year || '',
+    role || '',
+    tags || '',
+    link || '',
+    sort_order || 0
+  );
   
   return NextResponse.json({ id: result.lastInsertRowid });
 }
@@ -29,11 +41,25 @@ export async function PUT(request: NextRequest) {
   
   const db = getDb();
   const body = await request.json();
-  const { id, title, description, image_url, year, role, tags, link, sort_order, is_active } = body;
+  const { id, title, description, problem, solution, impact, image_url, year, role, tags, link, sort_order, is_active } = body;
   
   db.prepare(
-    'UPDATE projects SET title=?, description=?, image_url=?, year=?, role=?, tags=?, link=?, sort_order=?, is_active=?, updated_at=CURRENT_TIMESTAMP WHERE id=?'
-  ).run(title, description, image_url, year, role, tags, link, sort_order, is_active, id);
+    'UPDATE projects SET title=?, description=?, problem=?, solution=?, impact=?, image_url=?, year=?, role=?, tags=?, link=?, sort_order=?, is_active=?, updated_at=CURRENT_TIMESTAMP WHERE id=?'
+  ).run(
+    title,
+    description || '',
+    problem || '',
+    solution || '',
+    impact || '',
+    image_url || '',
+    year || '',
+    role || '',
+    tags || '',
+    link || '',
+    sort_order || 0,
+    is_active ?? 1,
+    id
+  );
   
   return NextResponse.json({ success: true });
 }

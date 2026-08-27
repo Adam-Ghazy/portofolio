@@ -4,10 +4,11 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { AdminLayout } from '@/components/admin/layout-wrapper'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { FileText, Briefcase, MessageSquare, Wrench, BarChart3 } from 'lucide-react'
+import { FileText, Briefcase, Building2, Wrench, BarChart3 } from 'lucide-react'
 
 interface DashboardStats {
   sections: number
+  experiences: number
   projects: number
   skills: number
   stats: number
@@ -16,6 +17,7 @@ interface DashboardStats {
 export default function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStats>({
     sections: 0,
+    experiences: 0,
     projects: 0,
     skills: 0,
     stats: 0,
@@ -25,13 +27,15 @@ export default function AdminDashboard() {
   useEffect(() => {
     Promise.all([
       fetch('/api/sections').then(r => r.json()),
+      fetch('/api/experiences').then(r => r.json()),
       fetch('/api/projects').then(r => r.json()),
       fetch('/api/skills').then(r => r.json()),
       fetch('/api/about-stats').then(r => r.json()),
     ])
-      .then(([sections, projects, skills, statsData]) => {
+      .then(([sections, experiences, projects, skills, statsData]) => {
         setStats({
           sections: Array.isArray(sections) ? sections.length : 0,
+          experiences: Array.isArray(experiences) ? experiences.length : 0,
           projects: Array.isArray(projects) ? projects.length : 0,
           skills: Array.isArray(skills) ? skills.length : 0,
           stats: Array.isArray(statsData) ? statsData.length : 0,
@@ -43,6 +47,7 @@ export default function AdminDashboard() {
 
   const cards = [
     { title: 'Sections', description: 'Content sections', value: stats.sections, icon: FileText, href: '/admin/sections' },
+    { title: 'Experience', description: 'Work & internship history', value: stats.experiences, icon: Building2, href: '/admin/experiences' },
     { title: 'Projects', description: 'Portfolio projects', value: stats.projects, icon: Briefcase, href: '/admin/my-projects' },
     { title: 'Skills', description: 'Skill offerings', value: stats.skills, icon: Wrench, href: '/admin/skills' },
     { title: 'Stats', description: 'About statistics', value: stats.stats, icon: BarChart3, href: '/admin/stats' },
@@ -80,11 +85,18 @@ export default function AdminDashboard() {
               <CardDescription>Manage your portfolio content</CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4">
-              <Link href="/admin/my-projects" className="flex items-center gap-4 rounded-lg border p-4 hover:bg-accent transition-colors">
-                <Briefcase className="h-8 w-8" />
+              <Link href="/admin/experiences" className="flex items-center gap-4 rounded-lg border p-4 hover:bg-accent transition-colors">
+                <Building2 className="h-8 w-8 text-primary" />
                 <div>
-                  <p className="font-medium">Add New Project</p>
-                  <p className="text-sm text-muted-foreground">Showcase your latest work</p>
+                  <p className="font-medium">Manage Work Experience</p>
+                  <p className="text-sm text-muted-foreground">Add or update professional roles and systems</p>
+                </div>
+              </Link>
+              <Link href="/admin/my-projects" className="flex items-center gap-4 rounded-lg border p-4 hover:bg-accent transition-colors">
+                <Briefcase className="h-8 w-8 text-primary" />
+                <div>
+                  <p className="font-medium">Manage Projects & Case Studies</p>
+                  <p className="text-sm text-muted-foreground">Showcase your latest work with problem-solution-impact</p>
                 </div>
               </Link>
             </CardContent>

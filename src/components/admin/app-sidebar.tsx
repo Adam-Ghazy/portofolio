@@ -6,7 +6,7 @@ import {
   LayoutDashboard,
   FileText,
   Briefcase,
-  MessageSquare,
+  Building2,
   Wrench,
   BarChart3,
   Settings,
@@ -28,6 +28,7 @@ import { Button } from '@/components/ui/button'
 const navigation = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
   { name: 'Sections', href: '/admin/sections', icon: FileText },
+  { name: 'Experience', href: '/admin/experiences', icon: Building2 },
   { name: 'Projects', href: '/admin/my-projects', icon: Briefcase },
   { name: 'Skills', href: '/admin/skills', icon: Wrench },
   { name: 'Stats', href: '/admin/stats', icon: BarChart3 },

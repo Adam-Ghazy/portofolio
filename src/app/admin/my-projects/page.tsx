@@ -32,6 +32,9 @@ interface Project {
   id: number
   title: string
   description: string
+  problem?: string
+  solution?: string
+  impact?: string
   image_url?: string
   year: string
   role: string
@@ -44,6 +47,9 @@ interface Project {
 const emptyForm = {
   title: '',
   description: '',
+  problem: '',
+  solution: '',
+  impact: '',
   year: '',
   role: '',
   tags: '',
@@ -161,6 +167,9 @@ export default function ProjectsPage() {
     setFormData({
       title: p.title,
       description: p.description ?? '',
+      problem: p.problem ?? '',
+      solution: p.solution ?? '',
+      impact: p.impact ?? '',
       year: p.year ?? '',
       role: p.role ?? '',
       tags: p.tags ?? '',
@@ -179,15 +188,15 @@ export default function ProjectsPage() {
       <div className="container mx-auto p-6 max-w-7xl">
         <div className="mb-6">
           <h1 className="text-3xl font-bold tracking-tight">Projects</h1>
-          <p className="text-muted-foreground">Manage portfolio projects</p>
+          <p className="text-muted-foreground">Manage portfolio projects and deep-dive case studies</p>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-[420px_1fr]">
+        <div className="grid gap-6 lg:grid-cols-[480px_1fr]">
           <Card className="h-fit">
             <CardHeader>
               <CardTitle>{editing ? 'Edit Project' : 'Add Project'}</CardTitle>
               <CardDescription>
-                {editing ? 'Update project details' : 'Add a new portfolio project'}
+                {editing ? 'Update project details and case study metrics' : 'Add a new portfolio project with problem-solution-impact details'}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -203,14 +212,58 @@ export default function ProjectsPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="description">Description *</Label>
+                  <Label htmlFor="description">Overview Description *</Label>
                   <Textarea
                     id="description"
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    rows={4}
+                    rows={3}
                     required
                   />
+                </div>
+
+                {/* Problem -> Solution -> Impact Deep-dive fields */}
+                <div className="p-3.5 rounded-xl border bg-muted/20 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-xs font-semibold uppercase tracking-wider text-primary">Case Study Breakdown</span>
+                    <span className="text-[11px] text-muted-foreground">(Displayed on Homepage & Projects page)</span>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="problem" className="text-xs font-semibold">1. Operational Problem</Label>
+                    <Textarea
+                      id="problem"
+                      placeholder="e.g. The campus canteen experienced severe overcrowding with 200+ students queuing daily..."
+                      value={formData.problem}
+                      onChange={(e) => setFormData({ ...formData, problem: e.target.value })}
+                      rows={2}
+                      className="text-xs"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="solution" className="text-xs font-semibold">2. Technical Solution</Label>
+                    <Textarea
+                      id="solution"
+                      placeholder="e.g. Engineered and launched FoodLAB mobile ordering platform with real-time push notifications..."
+                      value={formData.solution}
+                      onChange={(e) => setFormData({ ...formData, solution: e.target.value })}
+                      rows={2}
+                      className="text-xs"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="impact" className="text-xs font-semibold">3. Impact & Metrics</Label>
+                    <Textarea
+                      id="impact"
+                      placeholder="e.g. Secured IDR 20M funding · 300+ users · 60% wait reduction · Published on Google Play Store..."
+                      value={formData.impact}
+                      onChange={(e) => setFormData({ ...formData, impact: e.target.value })}
+                      rows={2}
+                      className="text-xs"
+                    />
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
@@ -218,7 +271,7 @@ export default function ProjectsPage() {
                     <Label htmlFor="year">Year</Label>
                     <Input
                       id="year"
-                      placeholder="2026"
+                      placeholder="2024 - 2025"
                       value={formData.year}
                       onChange={(e) => setFormData({ ...formData, year: e.target.value })}
                     />
@@ -227,7 +280,7 @@ export default function ProjectsPage() {
                     <Label htmlFor="role">Role</Label>
                     <Input
                       id="role"
-                      placeholder="Frontend Developer"
+                      placeholder="Mobile App Developer (Flutter)"
                       value={formData.role}
                       onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                     />
@@ -238,7 +291,7 @@ export default function ProjectsPage() {
                   <Label htmlFor="tags">Tags (comma-separated)</Label>
                   <Input
                     id="tags"
-                    placeholder="React, TypeScript, Tailwind CSS"
+                    placeholder="Flutter, Dart, Provider, REST API"
                     value={formData.tags}
                     onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
                   />
@@ -249,7 +302,7 @@ export default function ProjectsPage() {
                   <Input
                     id="link"
                     type="url"
-                    placeholder="https://..."
+                    placeholder="https://play.google.com/..."
                     value={formData.link}
                     onChange={(e) => setFormData({ ...formData, link: e.target.value })}
                   />
@@ -294,7 +347,7 @@ export default function ProjectsPage() {
 
                 <div className="flex gap-2">
                   <Button type="submit" className="flex-1">
-                    {editing ? 'Update' : 'Create'}
+                    {editing ? 'Update Project' : 'Create Project'}
                   </Button>
                   {editing && (
                     <Button type="button" variant="outline" onClick={handleCancel}>
@@ -317,56 +370,77 @@ export default function ProjectsPage() {
               ) : projects.length === 0 ? (
                 <p className="text-muted-foreground text-center py-8">No projects yet</p>
               ) : (
-                <div className="border rounded-lg">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Project</TableHead>
-                        <TableHead>Year</TableHead>
-                        <TableHead>Tags</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {projects.map((p) => (
-                        <TableRow key={p.id}>
-                          <TableCell>
-                            <div>
-                              <p className="font-medium">{p.title}</p>
-                              <p className="text-sm text-muted-foreground">{p.role}</p>
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-sm">{p.year}</TableCell>
-                          <TableCell>
-                            <div className="flex flex-wrap gap-1">
-                              {p.tags?.split(',').slice(0, 3).map((tag, i) => (
-                                <span key={i} className="text-xs bg-secondary px-1.5 py-0.5 rounded">
-                                  {tag.trim()}
-                                </span>
-                              ))}
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end gap-1">
-                              {p.link && (
-                                <Button size="icon" variant="ghost" asChild>
-                                  <a href={p.link} target="_blank" rel="noopener noreferrer">
-                                    <ExternalLink className="h-4 w-4" />
-                                  </a>
-                                </Button>
-                              )}
-                              <Button size="icon" variant="ghost" onClick={() => handleEdit(p)}>
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                              <Button size="icon" variant="ghost" onClick={() => setDeleteId(p.id)}>
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                <div className="space-y-4">
+                  {projects.map((p) => (
+                    <div key={p.id} className="p-4 rounded-xl border bg-card hover:border-primary/50 transition-colors space-y-3">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="space-y-1 min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h3 className="font-semibold text-base">{p.title}</h3>
+                            {p.year && (
+                              <span className="font-mono text-xs px-2 py-0.5 rounded border bg-muted/50">
+                                {p.year}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground font-mono">{p.role || 'Developer'}</p>
+                        </div>
+
+                        <div className="flex items-center gap-1 shrink-0">
+                          {p.link && (
+                            <Button size="icon" variant="ghost" asChild title="Open Link">
+                              <a href={p.link} target="_blank" rel="noopener noreferrer">
+                                <ExternalLink className="h-4 w-4" />
+                              </a>
+                            </Button>
+                          )}
+                          <Button size="icon" variant="ghost" onClick={() => handleEdit(p)} title="Edit">
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button size="icon" variant="ghost" onClick={() => setDeleteId(p.id)} title="Delete">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      <p className="text-sm text-muted-foreground line-clamp-2">
+                        {p.description}
+                      </p>
+
+                      {/* Problem, Solution, Impact Badges / Preview */}
+                      {(p.problem || p.solution || p.impact) && (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 pt-2 border-t text-xs">
+                          <div className="p-2 rounded bg-muted/40 border">
+                            <span className="font-mono font-semibold block text-[10px] uppercase text-muted-foreground mb-0.5">Problem</span>
+                            <p className="line-clamp-2 text-foreground/80">{p.problem || '-'}</p>
+                          </div>
+                          <div className="p-2 rounded bg-muted/40 border">
+                            <span className="font-mono font-semibold block text-[10px] uppercase text-muted-foreground mb-0.5">Solution</span>
+                            <p className="line-clamp-2 text-foreground/80">{p.solution || '-'}</p>
+                          </div>
+                          <div className="p-2 rounded bg-muted/40 border">
+                            <span className="font-mono font-semibold block text-[10px] uppercase text-muted-foreground mb-0.5">Impact</span>
+                            <p className="line-clamp-2 font-medium text-foreground/90">{p.impact || '-'}</p>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
+                        <div className="flex flex-wrap gap-1">
+                          {p.tags?.split(',').map((tag, i) => (
+                            <span key={i} className="text-[11px] font-mono bg-secondary px-2 py-0.5 rounded border">
+                              {tag.trim()}
+                            </span>
+                          ))}
+                        </div>
+                        {p.image_url && (
+                          <span className="text-[11px] text-muted-foreground font-mono flex items-center gap-1">
+                            📷 Image attached
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
             </CardContent>

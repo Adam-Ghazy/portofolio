@@ -28,14 +28,17 @@ export async function PUT(
   const db = getDb();
   const { id } = await params;
   const body = await request.json();
-  const { title, description, image_url, year, role, tags, link, sort_order, is_active, technologies, project_url } = body;
+  const { title, description, problem, solution, impact, image_url, year, role, tags, link, sort_order, is_active, technologies, project_url } = body;
   
   db.prepare(
-    'UPDATE projects SET title=?, description=?, image_url=?, year=?, role=?, tags=?, link=?, sort_order=?, is_active=?, updated_at=CURRENT_TIMESTAMP WHERE id=?'
+    'UPDATE projects SET title=?, description=?, problem=?, solution=?, impact=?, image_url=?, year=?, role=?, tags=?, link=?, sort_order=?, is_active=?, updated_at=CURRENT_TIMESTAMP WHERE id=?'
   ).run(
     title,
     description || '',
-    image_url || null,
+    problem || '',
+    solution || '',
+    impact || '',
+    image_url || '',
     year || '',
     role || '',
     technologies || tags || '',

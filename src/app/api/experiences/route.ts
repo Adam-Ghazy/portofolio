@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     location || '',
     period || '',
     description || '',
-    systems || '',
+    typeof systems === 'string' ? systems : JSON.stringify(systems || []),
     technologies || '',
     sort_order || 0
   );
@@ -49,14 +49,14 @@ export async function PUT(request: NextRequest) {
   ).run(
     company,
     position,
-    program,
-    location,
-    period,
-    description,
-    systems,
-    technologies,
-    sort_order,
-    is_active,
+    program || '',
+    location || '',
+    period || '',
+    description || '',
+    typeof systems === 'string' ? systems : JSON.stringify(systems || []),
+    technologies || '',
+    sort_order || 0,
+    is_active ?? 1,
     id
   );
 
