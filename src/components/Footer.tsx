@@ -31,7 +31,7 @@ export default function Footer({ settings, background = 'primary' }: FooterProps
               ADAM GHAZY AL FALAH
             </div>
             <div className="text-[12px] mt-1" style={{ color: 'var(--text-tertiary)' }}>
-              {settings?.footer_tagline || 'engineered for impact · powered by next.js · turning problems into solutions'}
+              {settings?.footer_tagline || 'turning problems into solutions'}
             </div>
           </div>
 

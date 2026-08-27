@@ -415,7 +415,7 @@ export function seedDefaults(force = false) {
   insSet.run('site_title', 'Adam Ghazy Al Falah - Mobile, Frontend & Backend Developer');
   insSet.run('site_description', 'Portfolio of Adam Ghazy Al Falah, a Junior Mobile, Frontend & Backend Developer specializing in Flutter, Laravel, React.js, and REST API.');
   insSet.run('hero_meta', 'junior developer · flutter, laravel, react & rest api · open to work');
-  insSet.run('footer_tagline', 'engineered for impact · powered by next.js · turning problems into solutions');
+  insSet.run('footer_tagline', 'turning problems into solutions');
   insSet.run('status_left', 'ADAM GHAZY // JUNIOR DEVELOPER');
   insSet.run('status_right', 'designed & built by Adam Ghazy Al Falah · © 2026');
   insSet.run('email', 'ghozyalfalah02@gmail.com');
