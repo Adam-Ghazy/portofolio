@@ -43,8 +43,16 @@ const DEFAULT_PROJECTS: ProjectItem[] = [
   },
 ];
 
+const isPlayStoreLink = (url?: string) => {
+  if (!url) return false;
+  const lower = url.toLowerCase();
+  return lower.includes('play.google.com') || lower.includes('playstore');
+};
+
 export default function Projects({ section, projects = [] }: { section?: any; projects?: ProjectItem[] }) {
-  const displayProjects = projects.length > 0 ? projects : DEFAULT_PROJECTS;
+  const allProjects = projects.length > 0 ? projects : DEFAULT_PROJECTS;
+  const displayProjects = allProjects.slice(0, 3);
+  const totalProjects = allProjects.length;
 
   return (
     <section id="projects" className="py-20 md:py-28 px-6 md:px-8 relative overflow-hidden" style={{ background: 'var(--bg-primary)' }}>
@@ -58,14 +66,14 @@ export default function Projects({ section, projects = [] }: { section?: any; pr
                 05 // projects
               </span>
               <span className="text-xs px-2 py-0.5 rounded font-mono border" style={{ borderColor: 'var(--border-color)', color: 'var(--text-secondary)', background: 'var(--bg-card)' }}>
-                Production Deployed
+                Web & Mobile Applications
               </span>
             </div>
             <h2 className="text-[26px] md:text-[34px] font-medium tracking-tight mb-3" style={{ color: 'var(--text-primary)' }}>
-              {section?.title || 'Featured Projects'}
+              {section?.title || 'Projects & Case Studies'}
             </h2>
             <p className="text-sm md:text-base leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-              {section?.subtitle || 'Production applications built, funded, and published to the Google Play Store with verified real-world impact.'}
+              {section?.subtitle || 'A collection of web and mobile applications developed across various platforms, from production systems to open-source solutions.'}
             </p>
           </div>
 
@@ -74,7 +82,7 @@ export default function Projects({ section, projects = [] }: { section?: any; pr
             className="inline-flex items-center gap-2 font-mono text-xs font-medium px-4 py-2 rounded-lg border transition-all hover:bg-[var(--bg-secondary)] self-start md:self-end"
             style={{ borderColor: 'var(--border-color)', color: 'var(--text-primary)' }}
           >
-            All Projects Detail
+            View All Projects ({totalProjects})
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
           </Link>
         </div>
@@ -104,15 +112,40 @@ export default function Projects({ section, projects = [] }: { section?: any; pr
                     {project.year || '2024 - 2025'}
                   </span>
                   <span className="font-mono text-[12px] font-medium" style={{ color: 'var(--text-secondary)' }}>
-                    {project.role || 'Mobile App Developer'}
+                    {project.role || 'Software Developer'}
                   </span>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <span className="font-mono text-[11px] px-2.5 py-0.5 rounded border" style={{ borderColor: 'var(--border-color)', color: 'var(--text-secondary)', background: 'var(--bg-secondary)' }}>
-                    Google Play Store
-                  </span>
-                </div>
+                {project.link && (
+                  <div className="flex items-center gap-2">
+                    {isPlayStoreLink(project.link) ? (
+                      <a
+                        href={project.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 font-mono text-[11px] px-2.5 py-1 rounded border transition-colors hover:border-[var(--accent)] hover:text-[var(--text-primary)]"
+                        style={{ borderColor: 'var(--border-color)', color: 'var(--text-secondary)', background: 'var(--bg-secondary)' }}
+                      >
+                        <svg className="w-3.5 h-3.5 text-emerald-500" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M3.609 1.814L13.792 12 3.61 22.186a2.404 2.404 0 0 1-.61-1.636V3.45c0-.626.226-1.203.609-1.636zm11.238 11.241l2.42 2.42-12.01 6.84 9.59-9.26zm2.42-2.11l2.84 1.62a1.644 1.644 0 0 1 0 2.87l-2.84 1.62-2.28-2.28 2.28-2.21zm-2.42-2.11L5.257 1.945l12.01 6.84-2.42 2.42z"/>
+                        </svg>
+                        <span>Google Play Store</span>
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/></svg>
+                      </a>
+                    ) : (
+                      <a
+                        href={project.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 font-mono text-[11px] px-2.5 py-1 rounded border transition-colors hover:border-[var(--accent)] hover:text-[var(--text-primary)]"
+                        style={{ borderColor: 'var(--border-color)', color: 'var(--text-secondary)', background: 'var(--bg-secondary)' }}
+                      >
+                        <span>Visit Project</span>
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/></svg>
+                      </a>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Title & General Description */}
@@ -139,7 +172,7 @@ export default function Projects({ section, projects = [] }: { section?: any; pr
                     Problem
                   </div>
                   <p className="text-[13px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-                    {project.problem || 'Long physical queue times and manual service tracking.'}
+                    {project.problem || 'Specific operational challenge or user need addressed.'}
                   </p>
                 </div>
 
@@ -155,7 +188,7 @@ export default function Projects({ section, projects = [] }: { section?: any; pr
                     Solution
                   </div>
                   <p className="text-[13px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-                    {project.solution || 'Digital mobile workflow with real-time status updates.'}
+                    {project.solution || 'Engineered solution and technical implementation details.'}
                   </p>
                 </div>
 
@@ -171,7 +204,7 @@ export default function Projects({ section, projects = [] }: { section?: any; pr
                     Impact & Results
                   </div>
                   <p className="text-[13px] leading-relaxed font-medium" style={{ color: 'var(--text-primary)' }}>
-                    {project.impact || 'Verified production metrics and user satisfaction.'}
+                    {project.impact || 'Verified production metrics, adoption, and performance.'}
                   </p>
                 </div>
               </div>
@@ -195,12 +228,26 @@ export default function Projects({ section, projects = [] }: { section?: any; pr
                 </div>
 
                 <div className="font-mono text-[11px]" style={{ color: 'var(--text-tertiary)' }}>
-                  Production Verified
+                  {project.year ? `Completed: ${project.year}` : 'Verified Project'}
                 </div>
               </div>
             </article>
           ))}
         </div>
+
+        {/* Bottom CTA for All Projects */}
+        {totalProjects > 3 && (
+          <div className="flex justify-center pt-8">
+            <Link
+              href="/projects"
+              className="inline-flex items-center gap-2 font-mono text-xs font-medium px-6 py-3 rounded-lg border transition-all hover:bg-[var(--bg-secondary)] shadow-sm"
+              style={{ borderColor: 'var(--border-color)', color: 'var(--text-primary)', background: 'var(--bg-card)' }}
+            >
+              View All Projects ({totalProjects})
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </Link>
+          </div>
+        )}
       </div>
     </section>
   );

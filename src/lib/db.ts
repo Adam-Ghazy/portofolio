@@ -128,6 +128,20 @@ function initTables() {
     // ignore
   }
 
+  try {
+    const projSec = db.prepare("SELECT * FROM sections WHERE slug = 'projects'").get() as any;
+    if (projSec && (projSec.title === 'Featured Projects' || projSec.subtitle?.includes('Google Play Store'))) {
+      db.prepare(`
+        UPDATE sections 
+        SET title = 'Projects & Case Studies', 
+            subtitle = 'A collection of web and mobile applications developed across various platforms, from production systems to open-source solutions.' 
+        WHERE slug = 'projects'
+      `).run();
+    }
+  } catch (e) {
+    // ignore
+  }
+
   const expCount = db.prepare('SELECT COUNT(*) as c FROM experiences').get() as { c: number };
   const eduCount = db.prepare('SELECT COUNT(*) as c FROM education').get() as { c: number };
   const secCount = db.prepare("SELECT COUNT(*) as c FROM sections WHERE slug = 'experience'").get() as { c: number };
@@ -211,8 +225,8 @@ export function seedDefaults(force = false) {
 
   insSec.run(
     'projects',
-    'Featured Projects',
-    'Production applications built, funded, and published to the Google Play Store with proven real-world impact.',
+    'Projects & Case Studies',
+    'A collection of web and mobile applications developed across various platforms, from production systems to open-source solutions.',
     '',
     '',
     5

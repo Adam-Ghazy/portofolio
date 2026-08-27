@@ -47,6 +47,12 @@ const DEFAULT_PROJECTS: ProjectItem[] = [
   },
 ];
 
+const isPlayStoreLink = (url?: string) => {
+  if (!url) return false;
+  const lower = url.toLowerCase();
+  return lower.includes('play.google.com') || lower.includes('playstore');
+};
+
 export default function ProjectsPage() {
   const [projects, setProjects] = useState<ProjectItem[]>([]);
   const [settings, setSettings] = useState<any>({});
@@ -76,13 +82,13 @@ export default function ProjectsPage() {
         <section className="px-6 md:px-8 py-14 md:py-20">
           <div className="max-w-[1200px] mx-auto">
             <span className="font-mono text-[11px] tracking-wider uppercase block mb-3" style={{ color: 'var(--text-tertiary)' }}>
-              01 // portfolio & case studies
+              01 // portfolio & projects
             </span>
             <h1 className="text-[36px] md:text-[52px] font-semibold tracking-tight mb-4" style={{ color: 'var(--text-primary)' }}>
-              Featured Projects
+              All Projects
             </h1>
-            <p className="text-[16px] md:text-[18px] leading-relaxed max-w-[680px]" style={{ color: 'var(--text-secondary)' }}>
-              Real-world production applications engineered with Flutter, REST APIs, and modern architecture - proven with measurable metrics, university funding, and Google Play Store deployments.
+            <p className="text-[16px] md:text-[18px] leading-relaxed max-w-[720px]" style={{ color: 'var(--text-secondary)' }}>
+              A complete showcase of web and mobile applications, engineering case studies, and digital solutions developed with modern tech stacks.
             </p>
           </div>
         </section>
@@ -92,7 +98,7 @@ export default function ProjectsPage() {
           <div className="max-w-[1200px] mx-auto space-y-12">
             {loading ? (
               <div className="p-8 text-center font-mono text-sm" style={{ color: 'var(--text-tertiary)' }}>
-                Loading production projects...
+                Loading projects...
               </div>
             ) : (
               projects.map((project, idx) => (
@@ -115,15 +121,40 @@ export default function ProjectsPage() {
                         {project.year || '2024'}
                       </span>
                       <span className="font-mono text-[12px] font-medium" style={{ color: 'var(--text-secondary)' }}>
-                        {project.role || 'Mobile App Developer'}
+                        {project.role || 'Software Developer'}
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-[11px] px-2.5 py-0.5 rounded border" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}>
-                        Google Play Store Published
-                      </span>
-                    </div>
+                    {project.link && (
+                      <div className="flex items-center gap-2">
+                        {isPlayStoreLink(project.link) ? (
+                          <a
+                            href={project.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 font-mono text-[11px] px-2.5 py-1 rounded border transition-colors hover:border-[var(--accent)] hover:text-[var(--text-primary)]"
+                            style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}
+                          >
+                            <svg className="w-3.5 h-3.5 text-emerald-500" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M3.609 1.814L13.792 12 3.61 22.186a2.404 2.404 0 0 1-.61-1.636V3.45c0-.626.226-1.203.609-1.636zm11.238 11.241l2.42 2.42-12.01 6.84 9.59-9.26zm2.42-2.11l2.84 1.62a1.644 1.644 0 0 1 0 2.87l-2.84 1.62-2.28-2.28 2.28-2.21zm-2.42-2.11L5.257 1.945l12.01 6.84-2.42 2.42z"/>
+                            </svg>
+                            <span>Google Play Store</span>
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/></svg>
+                          </a>
+                        ) : (
+                          <a
+                            href={project.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 font-mono text-[11px] px-2.5 py-1 rounded border transition-colors hover:border-[var(--accent)] hover:text-[var(--text-primary)]"
+                            style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}
+                          >
+                            <span>Visit Project</span>
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/></svg>
+                          </a>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {/* Title & Overview */}
@@ -155,7 +186,7 @@ export default function ProjectsPage() {
                         Technical Solution
                       </div>
                       <p className="text-[13.5px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-                        {project.solution || 'Modular mobile application with real-time state synchronization and notifications.'}
+                        {project.solution || 'Modular application architecture with real-time state synchronization.'}
                       </p>
                     </div>
 
@@ -165,7 +196,7 @@ export default function ProjectsPage() {
                         Verified Impact & Metrics
                       </div>
                       <p className="text-[13.5px] leading-relaxed font-medium" style={{ color: 'var(--text-primary)' }}>
-                        {project.impact || 'Proven user adoption and operational efficiency gains.'}
+                        {project.impact || 'Proven user adoption, performance, and operational efficiency gains.'}
                       </p>
                     </div>
 
@@ -190,7 +221,7 @@ export default function ProjectsPage() {
                     </div>
 
                     <div className="font-mono text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                      Production Verified
+                      {project.year ? `Completed: ${project.year}` : 'Verified Project'}
                     </div>
                   </div>
                 </article>

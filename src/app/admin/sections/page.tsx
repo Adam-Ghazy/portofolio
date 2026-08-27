@@ -61,8 +61,12 @@ const SECTION_GUIDES: Record<string, { label: string; desc: string; imageHint?: 
     desc: 'Overview story and stats introducing who you are and what you do.',
   },
   work: {
-    label: 'Featured Work Section',
-    desc: 'Header and subtitle for your portfolio projects showcase.',
+    label: 'Projects Section',
+    desc: 'Header and subtitle for your web & mobile projects showcase.',
+  },
+  projects: {
+    label: 'Projects Section',
+    desc: 'Header and subtitle for your web & mobile projects showcase.',
   },
   skills: {
     label: 'Skills Section',
