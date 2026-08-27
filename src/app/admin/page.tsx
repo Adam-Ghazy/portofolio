@@ -1,0 +1,117 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
+import { AdminLayout } from '@/components/admin/layout-wrapper'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { FileText, Briefcase, MessageSquare, Wrench, BarChart3 } from 'lucide-react'
+
+interface DashboardStats {
+  sections: number
+  projects: number
+  skills: number
+  stats: number
+}
+
+export default function AdminDashboard() {
+  const [stats, setStats] = useState<DashboardStats>({
+    sections: 0,
+    projects: 0,
+    skills: 0,
+    stats: 0,
+  })
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    Promise.all([
+      fetch('/api/sections').then(r => r.json()),
+      fetch('/api/projects').then(r => r.json()),
+      fetch('/api/skills').then(r => r.json()),
+      fetch('/api/about-stats').then(r => r.json()),
+    ])
+      .then(([sections, projects, skills, statsData]) => {
+        setStats({
+          sections: Array.isArray(sections) ? sections.length : 0,
+          projects: Array.isArray(projects) ? projects.length : 0,
+          skills: Array.isArray(skills) ? skills.length : 0,
+          stats: Array.isArray(statsData) ? statsData.length : 0,
+        })
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false))
+  }, [])
+
+  const cards = [
+    { title: 'Sections', description: 'Content sections', value: stats.sections, icon: FileText, href: '/admin/sections' },
+    { title: 'Projects', description: 'Portfolio projects', value: stats.projects, icon: Briefcase, href: '/admin/my-projects' },
+    { title: 'Skills', description: 'Skill offerings', value: stats.skills, icon: Wrench, href: '/admin/skills' },
+    { title: 'Stats', description: 'About statistics', value: stats.stats, icon: BarChart3, href: '/admin/stats' },
+  ]
+
+  return (
+    <AdminLayout>
+      <div className="container mx-auto p-6 max-w-7xl">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground">Overview of your portfolio content</p>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {cards.map((card) => (
+            <Link key={card.title} href={card.href}>
+              <Card className="hover:border-primary transition-colors cursor-pointer h-full">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">{card.title}</CardTitle>
+                  <card.icon className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{loading ? '…' : card.value}</div>
+                  <p className="text-xs text-muted-foreground">{card.description}</p>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2 mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Quick Actions</CardTitle>
+              <CardDescription>Manage your portfolio content</CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-4">
+              <Link href="/admin/my-projects" className="flex items-center gap-4 rounded-lg border p-4 hover:bg-accent transition-colors">
+                <Briefcase className="h-8 w-8" />
+                <div>
+                  <p className="font-medium">Add New Project</p>
+                  <p className="text-sm text-muted-foreground">Showcase your latest work</p>
+                </div>
+              </Link>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>System Info</CardTitle>
+              <CardDescription>Portfolio admin details</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Framework</span>
+                <span className="font-medium">Next.js App Router</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Database</span>
+                <span className="font-medium">SQLite (WAL)</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Auth</span>
+                <span className="font-medium">JWT + httpOnly cookie</span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </AdminLayout>
+  )
+}
