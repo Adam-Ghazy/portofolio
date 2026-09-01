@@ -37,6 +37,7 @@ interface Experience {
   description: string
   systems?: string
   technologies?: string
+  collaboration?: string
   sort_order: number
   is_active: number
 }
@@ -49,6 +50,7 @@ const emptyForm = {
   period: '',
   description: '',
   technologies: '',
+  collaboration: '',
   sort_order: 0,
 }
 
@@ -145,6 +147,7 @@ export default function ExperiencesPage() {
       period: exp.period ?? '',
       description: exp.description ?? '',
       technologies: exp.technologies ?? '',
+      collaboration: exp.collaboration ?? '',
       sort_order: exp.sort_order ?? 0,
     })
 
@@ -266,6 +269,36 @@ export default function ExperiencesPage() {
                     value={formData.technologies}
                     onChange={(e) => setFormData({ ...formData, technologies: e.target.value })}
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="collaboration">Collaboration Teams / Stakeholders (comma-separated)</Label>
+                  <Input
+                    id="collaboration"
+                    placeholder="Engineering, Operations, Logistics, QA/QC, Security"
+                    value={formData.collaboration}
+                    onChange={(e) => setFormData({ ...formData, collaboration: e.target.value })}
+                  />
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {['Engineering', 'Operations', 'Logistics', 'QA/QC', 'Security', 'Design', 'Product', 'Stakeholders'].map((team) => (
+                      <button
+                        key={team}
+                        type="button"
+                        onClick={() => {
+                          const current = formData.collaboration ? formData.collaboration.split(',').map(s => s.trim()).filter(Boolean) : [];
+                          if (!current.includes(team)) {
+                            setFormData({
+                              ...formData,
+                              collaboration: current.length > 0 ? `${formData.collaboration}, ${team}` : team
+                            });
+                          }
+                        }}
+                        className="text-[11px] font-mono px-2 py-0.5 rounded border hover:bg-accent hover:text-accent-foreground transition-colors"
+                      >
+                        +{team}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 {/* Sub-Systems / Projects Sub-Manager */}
@@ -462,6 +495,21 @@ export default function ExperiencesPage() {
                                 </div>
                               ))}
                             </div>
+                          </div>
+                        )}
+
+                        {/* Collaboration Badges */}
+                        {exp.collaboration && (
+                          <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t">
+                            <span className="font-mono text-[11px] text-muted-foreground">Collaboration:</span>
+                            {exp.collaboration.split(',').map((team, cIdx) => (
+                              <span
+                                key={cIdx}
+                                className="font-mono text-[11px] px-2 py-0.5 rounded border bg-muted/50 text-muted-foreground"
+                              >
+                                {team.trim()}
+                              </span>
+                            ))}
                           </div>
                         )}
 

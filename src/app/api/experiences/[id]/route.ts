@@ -21,13 +21,14 @@ export async function PUT(
     description,
     systems,
     technologies,
+    collaboration,
     sort_order,
     is_active,
   } = body;
 
   db.prepare(
     `UPDATE experiences
-     SET company=?, position=?, program=?, location=?, period=?, description=?, systems=?, technologies=?, sort_order=?, is_active=?, updated_at=CURRENT_TIMESTAMP
+     SET company=?, position=?, program=?, location=?, period=?, description=?, systems=?, technologies=?, collaboration=?, sort_order=?, is_active=?, updated_at=CURRENT_TIMESTAMP
      WHERE id=?`
   ).run(
     company,
@@ -38,6 +39,7 @@ export async function PUT(
     description ?? '',
     typeof systems === 'string' ? systems : JSON.stringify(systems || []),
     technologies ?? '',
+    collaboration ?? '',
     sort_order ?? 0,
     is_active ?? 1,
     id

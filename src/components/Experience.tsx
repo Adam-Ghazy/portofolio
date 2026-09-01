@@ -17,6 +17,7 @@ interface ExperienceItem {
   description: string;
   systems?: string;
   technologies?: string;
+  collaboration?: string;
 }
 
 export default function Experience({ section, experiences = [] }: { section?: any; experiences?: ExperienceItem[] }) {
@@ -42,7 +43,8 @@ export default function Experience({ section, experiences = [] }: { section?: an
           tech: 'Laravel, REST API, Workflow Automation'
         }
       ]),
-      technologies: 'Laravel, REST API, Data Synchronization, MySQL, Agile/Scrum'
+      technologies: 'Laravel, REST API, Data Synchronization, MySQL, Agile/Scrum',
+      collaboration: 'Engineering, Operations, Logistics, QA/QC, Security'
     }
   ];
 
@@ -179,24 +181,26 @@ export default function Experience({ section, experiences = [] }: { section?: an
 
                 {/* Footer: Collaboration & Tech Stack Badges */}
                 <div className="pt-5 border-t flex flex-wrap items-center justify-between gap-4" style={{ borderColor: 'var(--border-subtle)' }}>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-mono text-[11px] tracking-wider" style={{ color: 'var(--text-tertiary)' }}>
-                      Collaboration:
-                    </span>
-                    {['Engineering', 'Operations', 'Logistics', 'QA/QC', 'Security'].map((team, tIdx) => (
-                      <span
-                        key={tIdx}
-                        className="font-mono text-[11px] px-2.5 py-0.5 rounded border"
-                        style={{
-                          background: 'var(--bg-secondary)',
-                          color: 'var(--text-secondary)',
-                          borderColor: 'var(--border-subtle)'
-                        }}
-                      >
-                        {team}
+                  {exp.collaboration ? (
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-mono text-[11px] tracking-wider" style={{ color: 'var(--text-tertiary)' }}>
+                        Collaboration:
                       </span>
-                    ))}
-                  </div>
+                      {exp.collaboration.split(',').map((team, tIdx) => (
+                        <span
+                          key={tIdx}
+                          className="font-mono text-[11px] px-2.5 py-0.5 rounded border"
+                          style={{
+                            background: 'var(--bg-secondary)',
+                            color: 'var(--text-secondary)',
+                            borderColor: 'var(--border-subtle)'
+                          }}
+                        >
+                          {team.trim()}
+                        </span>
+                      ))}
+                    </div>
+                  ) : <div />}
 
                   <div className="flex flex-wrap gap-1.5">
                     {exp.technologies?.split(',').map((tech, techIdx) => (
