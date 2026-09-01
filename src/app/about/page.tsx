@@ -11,12 +11,14 @@ export default function AboutPage() {
   const [settings, setSettings] = useState<any>({});
   const [education, setEducation] = useState<any[]>([]);
   const [certs, setCerts] = useState<any[]>([]);
+  const [approaches, setApproaches] = useState<any[]>([]);
 
   useEffect(() => {
     fetch('/api/about-stats').then(r => (r.ok ? r.json() : [])).then(setStats).catch(() => {});
     fetch('/api/settings').then(r => (r.ok ? r.json() : {})).then(setSettings).catch(() => {});
     fetch('/api/education').then(r => (r.ok ? r.json() : [])).then(setEducation).catch(() => {});
     fetch('/api/certifications').then(r => (r.ok ? r.json() : [])).then(setCerts).catch(() => {});
+    fetch('/api/approaches').then(r => (r.ok ? r.json() : [])).then(setApproaches).catch(() => {});
   }, []);
 
   const defaultStats = [
@@ -26,7 +28,15 @@ export default function AboutPage() {
     { id: 4, value: '2', label: 'Play Store Published' },
   ];
 
+  const defaultApproaches = [
+    { id: 1, step_number: '01', title: 'User & Process Research', description: 'Identify real friction points in daily workflows and interview end users and operators before writing code.' },
+    { id: 2, step_number: '02', title: 'Modular Architecture', description: 'Architect decoupled mobile modules, clean state management with Provider, and robust REST APIs with Laravel.' },
+    { id: 3, step_number: '03', title: 'Real-Time Sync & QA', description: 'Implement WebSocket connections, handle network fallbacks, and test edge cases to ensure zero recording errors.' },
+    { id: 4, step_number: '04', title: 'Production Deployment', description: 'Publish to Google Play Store, monitor user feedback, and iterate quickly using Agile Scrum sprints.' },
+  ];
+
   const displayStats = stats.length > 0 ? stats : defaultStats;
+  const displayApproaches = approaches.length > 0 ? approaches : defaultApproaches;
 
   return (
     <div className="min-h-screen flex flex-col pb-6" style={{ background: 'var(--bg-primary)' }}>
@@ -93,39 +103,46 @@ export default function AboutPage() {
                   Academic Degrees
                 </h3>
 
-                <div className="rounded-2xl p-6 border" style={{ background: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
-                  <div className="flex justify-between items-start gap-2 mb-2">
-                    <h4 className="font-semibold text-[17px]" style={{ color: 'var(--text-primary)' }}>
-                      Bachelor of Applied Informatics Engineering
-                    </h4>
-                    <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded border" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-color)', color: 'var(--text-primary)' }}>
-                      GPA: 3.58 / 4.00
-                    </span>
+                {(education.length > 0 ? education : [
+                  {
+                    degree: 'Bachelor of Applied Informatics Engineering',
+                    institution: 'Electronic Engineering Polytechnic Institute of Surabaya (PENS)',
+                    location: 'Surabaya, Indonesia',
+                    period: 'June 2024 - July 2025',
+                    gpa: '3.58 / 4.00',
+                  },
+                  {
+                    degree: 'Diploma in Informatics Engineering',
+                    institution: 'Electronic Engineering Polytechnic Institute of Surabaya (PENS)',
+                    location: 'Surabaya, Indonesia',
+                    period: 'June 2021 - June 2024',
+                    gpa: '3.69 / 4.00',
+                  },
+                ]).map((edu: any, idx: number) => (
+                  <div key={edu.id || idx} className="rounded-2xl p-6 border" style={{ background: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
+                    <div className="flex justify-between items-start gap-2 mb-2">
+                      <h4 className="font-semibold text-[17px]" style={{ color: 'var(--text-primary)' }}>
+                        {edu.degree}
+                      </h4>
+                      {edu.gpa && (
+                        <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded border" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-color)', color: 'var(--text-primary)' }}>
+                          GPA: {edu.gpa}
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-[13.5px] font-medium" style={{ color: 'var(--text-secondary)' }}>
+                      {edu.institution}
+                    </div>
+                    <div className="text-xs font-mono mt-1" style={{ color: 'var(--text-tertiary)' }}>
+                      {edu.location}{edu.location && edu.period ? ' / ' : ''}{edu.period}
+                    </div>
+                    {edu.description && (
+                      <p className="text-[13px] leading-relaxed pt-2 mt-2 border-t" style={{ color: 'var(--text-secondary)', borderColor: 'var(--border-subtle)' }}>
+                        {edu.description}
+                      </p>
+                    )}
                   </div>
-                  <div className="text-[13.5px] font-medium" style={{ color: 'var(--text-secondary)' }}>
-                    Electronic Engineering Polytechnic Institute of Surabaya (PENS)
-                  </div>
-                  <div className="text-xs font-mono mt-1" style={{ color: 'var(--text-tertiary)' }}>
-                    Surabaya, Indonesia / June 2024 - July 2025
-                  </div>
-                </div>
-
-                <div className="rounded-2xl p-6 border" style={{ background: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
-                  <div className="flex justify-between items-start gap-2 mb-2">
-                    <h4 className="font-semibold text-[17px]" style={{ color: 'var(--text-primary)' }}>
-                      Diploma in Informatics Engineering
-                    </h4>
-                    <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded border" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-color)', color: 'var(--text-primary)' }}>
-                      GPA: 3.69 / 4.00
-                    </span>
-                  </div>
-                  <div className="text-[13.5px] font-medium" style={{ color: 'var(--text-secondary)' }}>
-                    Electronic Engineering Polytechnic Institute of Surabaya (PENS)
-                  </div>
-                  <div className="text-xs font-mono mt-1" style={{ color: 'var(--text-tertiary)' }}>
-                    Surabaya, Indonesia / June 2021 - June 2024
-                  </div>
-                </div>
+                ))}
               </div>
 
               {/* Certification */}
@@ -134,25 +151,41 @@ export default function AboutPage() {
                   Professional Certification
                 </h3>
 
-                <div className="rounded-2xl p-6 border" style={{ background: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
-                  <div className="flex justify-between items-start gap-2 mb-2">
-                    <h4 className="font-semibold text-[17px]" style={{ color: 'var(--text-primary)' }}>
-                      Junior Web Developer
-                    </h4>
-                    <span className="font-mono text-xs px-2 py-0.5 rounded border" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}>
-                      July 2024
-                    </span>
+                {(certs.length > 0 ? certs : [
+                  {
+                    title: 'Junior Web Developer',
+                    issuer: 'Digital Talent Scholarship 2024 / BNSP (Badan Nasional Sertifikasi Profesi)',
+                    location: 'Surabaya, Indonesia',
+                    issue_date: 'July 2024',
+                    credential_info: 'Certified competency in PHP-based web engineering, relational database management (MySQL), and frontend web fundamentals.',
+                  },
+                ]).map((cert: any, idx: number) => (
+                  <div key={cert.id || idx} className="rounded-2xl p-6 border" style={{ background: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
+                    <div className="flex justify-between items-start gap-2 mb-2">
+                      <h4 className="font-semibold text-[17px]" style={{ color: 'var(--text-primary)' }}>
+                        {cert.title}
+                      </h4>
+                      {cert.issue_date && (
+                        <span className="font-mono text-xs px-2 py-0.5 rounded border" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}>
+                          {cert.issue_date}
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-[13.5px] font-medium" style={{ color: 'var(--text-secondary)' }}>
+                      {cert.issuer}
+                    </div>
+                    {cert.location && (
+                      <div className="text-xs font-mono mt-1 mb-4" style={{ color: 'var(--text-tertiary)' }}>
+                        {cert.location}
+                      </div>
+                    )}
+                    {cert.credential_info && (
+                      <p className="text-[13px] leading-relaxed p-3 rounded-lg border" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-subtle)', color: 'var(--text-secondary)' }}>
+                        {cert.credential_info}
+                      </p>
+                    )}
                   </div>
-                  <div className="text-[13.5px] font-medium" style={{ color: 'var(--text-secondary)' }}>
-                    Digital Talent Scholarship 2024 / BNSP (Badan Nasional Sertifikasi Profesi)
-                  </div>
-                  <div className="text-xs font-mono mt-1 mb-4" style={{ color: 'var(--text-tertiary)' }}>
-                    Surabaya, Indonesia
-                  </div>
-                  <p className="text-[13px] leading-relaxed p-3 rounded-lg border" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-subtle)', color: 'var(--text-secondary)' }}>
-                    Certified competency in PHP-based web engineering, relational database management (MySQL), and frontend web fundamentals.
-                  </p>
-                </div>
+                ))}
               </div>
             </div>
           </div>
@@ -168,18 +201,27 @@ export default function AboutPage() {
               How I Build Software
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {[
-                { num: '01', title: 'User & Process Research', desc: 'Identify real friction points in daily workflows and interview end users and operators before writing code.' },
-                { num: '02', title: 'Modular Architecture', desc: 'Architect decoupled mobile modules, clean state management with Provider, and robust REST APIs with Laravel.' },
-                { num: '03', title: 'Real-Time Sync & QA', desc: 'Implement WebSocket connections, handle network fallbacks, and test edge cases to ensure zero recording errors.' },
-                { num: '04', title: 'Production Deployment', desc: 'Publish to Google Play Store, monitor user feedback, and iterate quickly using Agile Scrum sprints.' },
-              ].map((step, i) => (
-                <div key={i} className="rounded-2xl p-6 border" style={{ background: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
-                  <div className="font-mono text-[28px] font-bold mb-3" style={{ color: 'var(--accent)' }}>{step.num}</div>
-                  <h3 className="text-[16px] font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>{step.title}</h3>
-                  <p className="text-[13px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{step.desc}</p>
-                </div>
-              ))}
+              {displayApproaches.map((step: any, i: number) => {
+                const stepNum = step.step_number || String(i + 1).padStart(2, '0');
+                const desc = step.description || step.desc || '';
+                return (
+                  <div key={step.id || i} className="rounded-2xl p-6 border flex flex-col justify-between" style={{ background: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
+                    <div>
+                      <div className="font-mono text-[28px] font-bold mb-3" style={{ color: 'var(--accent)' }}>
+                        {stepNum}
+                      </div>
+                      <h3 className="text-[16px] font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
+                        {step.title}
+                      </h3>
+                      {desc && (
+                        <p className="text-[13px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                          {desc}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </section>

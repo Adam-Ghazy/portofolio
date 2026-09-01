@@ -60,6 +60,7 @@ function initTables() {
       description TEXT,
       systems TEXT,
       technologies TEXT,
+      collaboration TEXT,
       sort_order INTEGER DEFAULT 0,
       is_active INTEGER DEFAULT 1,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -102,6 +103,16 @@ function initTables() {
       sort_order INTEGER DEFAULT 0,
       is_active INTEGER DEFAULT 1
     );
+    CREATE TABLE IF NOT EXISTS approaches (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      step_number TEXT,
+      title TEXT NOT NULL,
+      description TEXT,
+      sort_order INTEGER DEFAULT 0,
+      is_active INTEGER DEFAULT 1,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
     CREATE TABLE IF NOT EXISTS admin_users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       username TEXT UNIQUE NOT NULL,
@@ -117,6 +128,17 @@ function initTables() {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
   `);
+
+  try {
+    const pragmaExp = db.prepare("PRAGMA table_info(experiences)").all() as any[];
+    const expCols = pragmaExp.map((c: any) => c.name);
+    if (!expCols.includes('collaboration')) {
+      db.exec('ALTER TABLE experiences ADD COLUMN collaboration TEXT');
+      db.prepare("UPDATE experiences SET collaboration = 'Engineering, Operations, Logistics, QA/QC, Security' WHERE collaboration IS NULL OR collaboration = ''").run();
+    }
+  } catch (e) {
+    // ignore
+  }
 
   try {
     const pragmaProjects = db.prepare("PRAGMA table_info(projects)").all() as any[];
@@ -145,10 +167,58 @@ function initTables() {
   const expCount = db.prepare('SELECT COUNT(*) as c FROM experiences').get() as { c: number };
   const eduCount = db.prepare('SELECT COUNT(*) as c FROM education').get() as { c: number };
   const secCount = db.prepare("SELECT COUNT(*) as c FROM sections WHERE slug = 'experience'").get() as { c: number };
+  const appCount = db.prepare('SELECT COUNT(*) as c FROM approaches').get() as { c: number };
 
   if (expCount.c === 0 || eduCount.c === 0 || secCount.c === 0) {
     seedDefaults();
   }
+
+  if (appCount.c === 0) {
+    seedApproaches();
+  }
+}
+
+function seedApproaches() {
+  const insApp = db.prepare(`
+    INSERT OR REPLACE INTO approaches (id, step_number, title, description, sort_order, is_active)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `);
+
+  insApp.run(
+    1,
+    '01',
+    'User & Process Research',
+    'Identify real friction points in daily workflows and interview end users and operators before writing code.',
+    1,
+    1
+  );
+
+  insApp.run(
+    2,
+    '02',
+    'Modular Architecture',
+    'Architect decoupled mobile modules, clean state management with Provider, and robust REST APIs with Laravel.',
+    2,
+    1
+  );
+
+  insApp.run(
+    3,
+    '03',
+    'Real-Time Sync & QA',
+    'Implement WebSocket connections, handle network fallbacks, and test edge cases to ensure zero recording errors.',
+    3,
+    1
+  );
+
+  insApp.run(
+    4,
+    '04',
+    'Production Deployment',
+    'Publish to Google Play Store, monitor user feedback, and iterate quickly using Agile Scrum sprints.',
+    4,
+    1
+  );
 }
 
 export function seedDefaults(force = false) {
@@ -161,6 +231,7 @@ export function seedDefaults(force = false) {
       DELETE FROM certifications;
       DELETE FROM skills;
       DELETE FROM about_stats;
+      DELETE FROM approaches;
     `);
   }
 
@@ -261,8 +332,8 @@ export function seedDefaults(force = false) {
 
   // 2. Work Experience (PT INKA)
   const insExp = db.prepare(`
-    INSERT OR REPLACE INTO experiences (id, company, position, program, location, period, description, systems, technologies, sort_order)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT OR REPLACE INTO experiences (id, company, position, program, location, period, description, systems, technologies, collaboration, sort_order)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
   const inkaSystems = JSON.stringify([
@@ -290,6 +361,7 @@ export function seedDefaults(force = false) {
     'Collaborated with cross-functional teams involving Engineering, Operations, and Logistics. Participated in requirement gathering, feature development, REST API integrations, data synchronization, and production deployment.',
     inkaSystems,
     'Laravel, REST API, Data Synchronization, MySQL, Agile/Scrum',
+    'Engineering, Operations, Logistics, QA/QC, Security',
     1
   );
 

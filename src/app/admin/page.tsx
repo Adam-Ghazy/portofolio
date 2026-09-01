@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { AdminLayout } from '@/components/admin/layout-wrapper'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { FileText, Briefcase, Building2, Wrench, BarChart3 } from 'lucide-react'
+import { FileText, Briefcase, Building2, Wrench, BarChart3, GraduationCap, Workflow } from 'lucide-react'
 
 interface DashboardStats {
   sections: number
@@ -12,6 +12,9 @@ interface DashboardStats {
   projects: number
   skills: number
   stats: number
+  education: number
+  certifications: number
+  approaches: number
 }
 
 export default function AdminDashboard() {
@@ -21,6 +24,9 @@ export default function AdminDashboard() {
     projects: 0,
     skills: 0,
     stats: 0,
+    education: 0,
+    certifications: 0,
+    approaches: 0,
   })
   const [loading, setLoading] = useState(true)
 
@@ -31,14 +37,20 @@ export default function AdminDashboard() {
       fetch('/api/projects').then(r => r.json()),
       fetch('/api/skills').then(r => r.json()),
       fetch('/api/about-stats').then(r => r.json()),
+      fetch('/api/education').then(r => r.json()),
+      fetch('/api/certifications').then(r => r.json()),
+      fetch('/api/approaches').then(r => r.json()),
     ])
-      .then(([sections, experiences, projects, skills, statsData]) => {
+      .then(([sections, experiences, projects, skills, statsData, eduData, certData, approachesData]) => {
         setStats({
           sections: Array.isArray(sections) ? sections.length : 0,
           experiences: Array.isArray(experiences) ? experiences.length : 0,
           projects: Array.isArray(projects) ? projects.length : 0,
           skills: Array.isArray(skills) ? skills.length : 0,
           stats: Array.isArray(statsData) ? statsData.length : 0,
+          education: Array.isArray(eduData) ? eduData.length : 0,
+          certifications: Array.isArray(certData) ? certData.length : 0,
+          approaches: Array.isArray(approachesData) ? approachesData.length : 0,
         })
       })
       .catch(console.error)
@@ -49,6 +61,8 @@ export default function AdminDashboard() {
     { title: 'Sections', description: 'Content sections', value: stats.sections, icon: FileText, href: '/admin/sections' },
     { title: 'Experience', description: 'Work & internship history', value: stats.experiences, icon: Building2, href: '/admin/experiences' },
     { title: 'Projects', description: 'Portfolio projects', value: stats.projects, icon: Briefcase, href: '/admin/my-projects' },
+    { title: 'Education & Certs', description: `${stats.education} Degrees · ${stats.certifications} Certifications`, value: stats.education + stats.certifications, icon: GraduationCap, href: '/admin/education' },
+    { title: 'Approach', description: 'Engineering approach steps', value: stats.approaches, icon: Workflow, href: '/admin/approaches' },
     { title: 'Skills', description: 'Skill offerings', value: stats.skills, icon: Wrench, href: '/admin/skills' },
     { title: 'Stats', description: 'About statistics', value: stats.stats, icon: BarChart3, href: '/admin/stats' },
   ]
@@ -85,6 +99,13 @@ export default function AdminDashboard() {
               <CardDescription>Manage your portfolio content</CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4">
+              <Link href="/admin/education" className="flex items-center gap-4 rounded-lg border p-4 hover:bg-accent transition-colors">
+                <GraduationCap className="h-8 w-8 text-primary" />
+                <div>
+                  <p className="font-medium">Manage Education & Certifications</p>
+                  <p className="text-sm text-muted-foreground">Update academic degrees, GPAs, and national certifications</p>
+                </div>
+              </Link>
               <Link href="/admin/experiences" className="flex items-center gap-4 rounded-lg border p-4 hover:bg-accent transition-colors">
                 <Building2 className="h-8 w-8 text-primary" />
                 <div>

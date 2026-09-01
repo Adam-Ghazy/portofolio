@@ -42,6 +42,7 @@ export interface Experience {
   description: string;
   systems?: string; // JSON string of systems/projects contributed to
   technologies: string;
+  collaboration?: string;
   sort_order: number;
   is_active: number;
   created_at?: string;
@@ -89,6 +90,17 @@ export interface AboutStat {
   is_active: number;
 }
 
+export interface Approach {
+  id?: number;
+  step_number?: string;
+  title: string;
+  description: string;
+  sort_order: number;
+  is_active: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface Settings {
   site_title: string;
   site_description: string;
@@ -103,9 +115,10 @@ export interface Settings {
   [key: string]: string;
 }
 
-export type AdminData = Section | Project | Experience | Skill | AboutStat;
+export type AdminData = Section | Project | Experience | Education | Certification | Skill | AboutStat | Approach;
 
 export interface FormErrors {
   [key: string]: string;
 }
+
 
