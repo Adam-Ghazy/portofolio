@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import getDb from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
+import { autoTranslate } from '@/lib/translate';
 
 export async function GET() {
   const db = getDb();
@@ -14,10 +15,15 @@ export async function POST(request: NextRequest) {
 
   const db = getDb();
   const body = await request.json();
-  const { value, label, sort_order } = body;
+  let { value, label, label_id, sort_order } = body;
+
+  if (label && !label_id) label_id = await autoTranslate(label, 'en', 'id');
+  if (label_id && !label) label = await autoTranslate(label_id, 'id', 'en');
+
   const result = db.prepare(
-    'INSERT INTO about_stats (value, label, sort_order) VALUES (?, ?, ?)'
-  ).run(value, label, sort_order || 0);
+    'INSERT INTO about_stats (value, label, label_id, sort_order) VALUES (?, ?, ?, ?)'
+  ).run(value, label || '', label_id || label || '', sort_order || 0);
+
   return NextResponse.json({ id: result.lastInsertRowid });
 }
 
@@ -27,10 +33,15 @@ export async function PUT(request: NextRequest) {
 
   const db = getDb();
   const body = await request.json();
-  const { id, value, label, sort_order, is_active } = body;
+  let { id, value, label, label_id, sort_order, is_active } = body;
+
+  if (label && !label_id) label_id = await autoTranslate(label, 'en', 'id');
+  if (label_id && !label) label = await autoTranslate(label_id, 'id', 'en');
+
   db.prepare(
-    'UPDATE about_stats SET value=?, label=?, sort_order=?, is_active=? WHERE id=?'
-  ).run(value, label, sort_order, is_active, id);
+    'UPDATE about_stats SET value=?, label=?, label_id=?, sort_order=?, is_active=? WHERE id=?'
+  ).run(value, label || '', label_id || label || '', sort_order, is_active, id);
+
   return NextResponse.json({ success: true });
 }
 

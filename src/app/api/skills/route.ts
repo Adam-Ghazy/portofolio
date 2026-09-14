@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import getDb from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
+import { autoTranslate } from '@/lib/translate';
 
 export async function GET() {
   const db = getDb();
@@ -14,10 +15,14 @@ export async function POST(request: NextRequest) {
 
   const db = getDb();
   const body = await request.json();
-  const { title, description, icon, sort_order } = body;
+  let { title, description, description_id, icon, sort_order } = body;
+
+  if (description && !description_id) description_id = await autoTranslate(description, 'en', 'id');
+  if (description_id && !description) description = await autoTranslate(description_id, 'id', 'en');
+
   const result = db.prepare(
-    'INSERT INTO skills (title, description, icon, sort_order) VALUES (?, ?, ?, ?)'
-  ).run(title, description || '', icon || '', sort_order || 0);
+    'INSERT INTO skills (title, description, description_id, icon, sort_order) VALUES (?, ?, ?, ?, ?)'
+  ).run(title || '', description || '', description_id || description || '', icon || '', sort_order || 0);
   return NextResponse.json({ id: result.lastInsertRowid });
 }
 
@@ -27,10 +32,14 @@ export async function PUT(request: NextRequest) {
 
   const db = getDb();
   const body = await request.json();
-  const { id, title, description, icon, sort_order, is_active } = body;
+  let { id, title, description, description_id, icon, sort_order, is_active } = body;
+
+  if (description && !description_id) description_id = await autoTranslate(description, 'en', 'id');
+  if (description_id && !description) description = await autoTranslate(description_id, 'id', 'en');
+
   db.prepare(
-    'UPDATE skills SET title=?, description=?, icon=?, sort_order=?, is_active=? WHERE id=?'
-  ).run(title, description, icon, sort_order, is_active, id);
+    'UPDATE skills SET title=?, description=?, description_id=?, icon=?, sort_order=?, is_active=? WHERE id=?'
+  ).run(title || '', description || '', description_id || description || '', icon || '', sort_order, is_active, id);
   return NextResponse.json({ success: true });
 }
 

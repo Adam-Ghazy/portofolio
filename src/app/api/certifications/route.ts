@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import getDb from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
+import { autoTranslate } from '@/lib/translate';
 
 export async function GET() {
   const db = getDb();
@@ -14,12 +15,27 @@ export async function POST(request: NextRequest) {
 
   const db = getDb();
   const body = await request.json();
-  const { title, issuer, location, issue_date, credential_info, sort_order } = body;
+  let { title, title_id, issuer, location, issue_date, credential_info, credential_info_id, sort_order } = body;
+
+  if (title && !title_id) title_id = await autoTranslate(title, 'en', 'id');
+  if (title_id && !title) title = await autoTranslate(title_id, 'id', 'en');
+
+  if (credential_info && !credential_info_id) credential_info_id = await autoTranslate(credential_info, 'en', 'id');
+  if (credential_info_id && !credential_info) credential_info = await autoTranslate(credential_info_id, 'id', 'en');
 
   const result = db.prepare(
-    `INSERT INTO certifications (title, issuer, location, issue_date, credential_info, sort_order)
-     VALUES (?, ?, ?, ?, ?, ?)`
-  ).run(title, issuer, location || '', issue_date || '', credential_info || '', sort_order || 0);
+    `INSERT INTO certifications (title, title_id, issuer, location, issue_date, credential_info, credential_info_id, sort_order)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+  ).run(
+    title || '',
+    title_id || title || '',
+    issuer || '',
+    location || '',
+    issue_date || '',
+    credential_info || '',
+    credential_info_id || credential_info || '',
+    sort_order || 0
+  );
 
   return NextResponse.json({ id: result.lastInsertRowid });
 }
@@ -30,13 +46,30 @@ export async function PUT(request: NextRequest) {
 
   const db = getDb();
   const body = await request.json();
-  const { id, title, issuer, location, issue_date, credential_info, sort_order, is_active } = body;
+  let { id, title, title_id, issuer, location, issue_date, credential_info, credential_info_id, sort_order, is_active } = body;
+
+  if (title && !title_id) title_id = await autoTranslate(title, 'en', 'id');
+  if (title_id && !title) title = await autoTranslate(title_id, 'id', 'en');
+
+  if (credential_info && !credential_info_id) credential_info_id = await autoTranslate(credential_info, 'en', 'id');
+  if (credential_info_id && !credential_info) credential_info = await autoTranslate(credential_info_id, 'id', 'en');
 
   db.prepare(
     `UPDATE certifications
-     SET title=?, issuer=?, location=?, issue_date=?, credential_info=?, sort_order=?, is_active=?
+     SET title=?, title_id=?, issuer=?, location=?, issue_date=?, credential_info=?, credential_info_id=?, sort_order=?, is_active=?
      WHERE id=?`
-  ).run(title, issuer, location, issue_date, credential_info, sort_order, is_active, id);
+  ).run(
+    title || '',
+    title_id || title || '',
+    issuer || '',
+    location || '',
+    issue_date || '',
+    credential_info || '',
+    credential_info_id || credential_info || '',
+    sort_order || 0,
+    is_active ?? 1,
+    id
+  );
 
   return NextResponse.json({ success: true });
 }
