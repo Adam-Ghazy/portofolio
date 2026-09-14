@@ -1,0 +1,84 @@
+{
+  "nav": {
+    "home": "beranda",
+    "about": "tentang",
+    "experience": "pengalaman",
+    "projects": "proyek",
+    "skills": "keahlian",
+    "contact": "kontak"
+  },
+  "common": {
+    "loading": "memuat sistem portofolio...",
+    "view_projects": "Lihat Proyek",
+    "work_experience": "Pengalaman Kerja",
+    "contact_me": "Hubungi Saya",
+    "explore_projects": "Eksplorasi Proyek",
+    "all": "Semua",
+    "live_demo": "Demo Langsung",
+    "source_code": "Kode Sumber",
+    "case_study": "Studi Kasus",
+    "send_message": "Kirim Pesan",
+    "sending": "Mengirim...",
+    "success": "Berhasil",
+    "error": "Gagal",
+    "years_experience": "Pengalaman Praktis",
+    "production_systems": "Sistem Produksi",
+    "active_users": "Pengguna Aktif Dilayani",
+    "playstore_apps": "Aplikasi Play Store Rilis"
+  },
+  "sections": {
+    "hero_badge": "01 // Pengembang Perangkat Lunak Junior",
+    "problem_badge": "02 // Metodologi",
+    "about_badge": "03 // Profil & Perjalanan",
+    "experience_badge": "04 // Riwayat Karier",
+    "projects_badge": "05 // Karya Terpilih",
+    "skills_badge": "06 // Kapabilitas",
+    "education_badge": "07 // Latar Belakang",
+    "contact_badge": "08 // Komunikasi"
+  },
+  "contact": {
+    "title": "Hubungi Saya",
+    "subtitle": "Terbuka untuk posisi junior developer, rekayasa mobile & fullstack, serta kolaborasi proyek berdampak.",
+    "name_label": "Nama Lengkap",
+    "name_placeholder": "Nama Anda",
+    "email_label": "Alamat Email",
+    "email_placeholder": "email@anda.com",
+    "subject_label": "Subjek",
+    "subject_placeholder": "Pertanyaan proyek / Tawaran kolaborasi",
+    "message_label": "Pesan",
+    "message_placeholder": "Jelaskan proyek atau pertanyaan Anda...",
+    "submit_btn": "Kirim Pesan",
+    "sending_btn": "Mengirim Pesan...",
+    "success_msg": "Terima kasih! Pesan Anda telah berhasil dikirim.",
+    "error_msg": "Gagal mengirim pesan. Silakan coba lagi atau kirim email langsung."
+  },
+  "experience": {
+    "systems_heading": "Sistem & Proyek yang Dikontribusikan",
+    "technologies_label": "Teknologi",
+    "collaboration_label": "Kolaborasi",
+    "period_label": "Periode"
+  },
+  "projects": {
+    "problem_heading": "Masalah & Konteks",
+    "solution_heading": "Solusi Rekayasa",
+    "impact_heading": "Dampak Terukur",
+    "stack_heading": "Tumpukan Teknologi",
+    "role_heading": "Peran"
+  },
+  "education": {
+    "academic_degrees": "Gelar Akademik",
+    "certifications": "Sertifikasi Profesional",
+    "gpa_label": "IPK",
+    "issued_label": "Diterbitkan"
+  },
+  "footer": {
+    "tagline": "mengubah masalah menjadi solusi digital",
+    "rights": "Hak cipta dilindungi undang-undang.",
+    "built_with": "Dibangun dengan Next.js, TypeScript & Tailwind CSS"
+  },
+  "statusbar": {
+    "status": "SIAP",
+    "branch": "main",
+    "mode": "PRODUKSI"
+  }
+}

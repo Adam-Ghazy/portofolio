@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { I18nProvider } from "@/components/I18nProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Adam Ghazy - Portofolio",
+  title: "Adam Ghazy - Portfolio",
   description: "Personal portfolio of Adam Ghazy Al Falah, a Junior Mobile, Frontend & Backend Developer specializing in Flutter, Laravel, React.js, and REST APIs with 1+ year of production experience.",
   keywords: [
     "Adam Ghazy Al Falah",
@@ -26,13 +27,13 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     url: "https://www.linkedin.com/in/adamghazy",
-    title: "Adam Ghazy - Portofolio",
+    title: "Adam Ghazy - Portfolio",
     description: "Junior Mobile, Frontend & Backend Developer building practical digital solutions with Flutter, Laravel, React.js, and REST APIs.",
     siteName: "Adam Ghazy Al Falah Portfolio",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Adam Ghazy - Portofolio",
+    title: "Adam Ghazy - Portfolio",
     description: "Junior Mobile, Frontend & Backend Developer building practical digital solutions with Flutter, Laravel, React.js, and REST APIs.",
   },
   icons: {
@@ -55,7 +56,7 @@ export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
-  }) {
+}) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -65,7 +66,9 @@ export default function RootLayout({
       </head>
       <body>
         <ThemeProvider>
-          {children}
+          <I18nProvider>
+            {children}
+          </I18nProvider>
         </ThemeProvider>
       </body>
     </html>

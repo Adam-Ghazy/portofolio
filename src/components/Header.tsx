@@ -1,16 +1,18 @@
 'use client';
 
 import { useTheme } from './ThemeProvider';
+import { useLanguage } from './I18nProvider';
 import Link from 'next/link';
 
 export default function Header() {
   const { theme, toggle } = useTheme();
-  
+  const { locale, setLocale, t } = useLanguage();
+
   return (
     <header 
       className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl border-b"
       style={{ 
-        background: theme === 'dark' ? 'rgba(11,13,17,0.85)' : 'rgba(248,249,250,0.85)',
+        background: 'var(--header-bg, rgba(11,13,17,0.85))',
         borderColor: 'var(--border-color)'
       }}
     >
@@ -22,17 +24,17 @@ export default function Header() {
 
         <nav className="hidden md:flex items-center gap-7">
           {[
-            { label: 'home', href: '/' },
-            { label: 'about', href: '/about' },
-            { label: 'experience', href: '/experience' },
-            { label: 'projects', href: '/projects' },
-            { label: 'skills', href: '/skills' },
-            { label: 'contact', href: '/contact' },
+            { key: 'home', label: t('nav.home', 'home'), href: '/' },
+            { key: 'about', label: t('nav.about', 'about'), href: '/about' },
+            { key: 'experience', label: t('nav.experience', 'experience'), href: '/experience' },
+            { key: 'projects', label: t('nav.projects', 'projects'), href: '/projects' },
+            { key: 'skills', label: t('nav.skills', 'skills'), href: '/skills' },
+            { key: 'contact', label: t('nav.contact', 'contact'), href: '/contact' },
           ].map(link => (
             <Link
-              key={link.label}
+              key={link.key}
               href={link.href}
-              className="relative font-mono text-xs link-hover transition-colors duration-200"
+              className="relative font-mono text-xs link-hover transition-colors duration-200 uppercase"
               style={{ color: 'var(--text-secondary)' }}
               onMouseEnter={e => (e.currentTarget.style.color = 'var(--accent)')}
               onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-secondary)')}
@@ -43,6 +45,46 @@ export default function Header() {
         </nav>
 
         <div className="flex items-center gap-3">
+          {/* Language Switcher */}
+          <div 
+            className="flex items-center rounded-lg border p-0.5"
+            style={{ 
+              background: 'var(--bg-card)',
+              borderColor: 'var(--border-color)',
+            }}
+          >
+            <button
+              onClick={() => setLocale('id')}
+              className={`px-2 py-0.5 text-[11px] font-mono rounded transition-all ${
+                locale === 'id'
+                  ? 'font-bold shadow-sm'
+                  : 'opacity-60 hover:opacity-100'
+              }`}
+              style={{
+                background: locale === 'id' ? 'var(--accent)' : 'transparent',
+                color: locale === 'id' ? 'var(--accent-contrast, #ffffff)' : 'var(--text-secondary)',
+              }}
+              title="Ganti ke Bahasa Indonesia"
+            >
+              ID
+            </button>
+            <button
+              onClick={() => setLocale('en')}
+              className={`px-2 py-0.5 text-[11px] font-mono rounded transition-all ${
+                locale === 'en'
+                  ? 'font-bold shadow-sm'
+                  : 'opacity-60 hover:opacity-100'
+              }`}
+              style={{
+                background: locale === 'en' ? 'var(--accent)' : 'transparent',
+                color: locale === 'en' ? 'var(--accent-contrast, #ffffff)' : 'var(--text-secondary)',
+              }}
+              title="Switch to English"
+            >
+              EN
+            </button>
+          </div>
+
           <a
             href="https://www.linkedin.com/in/adamghazy"
             target="_blank"

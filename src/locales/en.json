@@ -1,0 +1,84 @@
+{
+  "nav": {
+    "home": "home",
+    "about": "about",
+    "experience": "experience",
+    "projects": "projects",
+    "skills": "skills",
+    "contact": "contact"
+  },
+  "common": {
+    "loading": "loading portfolio system...",
+    "view_projects": "View Projects",
+    "work_experience": "Work Experience",
+    "contact_me": "Contact Me",
+    "explore_projects": "Explore Projects",
+    "all": "All",
+    "live_demo": "Live Demo",
+    "source_code": "Source Code",
+    "case_study": "Case Study",
+    "send_message": "Send Message",
+    "sending": "Sending...",
+    "success": "Success",
+    "error": "Error",
+    "years_experience": "Hands-on Experience",
+    "production_systems": "Production Systems",
+    "active_users": "Active Users Served",
+    "playstore_apps": "Play Store Published"
+  },
+  "sections": {
+    "hero_badge": "01 // Junior Software Developer",
+    "problem_badge": "02 // Methodology",
+    "about_badge": "03 // Profile & Journey",
+    "experience_badge": "04 // Career History",
+    "projects_badge": "05 // Selected Work",
+    "skills_badge": "06 // Capabilities",
+    "education_badge": "07 // Background",
+    "contact_badge": "08 // Communication"
+  },
+  "contact": {
+    "title": "Get in Touch",
+    "subtitle": "Open to junior developer roles, fullstack and mobile engineering positions, and impactful project collaborations.",
+    "name_label": "Your Name",
+    "name_placeholder": "John Doe",
+    "email_label": "Email Address",
+    "email_placeholder": "john@example.com",
+    "subject_label": "Subject",
+    "subject_placeholder": "Project inquiry / Collaboration",
+    "message_label": "Message",
+    "message_placeholder": "Describe your project or inquiry...",
+    "submit_btn": "Send Message",
+    "sending_btn": "Sending Message...",
+    "success_msg": "Thank you! Your message has been sent successfully.",
+    "error_msg": "Failed to send message. Please try again or email directly."
+  },
+  "experience": {
+    "systems_heading": "Systems & Projects Contributed",
+    "technologies_label": "Technologies",
+    "collaboration_label": "Collaboration",
+    "period_label": "Period"
+  },
+  "projects": {
+    "problem_heading": "Problem & Context",
+    "solution_heading": "Engineering Solution",
+    "impact_heading": "Measurable Impact",
+    "stack_heading": "Technology Stack",
+    "role_heading": "Role"
+  },
+  "education": {
+    "academic_degrees": "Academic Degrees",
+    "certifications": "Professional Certifications",
+    "gpa_label": "GPA",
+    "issued_label": "Issued"
+  },
+  "footer": {
+    "tagline": "turning problems into solutions",
+    "rights": "All rights reserved.",
+    "built_with": "Built with Next.js, TypeScript & Tailwind CSS"
+  },
+  "statusbar": {
+    "status": "READY",
+    "branch": "main",
+    "mode": "PRODUCTION"
+  }
+}
