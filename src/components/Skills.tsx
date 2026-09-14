@@ -1,11 +1,13 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { useLanguage } from './I18nProvider';
 
 interface SkillItem {
   id: number | string;
   title: string;
   description: string;
+  description_id?: string;
   icon?: string;
   sort_order?: number;
   is_active?: number;
@@ -13,36 +15,36 @@ interface SkillItem {
 
 const DEFAULT_STACK_ITEMS = [
   // Programming & Development
-  { title: 'Flutter', category: 'Programming & Development' },
-  { title: 'Dart', category: 'Programming & Development' },
-  { title: 'Laravel', category: 'Programming & Development' },
-  { title: 'PHP', category: 'Programming & Development' },
-  { title: 'React.js', category: 'Programming & Development' },
-  { title: 'JavaScript', category: 'Programming & Development' },
-  { title: 'HTML', category: 'Programming & Development' },
-  { title: 'CSS', category: 'Programming & Development' },
+  { title: 'Flutter', category: 'Programming & Development', category_id: 'Pemrograman & Pengembangan' },
+  { title: 'Dart', category: 'Programming & Development', category_id: 'Pemrograman & Pengembangan' },
+  { title: 'Laravel', category: 'Programming & Development', category_id: 'Pemrograman & Pengembangan' },
+  { title: 'PHP', category: 'Programming & Development', category_id: 'Pemrograman & Pengembangan' },
+  { title: 'React.js', category: 'Programming & Development', category_id: 'Pemrograman & Pengembangan' },
+  { title: 'JavaScript', category: 'Programming & Development', category_id: 'Pemrograman & Pengembangan' },
+  { title: 'HTML', category: 'Programming & Development', category_id: 'Pemrograman & Pengembangan' },
+  { title: 'CSS', category: 'Programming & Development', category_id: 'Pemrograman & Pengembangan' },
 
   // Backend & API
-  { title: 'REST API', category: 'Backend & API' },
-  { title: 'API Integration', category: 'Backend & API' },
-  { title: 'WebSocket', category: 'Backend & API' },
+  { title: 'REST API', category: 'Backend & API', category_id: 'Backend & API' },
+  { title: 'API Integration', category: 'Backend & API', category_id: 'Backend & API' },
+  { title: 'WebSocket', category: 'Backend & API', category_id: 'Backend & API' },
 
   // Database
-  { title: 'MySQL', category: 'Database' },
+  { title: 'MySQL', category: 'Database', category_id: 'Basis Data' },
 
   // Tools & Infrastructure
-  { title: 'Git', category: 'Tools & Infrastructure' },
-  { title: 'Docker', category: 'Tools & Infrastructure' },
-  { title: 'Firebase', category: 'Tools & Infrastructure' },
+  { title: 'Git', category: 'Tools & Infrastructure', category_id: 'Alat & Infrastruktur' },
+  { title: 'Docker', category: 'Tools & Infrastructure', category_id: 'Alat & Infrastruktur' },
+  { title: 'Firebase', category: 'Tools & Infrastructure', category_id: 'Alat & Infrastruktur' },
 
   // Development Practices
-  { title: 'Agile', category: 'Development Practices' },
-  { title: 'Scrum', category: 'Development Practices' },
-  { title: 'Debugging', category: 'Development Practices' },
-  { title: 'AI Coding Agents', category: 'Development Practices' },
+  { title: 'Agile', category: 'Development Practices', category_id: 'Metodologi Pengembangan' },
+  { title: 'Scrum', category: 'Development Practices', category_id: 'Metodologi Pengembangan' },
+  { title: 'Debugging', category: 'Development Practices', category_id: 'Metodologi Pengembangan' },
+  { title: 'AI Coding Agents', category: 'Development Practices', category_id: 'Metodologi Pengembangan' },
 ];
 
-const DEFAULT_SOFT_SKILLS = [
+const DEFAULT_SOFT_SKILLS_EN = [
   'Problem Solving',
   'Team Collaboration',
   'Stakeholder Communication',
@@ -50,7 +52,16 @@ const DEFAULT_SOFT_SKILLS = [
   'Time Management',
 ];
 
+const DEFAULT_SOFT_SKILLS_ID = [
+  'Pemecahan Masalah',
+  'Kolaborasi Tim',
+  'Komunikasi Pemangku Kepentingan',
+  'Kemampuan Adaptasi',
+  'Manajemen Waktu',
+];
+
 export default function Skills({ section, skills = [] }: { section?: any; skills?: SkillItem[] }) {
+  const { t, l, locale } = useLanguage();
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
 
   // Split Technical Skills and Soft Skills
@@ -58,12 +69,14 @@ export default function Skills({ section, skills = [] }: { section?: any; skills
     const rawSoft = skills.filter(
       (s) =>
         s.description?.toLowerCase() === 'soft skills' ||
-        s.description?.toLowerCase() === 'soft skill'
+        s.description?.toLowerCase() === 'soft skill' ||
+        s.description_id?.toLowerCase() === 'keterampilan interpersonal'
     );
     const rawTech = skills.filter(
       (s) =>
         s.description?.toLowerCase() !== 'soft skills' &&
-        s.description?.toLowerCase() !== 'soft skill'
+        s.description?.toLowerCase() !== 'soft skill' &&
+        s.description_id?.toLowerCase() !== 'keterampilan interpersonal'
     );
 
     const techMap = new Map<string, { id: string | number; title: string; category: string }>();
@@ -73,46 +86,48 @@ export default function Skills({ section, skills = [] }: { section?: any; skills
       techMap.set(item.title.toLowerCase(), {
         id: `def-${idx}`,
         title: item.title,
-        category: item.category,
+        category: locale === 'id' ? item.category_id : item.category,
       });
     });
 
     // Add/override from DB
     rawTech.forEach((item) => {
       const existing = techMap.get(item.title.toLowerCase());
+      const cat = locale === 'id' && item.description_id ? item.description_id : (item.description?.trim() || existing?.category || 'General');
       techMap.set(item.title.toLowerCase(), {
         id: item.id,
         title: item.title,
-        category: item.description?.trim() || existing?.category || 'General',
+        category: cat,
       });
     });
 
     const softList =
       rawSoft.length > 0
-        ? rawSoft.map((s) => s.title)
-        : DEFAULT_SOFT_SKILLS;
+        ? rawSoft.map((s) => (locale === 'id' && s.description_id ? s.title : s.title))
+        : (locale === 'id' ? DEFAULT_SOFT_SKILLS_ID : DEFAULT_SOFT_SKILLS_EN);
 
     return {
       techSkills: Array.from(techMap.values()),
       softSkills: softList,
     };
-  }, [skills]);
+  }, [skills, locale]);
 
   // Extract unique categories for filter
+  const allLabel = t('common.all', 'All');
   const categories = useMemo(() => {
     const cats = new Set<string>();
     techSkills.forEach((s) => {
       if (s.category) cats.add(s.category);
     });
-    return ['All', ...Array.from(cats)];
-  }, [techSkills]);
+    return [allLabel, ...Array.from(cats)];
+  }, [techSkills, allLabel]);
 
   const filteredTechSkills = useMemo(() => {
-    if (selectedCategory === 'All') return techSkills;
+    if (selectedCategory === 'All' || selectedCategory === allLabel) return techSkills;
     return techSkills.filter(
       (s) => s.category.toLowerCase() === selectedCategory.toLowerCase()
     );
-  }, [techSkills, selectedCategory]);
+  }, [techSkills, selectedCategory, allLabel]);
 
   return (
     <section id="skills" className="py-20 md:py-28 px-6 md:px-8 relative overflow-hidden" style={{ background: 'var(--bg-primary)' }}>
@@ -122,13 +137,13 @@ export default function Skills({ section, skills = [] }: { section?: any; skills
         <div className="flex flex-col lg:flex-row lg:items-end justify-between mb-10 gap-6">
           <div className="max-w-[560px]">
             <span className="font-mono text-[11px] tracking-wider uppercase block mb-3" style={{ color: 'var(--text-tertiary)' }}>
-              06 // skills
+              {t('sections.skills_badge', '06 // skills')}
             </span>
             <h2 className="text-[26px] md:text-[34px] font-medium tracking-tight mb-2.5" style={{ color: 'var(--text-primary)' }}>
-              {section?.title || 'Skills & Tech Stack'}
+              {l(section, 'title') || (locale === 'id' ? 'Keahlian & Teknologi' : 'Skills & Tech Stack')}
             </h2>
             <p className="text-sm md:text-base leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-              {section?.subtitle || 'The tools, languages, and frameworks I use to build modern, reliable production applications.'}
+              {l(section, 'subtitle') || (locale === 'id' ? 'Alat, bahasa pemrograman, dan framework yang saya gunakan untuk membangun sistem produksi yang andal.' : 'The tools, languages, and frameworks I use to build modern, reliable production applications.')}
             </p>
           </div>
 
@@ -136,11 +151,11 @@ export default function Skills({ section, skills = [] }: { section?: any; skills
           {categories.length > 2 && (
             <div className="flex flex-wrap gap-2 self-start lg:self-end lg:justify-end">
               {categories.map((cat) => {
-                const isActive = selectedCategory === cat;
-                const count =
-                  cat === 'All'
-                    ? techSkills.length
-                    : techSkills.filter((s) => s.category.toLowerCase() === cat.toLowerCase()).length;
+                const isAll = cat === 'All' || cat === allLabel;
+                const isActive = selectedCategory === cat || (isAll && (selectedCategory === 'All' || selectedCategory === allLabel));
+                const count = isAll
+                  ? techSkills.length
+                  : techSkills.filter((s) => s.category.toLowerCase() === cat.toLowerCase()).length;
                 return (
                   <button
                     key={cat}
@@ -195,10 +210,10 @@ export default function Skills({ section, skills = [] }: { section?: any; skills
           <div className="p-6 md:p-8 rounded-2xl border" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-subtle)' }}>
             <div className="mb-4">
               <h3 className="font-mono text-[12px] uppercase tracking-wider font-semibold" style={{ color: 'var(--text-primary)' }}>
-                Core Soft Skills & Strengths
+                {locale === 'id' ? 'Keterampilan Interpersonal Utama' : 'Core Soft Skills & Strengths'}
               </h3>
               <p className="text-[13px] mt-0.5" style={{ color: 'var(--text-secondary)' }}>
-                Professional collaboration and communication attributes cultivated through cross-functional team projects.
+                {locale === 'id' ? 'Atribut komunikasi dan kolaborasi profesional yang diasah melalui proyek tim lintas fungsi.' : 'Professional collaboration and communication attributes cultivated through cross-functional team projects.'}
               </p>
             </div>
 

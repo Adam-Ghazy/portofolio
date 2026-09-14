@@ -1,9 +1,14 @@
 'use client';
 
+import { useLanguage } from './I18nProvider';
+
 interface SystemItem {
   title: string;
+  title_id?: string;
   tagline?: string;
+  tagline_id?: string;
   description: string;
+  description_id?: string;
   tech?: string;
 }
 
@@ -11,24 +16,34 @@ interface ExperienceItem {
   id?: number;
   company: string;
   position: string;
+  position_id?: string;
   program?: string;
+  program_id?: string;
   location: string;
   period: string;
   description: string;
+  description_id?: string;
   systems?: string;
+  systems_id?: string;
   technologies?: string;
   collaboration?: string;
+  collaboration_id?: string;
 }
 
 export default function Experience({ section, experiences = [] }: { section?: any; experiences?: ExperienceItem[] }) {
+  const { t, l, locale } = useLanguage();
+
   const defaultExperiences: ExperienceItem[] = [
     {
       company: 'PT. Industri Kereta Api (Persero)',
       position: 'Junior Software Developer Intern',
+      position_id: 'Junior Software Developer Intern',
       program: 'Magang Nasional Batch 2',
+      program_id: 'Magang Nasional Batch 2',
       location: 'Madiun, Indonesia',
       period: 'November 2025 - May 2026',
       description: 'Collaborated with cross-functional teams involving Engineering, Operations, and Logistics. Contributed to requirement gathering, digital workflow design, REST API integrations, data synchronization, and production deployment for Indonesia’s national rolling stock manufacturer.',
+      description_id: 'Berkolaborasi dengan tim lintas fungsi yang melibatkan Engineering, Operasi, dan Logistik. Terlibat dalam pengumpulan kebutuhan, perancangan alur kerja digital, integrasi REST API, sinkronisasi data, dan penyebaran produksi.',
       systems: JSON.stringify([
         {
           title: 'Paperless Inspection System',
@@ -40,6 +55,20 @@ export default function Experience({ section, experiences = [] }: { section?: an
           title: 'Surat Jalan Online',
           tagline: 'Delivery-Order Digitalization',
           description: 'Contributed to the digitalization of the Surat Jalan Online system. Streamlined delivery-order processes across PPO (Pusat Pelayanan Operasi), Logistics, Security, and external courier teams with live status tracking.',
+          tech: 'Laravel, REST API, Workflow Automation'
+        }
+      ]),
+      systems_id: JSON.stringify([
+        {
+          title: 'Paperless Inspection System',
+          tagline: 'Digitalisasi Inspeksi QA/QC',
+          description: 'Berkontribusi dalam pengembangan sistem inspeksi digital untuk alur kerja QA/QC. Menggantikan dokumentasi berbasis kertas manual dengan alur kerja digital terstruktur guna mengurangi galat pencatatan dan meningkatkan efisiensi proses inspeksi.',
+          tech: 'Laravel, REST API, Data Synchronization, MySQL'
+        },
+        {
+          title: 'Surat Jalan Online',
+          tagline: 'Digitalisasi Surat Jalan & Logistik',
+          description: 'Berkontribusi dalam digitalisasi sistem Surat Jalan Online untuk mempermudah alur pesanan pengiriman antardivisi PPO, Logistik, Keamanan, dan kurir eksternal.',
           tech: 'Laravel, REST API, Workflow Automation'
         }
       ]),
@@ -58,17 +87,17 @@ export default function Experience({ section, experiences = [] }: { section?: an
         <div className="max-w-[640px] mb-12">
           <div className="flex items-center gap-2 mb-3">
             <span className="font-mono text-[11px] tracking-wider uppercase" style={{ color: 'var(--text-tertiary)' }}>
-              04 // experience
+              {t('sections.experience_badge', '04 // experience')}
             </span>
             <span className="text-xs px-2 py-0.5 rounded font-mono border" style={{ borderColor: 'var(--border-color)', color: 'var(--text-secondary)', background: 'var(--bg-card)' }}>
               Industry Experience
             </span>
           </div>
           <h2 className="text-[26px] md:text-[34px] font-medium tracking-tight mb-3" style={{ color: 'var(--text-primary)' }}>
-            {section?.title || 'Work Experience'}
+            {l(section, 'title') || (locale === 'id' ? 'Pengalaman Kerja' : 'Work Experience')}
           </h2>
           <p className="text-sm md:text-base leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-            {section?.subtitle || 'Professional internship experience digitalizing enterprise QA/QC inspection and logistics workflows.'}
+            {l(section, 'subtitle') || (locale === 'id' ? 'Pengalaman magang profesional dalam digitalisasi alur inspeksi QA/QC dan logistik industri manufaktur.' : 'Professional internship experience digitalizing enterprise QA/QC inspection and logistics workflows.')}
           </p>
         </div>
 
@@ -77,7 +106,8 @@ export default function Experience({ section, experiences = [] }: { section?: an
           {items.map((exp, idx) => {
             let parsedSystems: SystemItem[] = [];
             try {
-              parsedSystems = exp.systems ? JSON.parse(exp.systems) : [];
+              const rawSys = locale === 'id' && exp.systems_id ? exp.systems_id : exp.systems;
+              parsedSystems = rawSys ? JSON.parse(rawSys) : [];
             } catch {
               parsedSystems = [];
             }
@@ -98,7 +128,7 @@ export default function Experience({ section, experiences = [] }: { section?: an
                       <h3 className="text-[20px] md:text-[24px] font-semibold tracking-tight" style={{ color: 'var(--text-primary)' }}>
                         {exp.company}
                       </h3>
-                      {exp.program && (
+                      {(exp.program || exp.program_id) && (
                         <span
                           className="font-mono text-[11px] px-2.5 py-0.5 rounded border"
                           style={{
@@ -107,13 +137,13 @@ export default function Experience({ section, experiences = [] }: { section?: an
                             borderColor: 'var(--border-color)'
                           }}
                         >
-                          {exp.program}
+                          {l(exp, 'program')}
                         </span>
                       )}
                     </div>
                     <div className="flex flex-wrap items-center gap-3 text-[13px]" style={{ color: 'var(--text-secondary)' }}>
                       <span className="font-medium font-mono" style={{ color: 'var(--text-primary)' }}>
-                        {exp.position}
+                        {l(exp, 'position')}
                       </span>
                       <span>-</span>
                       <span>{exp.location}</span>
@@ -136,14 +166,14 @@ export default function Experience({ section, experiences = [] }: { section?: an
 
                 {/* Overview Description */}
                 <p className="text-[14.5px] leading-relaxed my-6" style={{ color: 'var(--text-secondary)' }}>
-                  {exp.description}
+                  {l(exp, 'description')}
                 </p>
 
                 {/* Contributed Systems Breakdown */}
                 {parsedSystems.length > 0 && (
                   <div className="mt-6 mb-6">
                     <h4 className="font-mono text-[11px] uppercase tracking-wider mb-4" style={{ color: 'var(--text-tertiary)' }}>
-                      Key Digital Systems & Responsibilities
+                      {t('experience.systems_heading', 'Key Digital Systems & Responsibilities')}
                     </h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {parsedSystems.map((sys, sIdx) => (
@@ -157,16 +187,16 @@ export default function Experience({ section, experiences = [] }: { section?: an
                         >
                           <div className="flex items-center justify-between gap-2 mb-2">
                             <span className="font-semibold text-[15px]" style={{ color: 'var(--text-primary)' }}>
-                              {sys.title}
+                              {locale === 'id' && sys.title_id ? sys.title_id : sys.title}
                             </span>
-                            {sys.tagline && (
+                            {(sys.tagline || sys.tagline_id) && (
                               <span className="font-mono text-[10px] px-2 py-0.5 rounded border" style={{ borderColor: 'var(--border-color)', color: 'var(--text-tertiary)' }}>
-                                {sys.tagline}
+                                {locale === 'id' && sys.tagline_id ? sys.tagline_id : sys.tagline}
                               </span>
                             )}
                           </div>
                           <p className="text-[13px] leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>
-                            {sys.description}
+                            {locale === 'id' && sys.description_id ? sys.description_id : sys.description}
                           </p>
                           {sys.tech && (
                             <div className="font-mono text-[11px]" style={{ color: 'var(--text-tertiary)' }}>
@@ -181,12 +211,12 @@ export default function Experience({ section, experiences = [] }: { section?: an
 
                 {/* Footer: Collaboration & Tech Stack Badges */}
                 <div className="pt-5 border-t flex flex-wrap items-center justify-between gap-4" style={{ borderColor: 'var(--border-subtle)' }}>
-                  {exp.collaboration ? (
+                  {(exp.collaboration || exp.collaboration_id) ? (
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="font-mono text-[11px] tracking-wider" style={{ color: 'var(--text-tertiary)' }}>
-                        Collaboration:
+                        {t('experience.collaboration_label', 'Collaboration')}:
                       </span>
-                      {exp.collaboration.split(',').map((team, tIdx) => (
+                      {l(exp, 'collaboration').split(',').map((team, tIdx) => (
                         <span
                           key={tIdx}
                           className="font-mono text-[11px] px-2.5 py-0.5 rounded border"

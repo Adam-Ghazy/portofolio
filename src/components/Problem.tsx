@@ -1,15 +1,37 @@
 'use client';
 
+import { useLanguage } from './I18nProvider';
+
 export default function Problem({ section }: { section?: any }) {
+  const { t, l, locale } = useLanguage();
+
   let problems = [];
   try {
-    problems = section?.content ? JSON.parse(section.content) : [];
+    const raw = locale === 'id' && section?.content_id ? section.content_id : section?.content;
+    problems = raw ? JSON.parse(raw) : [];
   } catch {
     problems = [];
   }
 
   if (!problems.length) {
-    problems = [
+    problems = locale === 'id' ? [
+      {
+        title: 'Masalah -> Solusi -> Dampak',
+        desc: 'Perangkat lunak hadir untuk menyelesaikan friksi manusia dan operasional nyata. Saya merancang setiap fitur berfokus pada efisiensi waktu, pengurangan galat manual, dan produktivitas alur kerja.'
+      },
+      {
+        title: 'Arsitektur Bersih & Kemudahan Pemeliharaan',
+        desc: 'Baik merancang arsitektur mobile Flutter maupun REST API Laravel, saya mengutamakan kode yang rapi, terstruktur, dan bertipe ketat agar mudah dirawat dan dikembangkan.'
+      },
+      {
+        title: 'Sinkronisasi Real-Time & Keandalan',
+        desc: 'Pengalaman membangun sistem antrean dan sinkronisasi data mengajarkan saya menangani transisi state, latensi jaringan, dan komunikasi WebSocket secara tangguh.'
+      },
+      {
+        title: 'Kolaborasi Lintas Fungsi',
+        desc: 'Mulai dari insinyur QA/QC dan staf logistik hingga pemangku kepentingan kantor pemerintahan, saya berkomunikasi secara proaktif untuk mengubah kebutuhan domain menjadi sistem yang intuitif.'
+      }
+    ] : [
       {
         title: 'Problem -> Solution -> Impact',
         desc: 'Software exists to solve real human and operational friction. I design every feature focusing on measurable user time saved, reduced manual errors, and workflow efficiency.'
@@ -33,13 +55,13 @@ export default function Problem({ section }: { section?: any }) {
     <section className="py-20 md:py-28 px-6 md:px-8" style={{ background: 'var(--bg-secondary)' }}>
       <div className="max-w-[1200px] mx-auto">
         <span className="font-mono text-[11px] tracking-wider uppercase block mb-3" style={{ color: 'var(--text-tertiary)' }}>
-          02 // principles
+          {t('sections.problem_badge', '02 // Methodology')}
         </span>
         <h2 className="text-[26px] md:text-[34px] font-medium tracking-tight mb-3" style={{ color: 'var(--text-primary)' }}>
-          {section?.title || 'Engineering Methodology'}
+          {l(section, 'title') || 'Engineering Methodology'}
         </h2>
         <p className="text-sm md:text-base max-w-[560px] leading-relaxed mb-12" style={{ color: 'var(--text-secondary)' }}>
-          {section?.subtitle || 'How I bridge operational challenges with practical, high-impact software solutions.'}
+          {l(section, 'subtitle') || 'How I bridge operational challenges with practical, high-impact software solutions.'}
         </p>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">

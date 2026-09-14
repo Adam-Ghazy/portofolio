@@ -5,17 +5,24 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import StatusBar from '@/components/StatusBar';
 import Link from 'next/link';
+import { useLanguage } from '@/components/I18nProvider';
 
 interface ProjectItem {
   id?: number;
   title: string;
+  title_id?: string;
   description: string;
+  description_id?: string;
   problem?: string;
+  problem_id?: string;
   solution?: string;
+  solution_id?: string;
   impact?: string;
+  impact_id?: string;
   image_url?: string;
   year?: string;
   role?: string;
+  role_id?: string;
   tags?: string;
   link?: string;
 }
@@ -24,24 +31,36 @@ const DEFAULT_PROJECTS: ProjectItem[] = [
   {
     id: 1,
     title: 'FoodLAB - Campus Food Ordering Platform',
+    title_id: 'FoodLAB - Platform Pemesanan Makanan Kampus',
     role: 'Mobile App Developer (Flutter)',
+    role_id: 'Pengembang Aplikasi Mobile (Flutter)',
     year: '2023 - 2025',
     description: 'A production campus food ordering platform built to eliminate physical canteen queues and streamline vendor order management at the Electronic Engineering Polytechnic Institute of Surabaya (PENS).',
+    description_id: 'Platform pemesanan makanan kantin kampus yang dibangun untuk mengeliminasi antrean panjang dan mempermudah pengelolaan pesanan stan penjual di Politeknik Elektronika Negeri Surabaya (PENS).',
     problem: 'The campus canteen experienced daily overcrowding, with more than 200 students queuing physically during peak hours, causing significant wait times and congested dining spaces.',
+    problem_id: 'Kantin kampus mengalami penumpukan antrean parah setiap hari dengan lebih dari 200 mahasiswa mengantre fisik saat jam makan siang.',
     solution: 'Engineered and launched FoodLAB as a complete mobile ordering solution using Flutter, Provider state management, REST APIs, and real-time push notifications. Enabled students to browse menus, place orders in advance, and receive live preparation status alerts.',
+    solution_id: 'Merancang dan merilis FoodLAB sebagai solusi pemesanan mobile lengkap menggunakan Flutter, manajemen state Provider, REST API, dan notifikasi push real-time.',
     impact: 'Secured IDR 20M university development funding · Scaled successfully from a final project MVP into an active production system · Reached 300+ active users across campus · Reduced average waiting time by 60% · Onboarded 10+ campus food vendors · Published on the Google Play Store with a 4.5+ star rating.',
+    impact_id: 'Meraih pendanaan pengembangan universitas Rp20 Juta · Berkembang dari MVP tugas akhir menjadi sistem produksi aktif · Menjangkau 300+ pengguna aktif kampus · Memangkas waktu tunggu 60% · Mengintegrasikan 10+ penjual makanan · Rilis di Google Play Store dengan rating 4.5+ bintang.',
     tags: 'Flutter, Dart, Provider, REST API, Push Notifications, Agile Scrum',
     link: 'https://play.google.com',
   },
   {
     id: 2,
     title: 'Real-Time Queue Management System',
+    title_id: 'Sistem Manajemen Antrean Real-Time',
     role: 'Mobile App Developer (Flutter)',
+    role_id: 'Pengembang Aplikasi Mobile (Flutter)',
     year: '2024',
     description: 'A real-time public service queue management mobile application deployed at the Gebang Putih Urban Village Office (Kantor Kelurahan Gebang Putih, Surabaya).',
+    description_id: 'Aplikasi mobile manajemen antrean pelayanan publik real-time yang diterapkan di Kantor Kelurahan Gebang Putih, Surabaya.',
     problem: 'The existing administrative queue process relied on physical manual tickets, leading to crowded waiting halls, unpredictable wait times, and an average service time of 15 minutes per citizen.',
+    problem_id: 'Proses antrean administrasi sebelumnya mengandalkan tiket fisik manual yang menyebabkan ruang tunggu padat dan waktu layanan rata-rata 15 menit per warga.',
     solution: 'Developed and deployed a real-time digital queue management application. Integrated WebSockets and REST APIs for instantaneous multi-counter queue state synchronization and live status notifications.',
+    solution_id: 'Mengembangkan dan merilis aplikasi antrean digital real-time terintegrasi WebSockets dan REST API untuk sinkronisasi loket multi-layanan secara instan.',
     impact: 'Reduced manual administrative processes by 40% · Reduced average citizen service time from 15 minutes down to 7 minutes · Supported multiple service counters simultaneously · Published to Google Play Store and successfully deployed for public local government use.',
+    impact_id: 'Mengurangi proses manual administrasi sebesar 40% · Mempersingkat waktu layanan warga dari 15 menit menjadi 7 menit · Mendukung multi-loket simultan · Rilis di Google Play Store untuk pemerintahan lokal.',
     tags: 'Flutter, Dart, REST API, WebSocket, Real-Time Sync, Public Service',
     link: 'https://play.google.com',
   },
@@ -54,6 +73,7 @@ const isPlayStoreLink = (url?: string) => {
 };
 
 export default function ProjectsPage() {
+  const { t, l, locale } = useLanguage();
   const [projects, setProjects] = useState<ProjectItem[]>([]);
   const [settings, setSettings] = useState<any>({});
   const [loading, setLoading] = useState(true);
@@ -82,13 +102,15 @@ export default function ProjectsPage() {
         <section className="px-6 md:px-8 py-14 md:py-20">
           <div className="max-w-[1200px] mx-auto">
             <span className="font-mono text-[11px] tracking-wider uppercase block mb-3" style={{ color: 'var(--text-tertiary)' }}>
-              01 // portfolio & projects
+              {t('sections.projects_badge', '01 // portfolio & projects')}
             </span>
             <h1 className="text-[36px] md:text-[52px] font-semibold tracking-tight mb-4" style={{ color: 'var(--text-primary)' }}>
-              All Projects
+              {locale === 'id' ? 'Semua Proyek' : 'All Projects'}
             </h1>
             <p className="text-[16px] md:text-[18px] leading-relaxed max-w-[720px]" style={{ color: 'var(--text-secondary)' }}>
-              A complete showcase of web and mobile applications, engineering case studies, and digital solutions developed with modern tech stacks.
+              {locale === 'id'
+                ? 'Koleksi lengkap aplikasi web dan mobile, studi kasus rekayasa, serta solusi digital yang dikembangkan dengan teknologi modern.'
+                : 'A complete showcase of web and mobile applications, engineering case studies, and digital solutions developed with modern tech stacks.'}
             </p>
           </div>
         </section>
@@ -98,7 +120,7 @@ export default function ProjectsPage() {
           <div className="max-w-[1200px] mx-auto space-y-12">
             {loading ? (
               <div className="p-8 text-center font-mono text-sm" style={{ color: 'var(--text-tertiary)' }}>
-                Loading projects...
+                {t('common.loading', 'Loading projects...')}
               </div>
             ) : (
               projects.map((project, idx) => (
@@ -121,7 +143,7 @@ export default function ProjectsPage() {
                         {project.year || '2024'}
                       </span>
                       <span className="font-mono text-[12px] font-medium" style={{ color: 'var(--text-secondary)' }}>
-                        {project.role || 'Software Developer'}
+                        {l(project, 'role') || 'Software Developer'}
                       </span>
                     </div>
 
@@ -149,7 +171,7 @@ export default function ProjectsPage() {
                             className="inline-flex items-center gap-1.5 font-mono text-[11px] px-2.5 py-1 rounded border transition-colors hover:border-[var(--accent)] hover:text-[var(--text-primary)]"
                             style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}
                           >
-                            <span>Visit Project</span>
+                            <span>{locale === 'id' ? 'Buka Proyek' : 'Visit Project'}</span>
                             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/></svg>
                           </a>
                         )}
@@ -160,10 +182,10 @@ export default function ProjectsPage() {
                   {/* Title & Overview */}
                   <div className="mb-8">
                     <h2 className="text-[24px] md:text-[30px] font-semibold tracking-tight mb-3" style={{ color: 'var(--text-primary)' }}>
-                      {project.title}
+                      {l(project, 'title')}
                     </h2>
                     <p className="text-[15px] md:text-[16px] leading-relaxed max-w-[960px]" style={{ color: 'var(--text-secondary)' }}>
-                      {project.description}
+                      {l(project, 'description')}
                     </p>
                   </div>
 
@@ -173,30 +195,30 @@ export default function ProjectsPage() {
                     {/* Problem */}
                     <div className="rounded-xl p-5 md:p-6 border" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-subtle)' }}>
                       <div className="font-mono text-[11px] uppercase tracking-wider font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
-                        The Operational Problem
+                        {locale === 'id' ? 'Masalah Operasional' : 'The Operational Problem'}
                       </div>
                       <p className="text-[13.5px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-                        {project.problem || 'Manual workflows resulting in delays and lack of real-time visibility.'}
+                        {l(project, 'problem') || 'Manual workflows resulting in delays and lack of real-time visibility.'}
                       </p>
                     </div>
 
                     {/* Solution */}
                     <div className="rounded-xl p-5 md:p-6 border" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-subtle)' }}>
                       <div className="font-mono text-[11px] uppercase tracking-wider font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
-                        Technical Solution
+                        {locale === 'id' ? 'Solusi Teknis' : 'Technical Solution'}
                       </div>
                       <p className="text-[13.5px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-                        {project.solution || 'Modular application architecture with real-time state synchronization.'}
+                        {l(project, 'solution') || 'Modular application architecture with real-time state synchronization.'}
                       </p>
                     </div>
 
                     {/* Impact */}
                     <div className="rounded-xl p-5 md:p-6 border" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-subtle)' }}>
                       <div className="font-mono text-[11px] uppercase tracking-wider font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
-                        Verified Impact & Metrics
+                        {locale === 'id' ? 'Dampak & Metrik Terverifikasi' : 'Verified Impact & Metrics'}
                       </div>
                       <p className="text-[13.5px] leading-relaxed font-medium" style={{ color: 'var(--text-primary)' }}>
-                        {project.impact || 'Proven user adoption, performance, and operational efficiency gains.'}
+                        {l(project, 'impact') || 'Proven user adoption, performance, and operational efficiency gains.'}
                       </p>
                     </div>
 
@@ -221,7 +243,7 @@ export default function ProjectsPage() {
                     </div>
 
                     <div className="font-mono text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                      {project.year ? `Completed: ${project.year}` : 'Verified Project'}
+                      {project.year ? `${locale === 'id' ? 'Selesai' : 'Completed'}: ${project.year}` : (locale === 'id' ? 'Proyek Terverifikasi' : 'Verified Project')}
                     </div>
                   </div>
                 </article>
@@ -234,10 +256,12 @@ export default function ProjectsPage() {
         <section className="px-6 md:px-8 py-16 text-center border-t" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}>
           <div className="max-w-[600px] mx-auto">
             <h2 className="text-[26px] md:text-[32px] font-medium tracking-tight mb-3" style={{ color: 'var(--text-primary)' }}>
-              Looking for a Production-Proven Junior Developer?
+              {locale === 'id' ? 'Mencari Software Engineer Junior yang Teruji?' : 'Looking for a Production-Proven Junior Developer?'}
             </h2>
             <p className="text-[15px] leading-relaxed mb-6" style={{ color: 'var(--text-secondary)' }}>
-              I am open to full-time junior mobile, frontend, and backend engineering positions. Let&apos;s build software that makes a difference.
+              {locale === 'id'
+                ? 'Saya terbuka untuk posisi penuh waktu junior mobile, frontend, dan backend. Mari membangun perangkat lunak yang bermakna.'
+                : "I am open to full-time junior mobile, frontend, and backend engineering positions. Let's build software that makes a difference."}
             </p>
             <div className="flex flex-wrap items-center justify-center gap-3">
               <Link
@@ -245,14 +269,14 @@ export default function ProjectsPage() {
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-mono text-sm font-medium shadow-sm hover:opacity-90 transition-all"
                 style={{ background: 'var(--accent)', color: 'var(--accent-contrast, #ffffff)' }}
               >
-                Get in Touch
+                {t('common.contact_me', 'Get in Touch')}
               </Link>
               <Link
-                href="/#experience"
+                href="/experience"
                 className="inline-flex items-center gap-2 px-5 py-3 rounded-lg font-mono text-sm font-medium border transition-all hover:bg-[var(--bg-card)]"
                 style={{ borderColor: 'var(--border-color)', color: 'var(--text-primary)' }}
               >
-                View Work Experience
+                {t('common.work_experience', 'View Work Experience')}
               </Link>
             </div>
           </div>

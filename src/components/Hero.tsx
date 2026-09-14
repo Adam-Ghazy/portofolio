@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useLanguage } from './I18nProvider';
 
 export default function Hero({
   section,
@@ -9,18 +10,21 @@ export default function Hero({
 }: {
   section?: any;
   meta?: string;
-  stats?: Array<{ value: string; label: string }>;
+  stats?: Array<{ value: string; label: string; label_id?: string }>;
 }) {
+  const { t, l } = useLanguage();
   const photoUrl = section?.image_url || '/uploads/profile_hero.jpg';
 
   const defaultStats = [
-    { value: '1+ yr', label: 'Hands-on Experience' },
-    { value: '3+', label: 'Production Systems' },
-    { value: '300+', label: 'Active Users Served' },
-    { value: '2', label: 'Play Store Published' },
+    { value: '1+ yr', label: t('common.years_experience', 'Hands-on Experience') },
+    { value: '3+', label: t('common.production_systems', 'Production Systems') },
+    { value: '300+', label: t('common.active_users', 'Active Users Served') },
+    { value: '2', label: t('common.playstore_apps', 'Play Store Published') },
   ];
 
-  const displayStats = stats && stats.length > 0 ? stats : defaultStats;
+  const displayStats = stats && stats.length > 0
+    ? stats.map(s => ({ value: s.value, label: l(s, 'label') }))
+    : defaultStats;
 
   return (
     <section className="min-h-screen flex flex-col justify-center pb-16 md:pb-20 pt-28 px-6 md:px-8 relative overflow-hidden" style={{ background: 'var(--bg-primary)' }}>
@@ -32,7 +36,7 @@ export default function Hero({
             
             {/* Status & Intro badge */}
             <div className="flex flex-wrap items-center gap-2 mb-4 animate-fade-in-up" style={{ color: 'var(--text-tertiary)' }}>
-              <span className="font-mono text-[11px] tracking-wider uppercase">01 // Junior Software Developer</span>
+              <span className="font-mono text-[11px] tracking-wider uppercase">{t('sections.hero_badge', '01 // Junior Software Developer')}</span>
               <span className="font-mono text-[11px] tracking-wider hidden sm:inline">/ Madiun, Indonesia</span>
             </div>
 
@@ -41,7 +45,7 @@ export default function Hero({
               className="text-[34px] sm:text-[44px] md:text-[52px] lg:text-[56px] font-semibold leading-[1.08] tracking-tight mb-3 animate-fade-in-up delay-100"
               style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}
             >
-              {section?.title || 'Adam Ghazy Al Falah'}
+              {l(section, 'title') || 'Adam Ghazy Al Falah'}
             </h1>
 
             {/* Professional Title & Highlights */}
@@ -71,7 +75,7 @@ export default function Hero({
               className="text-[15px] sm:text-[16px] md:text-[17px] leading-relaxed max-w-[560px] mb-8 animate-fade-in-up delay-200"
               style={{ color: 'var(--text-secondary)' }}
             >
-              {section?.subtitle ||
+              {l(section, 'subtitle') ||
                 'Building practical digital solutions that turn real-world problems into scalable, reliable applications across mobile, frontend, and backend stacks.'}
             </p>
 
@@ -82,7 +86,7 @@ export default function Hero({
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-mono text-sm font-medium transition-all duration-200 hover:opacity-90 shadow-sm"
                 style={{ background: 'var(--accent)', color: 'var(--accent-contrast, #ffffff)' }}
               >
-                View Projects
+                {t('common.view_projects', 'View Projects')}
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
               </Link>
               <a
@@ -90,14 +94,14 @@ export default function Hero({
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-mono text-sm font-medium border transition-all duration-200 hover:bg-[var(--bg-secondary)]"
                 style={{ borderColor: 'var(--border-color)', color: 'var(--text-primary)' }}
               >
-                Work Experience
+                {t('common.work_experience', 'Work Experience')}
               </a>
               <Link
                 href="/contact"
                 className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg font-mono text-sm transition-all duration-200 hover:text-[var(--accent)]"
                 style={{ color: 'var(--text-secondary)' }}
               >
-                Contact Me
+                {t('common.contact_me', 'Contact Me')}
               </Link>
             </div>
 
@@ -138,7 +142,7 @@ export default function Hero({
                   {photoUrl ? (
                     <img
                       src={photoUrl}
-                      alt={section?.title || 'Adam Ghazy Al Falah'}
+                      alt={l(section, 'title') || 'Adam Ghazy Al Falah'}
                       className="w-full h-full object-cover object-top transition-transform duration-500 hover:scale-105"
                       onError={(e) => {
                         (e.target as HTMLElement).style.display = 'none';

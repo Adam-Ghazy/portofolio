@@ -1,11 +1,14 @@
 'use client';
 
+import { useLanguage } from './I18nProvider';
+
 export default function StatusBar({ settings }: { settings: any }) {
+  const { l } = useLanguage();
   const currentYear = new Date().getFullYear();
   const defaultStatusRight = `terms & service · © ${currentYear}`;
   const statusRight =
-    settings?.status_right && settings.status_right !== 'Digital Automation Studio'
-      ? settings.status_right
+    l(settings, 'status_right') && settings?.status_right !== 'Digital Automation Studio'
+      ? l(settings, 'status_right')
       : defaultStatusRight;
 
   return (
@@ -20,8 +23,8 @@ export default function StatusBar({ settings }: { settings: any }) {
         letterSpacing: '0.03em'
       }}
     >
-      <span>{settings?.status_left || 'ADAM GHAZY // JUNIOR DEVELOPER'}</span>
-      <span>{statusRight}</span>
+      <span>{l(settings, 'status_left') || 'ADAM GHAZY // JUNIOR DEVELOPER'}</span>
+      <span suppressHydrationWarning>{statusRight}</span>
     </div>
   );
 }

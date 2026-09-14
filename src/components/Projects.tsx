@@ -1,17 +1,24 @@
 'use client';
 
 import Link from 'next/link';
+import { useLanguage } from './I18nProvider';
 
 interface ProjectItem {
   id?: number;
   title: string;
+  title_id?: string;
   description: string;
+  description_id?: string;
   problem?: string;
+  problem_id?: string;
   solution?: string;
+  solution_id?: string;
   impact?: string;
+  impact_id?: string;
   image_url?: string;
   year?: string;
   role?: string;
+  role_id?: string;
   tags?: string;
   link?: string;
 }
@@ -20,24 +27,36 @@ const DEFAULT_PROJECTS: ProjectItem[] = [
   {
     id: 1,
     title: 'FoodLAB - Campus Food Ordering Platform',
+    title_id: 'FoodLAB - Platform Pemesanan Makanan Kampus',
     role: 'Mobile App Developer (Flutter)',
+    role_id: 'Pengembang Aplikasi Mobile (Flutter)',
     year: '2023 - 2025',
     description: 'A production campus food ordering mobile platform engineered to eliminate physical canteen queues and streamline vendor order management at PENS.',
+    description_id: 'Platform pemesanan makanan kantin kampus yang dibangun untuk mengeliminasi antrean panjang dan mempermudah pengelolaan pesanan stan penjual.',
     problem: 'The campus canteen experienced daily overcrowding, with more than 200 students queuing for meals during lunch peaks.',
+    problem_id: 'Kantin kampus mengalami penumpukan antrean parah dengan lebih dari 200 mahasiswa mengantre setiap hari.',
     solution: 'Engineered and launched FoodLAB, a responsive Flutter mobile platform with real-time push notifications connecting students directly with 10+ food vendors.',
+    solution_id: 'Membangun dan merilis FoodLAB, platform mobile yang menghubungkan mahasiswa langsung dengan 10+ penjual makanan dengan status pesanan real-time.',
     impact: 'Secured IDR 20M university funding · 300+ active users · 60% reduction in average canteen waiting time · 10+ campus vendors · Published on Google Play Store with 4.5+ rating.',
+    impact_id: 'Mendapatkan pendanaan universitas Rp20 Juta · 300+ pengguna aktif · Penurunan 60% waktu tunggu rata-rata · 10+ tenant terintegrasi · Rilis di Google Play Store rating 4.5+.',
     tags: 'Flutter, Dart, Provider, REST API, Push Notifications, Agile Scrum',
     link: 'https://play.google.com',
   },
   {
     id: 2,
     title: 'Real-Time Queue Management System',
+    title_id: 'Sistem Manajemen Antrean Real-Time',
     role: 'Mobile App Developer (Flutter)',
+    role_id: 'Pengembang Aplikasi Mobile (Flutter)',
     year: '2024',
     description: 'A real-time public service queue management mobile application deployed at the Gebang Putih Urban Village Office (Surabaya).',
+    description_id: 'Sistem manajemen antrean digital real-time yang diterapkan untuk pelayanan publik di kantor administrasi kelurahan.',
     problem: 'Citizen administration relied heavily on manual physical tickets, causing crowded waiting halls and average service times of 15 minutes.',
+    problem_id: 'Proses antrean pelayanan publik sebelumnya sangat bergantung pada kertas manual dan menimbulkan waktu tunggu yang lama.',
     solution: 'Built and deployed a real-time queue management system powered by WebSockets and REST APIs, enabling citizens to monitor line progress and counter availability live.',
+    solution_id: 'Mengembangkan dan merilis sistem antrean mobile real-time yang mendukung banyak loket pelayanan dengan pelacakan antrean langsung.',
     impact: 'Reduced manual administrative processes by 40% · Cut average service time from 15 min to 7 min · Enabled multi-counter management · Published on Google Play Store.',
+    impact_id: 'Mengurangi proses manual sebesar 40% · Mempersingkat waktu layanan rata-rata dari 15 menit menjadi 7 menit · Mendukung multi-loket · Rilis di Google Play Store untuk layanan publik.',
     tags: 'Flutter, Dart, REST API, WebSocket, Real-Time Sync',
     link: 'https://play.google.com',
   },
@@ -50,6 +69,7 @@ const isPlayStoreLink = (url?: string) => {
 };
 
 export default function Projects({ section, projects = [] }: { section?: any; projects?: ProjectItem[] }) {
+  const { t, l, locale } = useLanguage();
   const allProjects = projects.length > 0 ? projects : DEFAULT_PROJECTS;
   const displayProjects = allProjects.slice(0, 3);
   const totalProjects = allProjects.length;
@@ -63,17 +83,17 @@ export default function Projects({ section, projects = [] }: { section?: any; pr
           <div className="max-w-[640px]">
             <div className="flex items-center gap-2 mb-3">
               <span className="font-mono text-[11px] tracking-wider uppercase" style={{ color: 'var(--text-tertiary)' }}>
-                05 // projects
+                {t('sections.projects_badge', '05 // projects')}
               </span>
               <span className="text-xs px-2 py-0.5 rounded font-mono border" style={{ borderColor: 'var(--border-color)', color: 'var(--text-secondary)', background: 'var(--bg-card)' }}>
                 Web & Mobile Applications
               </span>
             </div>
             <h2 className="text-[26px] md:text-[34px] font-medium tracking-tight mb-3" style={{ color: 'var(--text-primary)' }}>
-              {section?.title || 'Projects & Case Studies'}
+              {l(section, 'title') || (locale === 'id' ? 'Proyek & Studi Kasus' : 'Projects & Case Studies')}
             </h2>
             <p className="text-sm md:text-base leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-              {section?.subtitle || 'A collection of web and mobile applications developed across various platforms, from production systems to open-source solutions.'}
+              {l(section, 'subtitle') || (locale === 'id' ? 'Koleksi aplikasi web dan mobile yang dikembangkan di berbagai platform, mulai dari sistem produksi hingga solusi terbuka.' : 'A collection of web and mobile applications developed across various platforms, from production systems to open-source solutions.')}
             </p>
           </div>
 
@@ -82,7 +102,7 @@ export default function Projects({ section, projects = [] }: { section?: any; pr
             className="inline-flex items-center gap-2 font-mono text-xs font-medium px-4 py-2 rounded-lg border transition-all hover:bg-[var(--bg-secondary)] self-start md:self-end"
             style={{ borderColor: 'var(--border-color)', color: 'var(--text-primary)' }}
           >
-            View All Projects ({totalProjects})
+            {locale === 'id' ? `Lihat Semua Proyek (${totalProjects})` : `View All Projects (${totalProjects})`}
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
           </Link>
         </div>
@@ -112,7 +132,7 @@ export default function Projects({ section, projects = [] }: { section?: any; pr
                     {project.year || '2024 - 2025'}
                   </span>
                   <span className="font-mono text-[12px] font-medium" style={{ color: 'var(--text-secondary)' }}>
-                    {project.role || 'Software Developer'}
+                    {l(project, 'role') || 'Software Developer'}
                   </span>
                 </div>
 
@@ -140,7 +160,7 @@ export default function Projects({ section, projects = [] }: { section?: any; pr
                         className="inline-flex items-center gap-1.5 font-mono text-[11px] px-2.5 py-1 rounded border transition-colors hover:border-[var(--accent)] hover:text-[var(--text-primary)]"
                         style={{ borderColor: 'var(--border-color)', color: 'var(--text-secondary)', background: 'var(--bg-secondary)' }}
                       >
-                        <span>Visit Project</span>
+                        <span>{locale === 'id' ? 'Buka Proyek' : 'Visit Project'}</span>
                         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/></svg>
                       </a>
                     )}
@@ -151,10 +171,10 @@ export default function Projects({ section, projects = [] }: { section?: any; pr
               {/* Title & General Description */}
               <div className="mb-6">
                 <h3 className="text-[22px] md:text-[26px] font-semibold tracking-tight mb-2.5" style={{ color: 'var(--text-primary)' }}>
-                  {project.title}
+                  {l(project, 'title')}
                 </h3>
                 <p className="text-[15px] leading-relaxed max-w-[900px]" style={{ color: 'var(--text-secondary)' }}>
-                  {project.description}
+                  {l(project, 'description')}
                 </p>
               </div>
 
@@ -169,10 +189,10 @@ export default function Projects({ section, projects = [] }: { section?: any; pr
                   }}
                 >
                   <div className="font-mono text-[11px] uppercase tracking-wider font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
-                    Problem
+                    {t('projects.problem_heading', 'Problem')}
                   </div>
                   <p className="text-[13px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-                    {project.problem || 'Specific operational challenge or user need addressed.'}
+                    {l(project, 'problem') || 'Specific operational challenge or user need addressed.'}
                   </p>
                 </div>
 
@@ -185,10 +205,10 @@ export default function Projects({ section, projects = [] }: { section?: any; pr
                   }}
                 >
                   <div className="font-mono text-[11px] uppercase tracking-wider font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
-                    Solution
+                    {t('projects.solution_heading', 'Solution')}
                   </div>
                   <p className="text-[13px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-                    {project.solution || 'Engineered solution and technical implementation details.'}
+                    {l(project, 'solution') || 'Engineered solution and technical implementation details.'}
                   </p>
                 </div>
 
@@ -201,10 +221,10 @@ export default function Projects({ section, projects = [] }: { section?: any; pr
                   }}
                 >
                   <div className="font-mono text-[11px] uppercase tracking-wider font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
-                    Impact & Results
+                    {t('projects.impact_heading', 'Impact & Results')}
                   </div>
                   <p className="text-[13px] leading-relaxed font-medium" style={{ color: 'var(--text-primary)' }}>
-                    {project.impact || 'Verified production metrics, adoption, and performance.'}
+                    {l(project, 'impact') || 'Verified production metrics, adoption, and performance.'}
                   </p>
                 </div>
               </div>
@@ -228,7 +248,7 @@ export default function Projects({ section, projects = [] }: { section?: any; pr
                 </div>
 
                 <div className="font-mono text-[11px]" style={{ color: 'var(--text-tertiary)' }}>
-                  {project.year ? `Completed: ${project.year}` : 'Verified Project'}
+                  {project.year ? `${locale === 'id' ? 'Selesai' : 'Completed'}: ${project.year}` : (locale === 'id' ? 'Proyek Terverifikasi' : 'Verified Project')}
                 </div>
               </div>
             </article>
@@ -243,7 +263,7 @@ export default function Projects({ section, projects = [] }: { section?: any; pr
               className="inline-flex items-center gap-2 font-mono text-xs font-medium px-6 py-3 rounded-lg border transition-all hover:bg-[var(--bg-secondary)] shadow-sm"
               style={{ borderColor: 'var(--border-color)', color: 'var(--text-primary)', background: 'var(--bg-card)' }}
             >
-              View All Projects ({totalProjects})
+              {locale === 'id' ? `Lihat Semua Proyek (${totalProjects})` : `View All Projects (${totalProjects})`}
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             </Link>
           </div>
