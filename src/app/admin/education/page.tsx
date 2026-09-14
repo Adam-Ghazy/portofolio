@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Pencil, Trash2, GraduationCap, Award, Plus, Calendar, MapPin } from 'lucide-react'
+import { Pencil, Trash2, GraduationCap, Award, Calendar, MapPin, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   AlertDialog,
@@ -24,20 +24,24 @@ import { Education, Certification } from '@/types/admin'
 
 const emptyEduForm = {
   degree: '',
+  degree_id: '',
   institution: '',
   location: '',
   period: '',
   gpa: '',
   description: '',
+  description_id: '',
   sort_order: 0,
 }
 
 const emptyCertForm = {
   title: '',
+  title_id: '',
   issuer: '',
   location: '',
   issue_date: '',
   credential_info: '',
+  credential_info_id: '',
   sort_order: 0,
 }
 
@@ -50,6 +54,8 @@ export default function EducationAdminPage() {
   const [editingEdu, setEditingEdu] = useState<Education | null>(null)
   const [eduFormData, setEduFormData] = useState(emptyEduForm)
   const [deleteEduId, setDeleteEduId] = useState<number | null>(null)
+  const [eduLangTab, setEduLangTab] = useState<'id' | 'en'>('id')
+  const [isTranslatingEdu, setIsTranslatingEdu] = useState(false)
 
   // Certifications state
   const [certList, setCertList] = useState<Certification[]>([])
@@ -57,6 +63,8 @@ export default function EducationAdminPage() {
   const [editingCert, setEditingCert] = useState<Certification | null>(null)
   const [certFormData, setCertFormData] = useState(emptyCertForm)
   const [deleteCertId, setDeleteCertId] = useState<number | null>(null)
+  const [certLangTab, setCertLangTab] = useState<'id' | 'en'>('id')
+  const [isTranslatingCert, setIsTranslatingCert] = useState(false)
 
   useEffect(() => {
     fetchEducation()
@@ -91,6 +99,72 @@ export default function EducationAdminPage() {
     }
   }
 
+  async function handleAutoTranslateEdu() {
+    setIsTranslatingEdu(true)
+    try {
+      const translateField = async (text?: string) => {
+        if (!text || text.trim() === '') return ''
+        const res = await fetch('/api/translate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text, from: 'id', to: 'en' }),
+        })
+        if (!res.ok) return text
+        const data = await res.json()
+        return data.translatedText || text
+      }
+
+      const [enDegree, enDesc] = await Promise.all([
+        eduFormData.degree_id ? translateField(eduFormData.degree_id) : Promise.resolve(eduFormData.degree),
+        eduFormData.description_id ? translateField(eduFormData.description_id) : Promise.resolve(eduFormData.description),
+      ])
+
+      setEduFormData((prev) => ({
+        ...prev,
+        degree: enDegree || prev.degree,
+        description: enDesc || prev.description,
+      }))
+      toast.success('Successfully translated Indonesian to English')
+    } catch {
+      toast.error('Failed to auto-translate')
+    } finally {
+      setIsTranslatingEdu(false)
+    }
+  }
+
+  async function handleAutoTranslateCert() {
+    setIsTranslatingCert(true)
+    try {
+      const translateField = async (text?: string) => {
+        if (!text || text.trim() === '') return ''
+        const res = await fetch('/api/translate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text, from: 'id', to: 'en' }),
+        })
+        if (!res.ok) return text
+        const data = await res.json()
+        return data.translatedText || text
+      }
+
+      const [enTitle, enInfo] = await Promise.all([
+        certFormData.title_id ? translateField(certFormData.title_id) : Promise.resolve(certFormData.title),
+        certFormData.credential_info_id ? translateField(certFormData.credential_info_id) : Promise.resolve(certFormData.credential_info),
+      ])
+
+      setCertFormData((prev) => ({
+        ...prev,
+        title: enTitle || prev.title,
+        credential_info: enInfo || prev.credential_info,
+      }))
+      toast.success('Successfully translated Indonesian to English')
+    } catch {
+      toast.error('Failed to auto-translate')
+    } finally {
+      setIsTranslatingCert(false)
+    }
+  }
+
   // Handle Education Submit
   async function handleEduSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -99,6 +173,10 @@ export default function EducationAdminPage() {
       const method = editingEdu ? 'PUT' : 'POST'
       const body = {
         ...eduFormData,
+        degree: eduFormData.degree || eduFormData.degree_id,
+        degree_id: eduFormData.degree_id || eduFormData.degree,
+        description: eduFormData.description || eduFormData.description_id,
+        description_id: eduFormData.description_id || eduFormData.description,
         sort_order: Number(eduFormData.sort_order) || 0,
         ...(editingEdu ? { id: editingEdu.id, is_active: editingEdu.is_active ?? 1 } : { is_active: 1 }),
       }
@@ -137,11 +215,13 @@ export default function EducationAdminPage() {
     setEditingEdu(item)
     setEduFormData({
       degree: item.degree,
+      degree_id: item.degree_id ?? '',
       institution: item.institution,
       location: item.location || '',
       period: item.period || '',
       gpa: item.gpa || '',
       description: item.description || '',
+      description_id: item.description_id || '',
       sort_order: item.sort_order || 0,
     })
   }
@@ -159,6 +239,10 @@ export default function EducationAdminPage() {
       const method = editingCert ? 'PUT' : 'POST'
       const body = {
         ...certFormData,
+        title: certFormData.title || certFormData.title_id,
+        title_id: certFormData.title_id || certFormData.title,
+        credential_info: certFormData.credential_info || certFormData.credential_info_id,
+        credential_info_id: certFormData.credential_info_id || certFormData.credential_info,
         sort_order: Number(certFormData.sort_order) || 0,
         ...(editingCert ? { id: editingCert.id, is_active: editingCert.is_active ?? 1 } : { is_active: 1 }),
       }
@@ -197,10 +281,12 @@ export default function EducationAdminPage() {
     setEditingCert(item)
     setCertFormData({
       title: item.title,
+      title_id: item.title_id ?? '',
       issuer: item.issuer,
       location: item.location || '',
       issue_date: item.issue_date || '',
       credential_info: item.credential_info || '',
+      credential_info_id: item.credential_info_id || '',
       sort_order: item.sort_order || 0,
     })
   }
@@ -217,7 +303,7 @@ export default function EducationAdminPage() {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Education & Certifications</h1>
             <p className="text-muted-foreground">
-              Manage academic degrees, universities, GPAs, and national professional certifications
+              Manage academic degrees, universities, GPAs, and national professional certifications with bilingual support
             </p>
           </div>
         </div>
@@ -236,30 +322,111 @@ export default function EducationAdminPage() {
 
           {/* ======================= EDUCATION TAB ======================= */}
           <TabsContent value="education" className="space-y-6">
-            <div className="grid gap-6 lg:grid-cols-[480px_1fr]">
+            <div className="grid gap-6 lg:grid-cols-[500px_1fr]">
               {/* Education Form */}
               <Card className="h-fit">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <GraduationCap className="h-5 w-5 text-primary" />
-                    {editingEdu ? 'Edit Education' : 'Add Education'}
-                  </CardTitle>
-                  <CardDescription>
-                    {editingEdu ? 'Update degree and academic institution details' : 'Add a degree or educational qualification'}
-                  </CardDescription>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="flex items-center gap-2">
+                        <GraduationCap className="h-5 w-5 text-primary" />
+                        {editingEdu ? 'Edit Education' : 'Add Education'}
+                      </CardTitle>
+                      <CardDescription>
+                        {editingEdu ? 'Update degree and academic institution details' : 'Add a degree or educational qualification'}
+                      </CardDescription>
+                    </div>
+
+                    {/* Language Switch Tabs */}
+                    <div className="flex items-center rounded-lg border p-0.5 bg-muted/40 font-mono text-xs">
+                      <button
+                        type="button"
+                        onClick={() => setEduLangTab('id')}
+                        className={`px-2.5 py-1 rounded transition-all ${
+                          eduLangTab === 'id' ? 'bg-primary text-primary-foreground font-semibold shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                        }`}
+                      >
+                        ID
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setEduLangTab('en')}
+                        className={`px-2.5 py-1 rounded transition-all ${
+                          eduLangTab === 'en' ? 'bg-primary text-primary-foreground font-semibold shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                        }`}
+                      >
+                        EN
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Auto-Translate Button */}
+                  <div className="pt-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleAutoTranslateEdu}
+                      disabled={isTranslatingEdu || (!eduFormData.degree_id && !eduFormData.description_id)}
+                      className="w-full text-xs font-mono gap-1.5 h-8"
+                    >
+                      <Sparkles className="h-3.5 w-3.5" />
+                      {isTranslatingEdu ? 'Translating ID to EN...' : 'Auto-Translate ID to EN'}
+                    </Button>
+                  </div>
                 </CardHeader>
+
                 <CardContent>
                   <form onSubmit={handleEduSubmit} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="edu-degree">Degree / Major *</Label>
-                      <Input
-                        id="edu-degree"
-                        placeholder="e.g. Bachelor of Applied Informatics Engineering"
-                        value={eduFormData.degree}
-                        onChange={(e) => setEduFormData({ ...eduFormData, degree: e.target.value })}
-                        required
-                      />
-                    </div>
+                    {eduLangTab === 'id' ? (
+                      <>
+                        <div className="space-y-2">
+                          <Label htmlFor="edu-degree_id">Gelar / Jurusan (ID) *</Label>
+                          <Input
+                            id="edu-degree_id"
+                            placeholder="contoh: Sarjana Terapan Teknik Informatika"
+                            value={eduFormData.degree_id}
+                            onChange={(e) => setEduFormData({ ...eduFormData, degree_id: e.target.value })}
+                            required={!eduFormData.degree}
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="edu-description_id">Rincian Kurikulum / Peminatan (ID)</Label>
+                          <Textarea
+                            id="edu-description_id"
+                            placeholder="Jelaskan bidang kurikulum, mata kuliah utama, fokus rekayasa..."
+                            value={eduFormData.description_id}
+                            onChange={(e) => setEduFormData({ ...eduFormData, description_id: e.target.value })}
+                            rows={3}
+                          />
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="space-y-2">
+                          <Label htmlFor="edu-degree">Degree / Major (EN) *</Label>
+                          <Input
+                            id="edu-degree"
+                            placeholder="e.g. Bachelor of Applied Informatics Engineering"
+                            value={eduFormData.degree}
+                            onChange={(e) => setEduFormData({ ...eduFormData, degree: e.target.value })}
+                            required={!eduFormData.degree_id}
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="edu-description">Curriculum / Specialization Details (EN)</Label>
+                          <Textarea
+                            id="edu-description"
+                            placeholder="Describe key curriculum areas, coursework, thesis, or engineering focus..."
+                            value={eduFormData.description}
+                            onChange={(e) => setEduFormData({ ...eduFormData, description: e.target.value })}
+                            rows={3}
+                          />
+                        </div>
+                      </>
+                    )}
 
                     <div className="space-y-2">
                       <Label htmlFor="edu-institution">Institution / University *</Label>
@@ -315,45 +482,6 @@ export default function EducationAdminPage() {
                       </div>
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="edu-description">Overview / Specialization Details</Label>
-                      <Textarea
-                        id="edu-description"
-                        placeholder="Describe key curriculum areas, coursework, thesis, or engineering focus..."
-                        value={eduFormData.description}
-                        onChange={(e) => setEduFormData({ ...eduFormData, description: e.target.value })}
-                        rows={3}
-                      />
-                    </div>
-
-                    {/* Live Preview */}
-                    {(eduFormData.degree || eduFormData.institution) && (
-                      <div className="p-3.5 rounded-xl border bg-muted/20 space-y-1.5">
-                        <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
-                          Card Preview:
-                        </span>
-                        <div className="p-3 rounded-lg border bg-card space-y-1">
-                          <div className="flex justify-between items-start gap-2">
-                            <h4 className="font-semibold text-sm">{eduFormData.degree || 'Degree Title'}</h4>
-                            {eduFormData.gpa && (
-                              <span className="font-mono text-[10px] px-1.5 py-0.5 rounded border bg-muted font-medium">
-                                GPA: {eduFormData.gpa}
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-xs text-muted-foreground">{eduFormData.institution || 'Institution Name'}</p>
-                          <div className="flex items-center gap-1.5 text-[11px] font-mono text-muted-foreground pt-1">
-                            <span>{eduFormData.location || 'Location'}</span>
-                            <span>/</span>
-                            <span>{eduFormData.period || 'Period'}</span>
-                          </div>
-                          {eduFormData.description && (
-                            <p className="text-xs text-muted-foreground pt-1 line-clamp-2">{eduFormData.description}</p>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
                     <div className="flex gap-2 pt-2">
                       <Button type="submit" className="flex-1">
                         {editingEdu ? 'Update Education' : 'Add Education Record'}
@@ -390,6 +518,9 @@ export default function EducationAdminPage() {
                             <div className="space-y-1 min-w-0">
                               <div className="flex flex-wrap items-center gap-2">
                                 <h3 className="font-semibold text-base">{edu.degree}</h3>
+                                {edu.degree_id && edu.degree_id !== edu.degree && (
+                                  <span className="text-xs text-muted-foreground">({edu.degree_id})</span>
+                                )}
                                 {edu.gpa && (
                                   <span className="font-mono text-xs px-2 py-0.5 rounded border bg-muted/60 font-medium">
                                     GPA: {edu.gpa}
@@ -411,9 +542,6 @@ export default function EducationAdminPage() {
                                     {edu.period}
                                   </span>
                                 )}
-                                <span className="text-[10px] text-muted-foreground/60">
-                                  (Order: {edu.sort_order ?? 0})
-                                </span>
                               </div>
                             </div>
 
@@ -448,30 +576,111 @@ export default function EducationAdminPage() {
 
           {/* ======================= CERTIFICATIONS TAB ======================= */}
           <TabsContent value="certifications" className="space-y-6">
-            <div className="grid gap-6 lg:grid-cols-[480px_1fr]">
+            <div className="grid gap-6 lg:grid-cols-[500px_1fr]">
               {/* Certification Form */}
               <Card className="h-fit">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Award className="h-5 w-5 text-primary" />
-                    {editingCert ? 'Edit Certification' : 'Add Certification'}
-                  </CardTitle>
-                  <CardDescription>
-                    {editingCert ? 'Update certification and credential details' : 'Add a professional or national certification'}
-                  </CardDescription>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="flex items-center gap-2">
+                        <Award className="h-5 w-5 text-primary" />
+                        {editingCert ? 'Edit Certification' : 'Add Certification'}
+                      </CardTitle>
+                      <CardDescription>
+                        {editingCert ? 'Update certification and credential details' : 'Add a professional or national certification'}
+                      </CardDescription>
+                    </div>
+
+                    {/* Language Switch Tabs */}
+                    <div className="flex items-center rounded-lg border p-0.5 bg-muted/40 font-mono text-xs">
+                      <button
+                        type="button"
+                        onClick={() => setCertLangTab('id')}
+                        className={`px-2.5 py-1 rounded transition-all ${
+                          certLangTab === 'id' ? 'bg-primary text-primary-foreground font-semibold shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                        }`}
+                      >
+                        ID
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setCertLangTab('en')}
+                        className={`px-2.5 py-1 rounded transition-all ${
+                          certLangTab === 'en' ? 'bg-primary text-primary-foreground font-semibold shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                        }`}
+                      >
+                        EN
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Auto-Translate Button */}
+                  <div className="pt-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleAutoTranslateCert}
+                      disabled={isTranslatingCert || (!certFormData.title_id && !certFormData.credential_info_id)}
+                      className="w-full text-xs font-mono gap-1.5 h-8"
+                    >
+                      <Sparkles className="h-3.5 w-3.5" />
+                      {isTranslatingCert ? 'Translating ID to EN...' : 'Auto-Translate ID to EN'}
+                    </Button>
+                  </div>
                 </CardHeader>
+
                 <CardContent>
                   <form onSubmit={handleCertSubmit} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="cert-title">Certificate Title *</Label>
-                      <Input
-                        id="cert-title"
-                        placeholder="e.g. Junior Web Developer"
-                        value={certFormData.title}
-                        onChange={(e) => setCertFormData({ ...certFormData, title: e.target.value })}
-                        required
-                      />
-                    </div>
+                    {certLangTab === 'id' ? (
+                      <>
+                        <div className="space-y-2">
+                          <Label htmlFor="cert-title_id">Nama Sertifikasi (ID) *</Label>
+                          <Input
+                            id="cert-title_id"
+                            placeholder="contoh: Junior Web Developer"
+                            value={certFormData.title_id}
+                            onChange={(e) => setCertFormData({ ...certFormData, title_id: e.target.value })}
+                            required={!certFormData.title}
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="cert-info_id">Cakupan Kompetensi (ID)</Label>
+                          <Textarea
+                            id="cert-info_id"
+                            placeholder="contoh: Sertifikasi kompetensi dalam rekayasa web berbasis PHP, MySQL..."
+                            value={certFormData.credential_info_id}
+                            onChange={(e) => setCertFormData({ ...certFormData, credential_info_id: e.target.value })}
+                            rows={3}
+                          />
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="space-y-2">
+                          <Label htmlFor="cert-title">Certificate Title (EN) *</Label>
+                          <Input
+                            id="cert-title"
+                            placeholder="e.g. Junior Web Developer"
+                            value={certFormData.title}
+                            onChange={(e) => setCertFormData({ ...certFormData, title: e.target.value })}
+                            required={!certFormData.title_id}
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="cert-info">Coverage & Credential Info (EN)</Label>
+                          <Textarea
+                            id="cert-info"
+                            placeholder="e.g. Certified in PHP-based web development, relational database integration (MySQL)..."
+                            value={certFormData.credential_info}
+                            onChange={(e) => setCertFormData({ ...certFormData, credential_info: e.target.value })}
+                            rows={3}
+                          />
+                        </div>
+                      </>
+                    )}
 
                     <div className="space-y-2">
                       <Label htmlFor="cert-issuer">Issuing Organization *</Label>
@@ -516,43 +725,6 @@ export default function EducationAdminPage() {
                       />
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="cert-info">Coverage & Credential Info</Label>
-                      <Textarea
-                        id="cert-info"
-                        placeholder="e.g. Certified in PHP-based web development, relational database integration (MySQL), and frontend web fundamentals."
-                        value={certFormData.credential_info}
-                        onChange={(e) => setCertFormData({ ...certFormData, credential_info: e.target.value })}
-                        rows={3}
-                      />
-                    </div>
-
-                    {/* Live Preview */}
-                    {(certFormData.title || certFormData.issuer) && (
-                      <div className="p-3.5 rounded-xl border bg-muted/20 space-y-1.5">
-                        <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
-                          Card Preview:
-                        </span>
-                        <div className="p-3 rounded-lg border bg-card space-y-1">
-                          <div className="flex justify-between items-start gap-2">
-                            <h4 className="font-semibold text-sm">{certFormData.title || 'Certification Title'}</h4>
-                            <span className="font-mono text-[10px] px-1.5 py-0.5 rounded border bg-muted font-medium">
-                              {certFormData.issue_date || 'Date'}
-                            </span>
-                          </div>
-                          <p className="text-xs text-muted-foreground">{certFormData.issuer || 'Issuing Body'}</p>
-                          {certFormData.location && (
-                            <p className="text-[11px] font-mono text-muted-foreground">{certFormData.location}</p>
-                          )}
-                          {certFormData.credential_info && (
-                            <p className="text-xs text-muted-foreground pt-1 line-clamp-2 border-t mt-1">
-                              {certFormData.credential_info}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
                     <div className="flex gap-2 pt-2">
                       <Button type="submit" className="flex-1">
                         {editingCert ? 'Update Certification' : 'Add Certification'}
@@ -589,6 +761,9 @@ export default function EducationAdminPage() {
                             <div className="space-y-1 min-w-0">
                               <div className="flex flex-wrap items-center gap-2">
                                 <h3 className="font-semibold text-base">{cert.title}</h3>
+                                {cert.title_id && cert.title_id !== cert.title && (
+                                  <span className="text-xs text-muted-foreground">({cert.title_id})</span>
+                                )}
                                 {cert.issue_date && (
                                   <span className="font-mono text-xs px-2 py-0.5 rounded border bg-muted/60 font-medium">
                                     {cert.issue_date}
@@ -603,9 +778,6 @@ export default function EducationAdminPage() {
                                     {cert.location}
                                   </span>
                                 )}
-                                <span className="text-[10px] text-muted-foreground/60">
-                                  (Order: {cert.sort_order ?? 0})
-                                </span>
                               </div>
                             </div>
 

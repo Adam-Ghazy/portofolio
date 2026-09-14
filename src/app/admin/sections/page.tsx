@@ -19,21 +19,16 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
 
 interface Section {
   id: number
   slug: string
   title: string
+  title_id?: string
   subtitle?: string
+  subtitle_id?: string
   content?: string
+  content_id?: string
   image_url?: string
   sort_order: number
 }
@@ -41,8 +36,11 @@ interface Section {
 const emptyForm = {
   slug: '',
   title: '',
+  title_id: '',
   subtitle: '',
+  subtitle_id: '',
   content: '',
+  content_id: '',
   image_url: '',
 }
 
@@ -85,6 +83,8 @@ export default function SectionsPage() {
   const [deleteId, setDeleteId] = useState<number | null>(null)
   const [uploading, setUploading] = useState(false)
   const [formData, setFormData] = useState(emptyForm)
+  const [activeLangTab, setActiveLangTab] = useState<'id' | 'en'>('id')
+  const [isTranslating, setIsTranslating] = useState(false)
 
   useEffect(() => {
     fetchSections()
@@ -99,6 +99,41 @@ export default function SectionsPage() {
       toast.error('Failed to load sections')
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function handleAutoTranslateToEn() {
+    setIsTranslating(true)
+    try {
+      const translateField = async (text?: string) => {
+        if (!text || text.trim() === '') return ''
+        const res = await fetch('/api/translate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text, from: 'id', to: 'en' }),
+        })
+        if (!res.ok) return text
+        const data = await res.json()
+        return data.translatedText || text
+      }
+
+      const [enTitle, enSub, enContent] = await Promise.all([
+        formData.title_id ? translateField(formData.title_id) : Promise.resolve(formData.title),
+        formData.subtitle_id ? translateField(formData.subtitle_id) : Promise.resolve(formData.subtitle),
+        formData.content_id && formData.slug !== 'problem' ? translateField(formData.content_id) : Promise.resolve(formData.content),
+      ])
+
+      setFormData((prev) => ({
+        ...prev,
+        title: enTitle || prev.title,
+        subtitle: enSub || prev.subtitle,
+        content: enContent || prev.content,
+      }))
+      toast.success('Successfully translated Indonesian to English')
+    } catch {
+      toast.error('Failed to auto-translate')
+    } finally {
+      setIsTranslating(false)
     }
   }
 
@@ -136,9 +171,17 @@ export default function SectionsPage() {
     try {
       const url = editing ? `/api/sections/${editing.id}` : '/api/sections'
       const method = editing ? 'PUT' : 'POST'
-      const body = editing
-        ? { ...formData, sort_order: editing.sort_order, is_active: 1 }
-        : formData
+      const body = {
+        ...formData,
+        title: formData.title || formData.title_id,
+        title_id: formData.title_id || formData.title,
+        subtitle: formData.subtitle || formData.subtitle_id,
+        subtitle_id: formData.subtitle_id || formData.subtitle,
+        content: formData.content || formData.content_id,
+        content_id: formData.content_id || formData.content,
+        sort_order: editing ? editing.sort_order : 0,
+        is_active: 1,
+      }
 
       const res = await fetch(url, {
         method,
@@ -174,9 +217,12 @@ export default function SectionsPage() {
     setEditing(section)
     setFormData({
       slug: section.slug,
-      title: section.title,
+      title: section.title ?? '',
+      title_id: section.title_id ?? '',
       subtitle: section.subtitle ?? '',
+      subtitle_id: section.subtitle_id ?? '',
       content: section.content ?? '',
+      content_id: section.content_id ?? '',
       image_url: section.image_url ?? '',
     })
   }
@@ -193,7 +239,7 @@ export default function SectionsPage() {
       <div className="container mx-auto p-6 max-w-7xl">
         <div className="mb-6">
           <h1 className="text-3xl font-bold tracking-tight">Sections</h1>
-          <p className="text-muted-foreground">Manage and customize your portfolio landing page sections</p>
+          <p className="text-muted-foreground">Manage and customize your portfolio landing page sections with bilingual support</p>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-12">
@@ -201,10 +247,51 @@ export default function SectionsPage() {
           <div className="lg:col-span-5">
             <Card>
               <CardHeader>
-                <CardTitle>{editing ? `Edit: ${formData.slug || 'Section'}` : 'Add Section'}</CardTitle>
-                <CardDescription>
-                  {activeGuide ? activeGuide.desc : 'Configure section content, titles, and media'}
-                </CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>{editing ? `Edit: ${formData.slug || 'Section'}` : 'Add Section'}</CardTitle>
+                    <CardDescription>
+                      {activeGuide ? activeGuide.desc : 'Configure section content, titles, and media'}
+                    </CardDescription>
+                  </div>
+
+                  {/* Language Switch Tabs */}
+                  <div className="flex items-center rounded-lg border p-0.5 bg-muted/40 font-mono text-xs">
+                    <button
+                      type="button"
+                      onClick={() => setActiveLangTab('id')}
+                      className={`px-2.5 py-1 rounded transition-all ${
+                        activeLangTab === 'id' ? 'bg-primary text-primary-foreground font-semibold shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      ID
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveLangTab('en')}
+                      className={`px-2.5 py-1 rounded transition-all ${
+                        activeLangTab === 'en' ? 'bg-primary text-primary-foreground font-semibold shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      EN
+                    </button>
+                  </div>
+                </div>
+
+                {/* Auto Translate Button */}
+                <div className="pt-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleAutoTranslateToEn}
+                    disabled={isTranslating || (!formData.title_id && !formData.subtitle_id)}
+                    className="w-full text-xs font-mono gap-1.5 h-8"
+                  >
+                    <Sparkles className="h-3.5 w-3.5" />
+                    {isTranslating ? 'Translating ID to EN...' : 'Auto-Translate ID to EN'}
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -221,7 +308,7 @@ export default function SectionsPage() {
                     />
                     {!editing && (
                       <div className="flex flex-wrap gap-1.5 pt-1">
-                        {['hero', 'problem', 'about', 'work', 'skills', 'contact'].map((s) => (
+                        {['hero', 'problem', 'about', 'projects', 'skills', 'contact'].map((s) => (
                           <button
                             key={s}
                             type="button"
@@ -235,35 +322,65 @@ export default function SectionsPage() {
                     )}
                   </div>
 
-                  {/* Title field */}
-                  <div className="space-y-2">
-                    <Label htmlFor="title">
-                      {formData.slug === 'hero' ? 'Headline / Main Title *' : 'Section Title *'}
-                    </Label>
-                    <Input
-                      id="title"
-                      value={formData.title}
-                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                      placeholder="e.g. Hi, I'm Adam."
-                      required
-                    />
-                  </div>
+                  {activeLangTab === 'id' ? (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="title_id">
+                          {formData.slug === 'hero' ? 'Nama / Judul Utama (ID) *' : 'Judul Seksi (ID) *'}
+                        </Label>
+                        <Input
+                          id="title_id"
+                          value={formData.title_id}
+                          onChange={(e) => setFormData({ ...formData, title_id: e.target.value })}
+                          placeholder="contoh: Adam Ghazy Al Falah"
+                          required={!formData.title}
+                        />
+                      </div>
 
-                  {/* Subtitle field */}
-                  <div className="space-y-2">
-                    <Label htmlFor="subtitle">
-                      {formData.slug === 'hero' ? 'Bio / Subtitle Description' : 'Subtitle / Tagline'}
-                    </Label>
-                    <Textarea
-                      id="subtitle"
-                      value={formData.subtitle}
-                      onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
-                      placeholder="Short descriptive text..."
-                      rows={3}
-                    />
-                  </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="subtitle_id">
+                          {formData.slug === 'hero' ? 'Ringkasan Bio / Subjudul (ID)' : 'Subjudul / Tagline (ID)'}
+                        </Label>
+                        <Textarea
+                          id="subtitle_id"
+                          value={formData.subtitle_id}
+                          onChange={(e) => setFormData({ ...formData, subtitle_id: e.target.value })}
+                          placeholder="Teks deskripsi ringkas..."
+                          rows={3}
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="title">
+                          {formData.slug === 'hero' ? 'Headline / Main Title (EN) *' : 'Section Title (EN) *'}
+                        </Label>
+                        <Input
+                          id="title"
+                          value={formData.title}
+                          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                          placeholder="e.g. Adam Ghazy Al Falah"
+                          required={!formData.title_id}
+                        />
+                      </div>
 
-                  {/* Image / Photo Upload (especially for Hero) */}
+                      <div className="space-y-2">
+                        <Label htmlFor="subtitle">
+                          {formData.slug === 'hero' ? 'Bio / Subtitle Description (EN)' : 'Subtitle / Tagline (EN)'}
+                        </Label>
+                        <Textarea
+                          id="subtitle"
+                          value={formData.subtitle}
+                          onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
+                          placeholder="Short descriptive text..."
+                          rows={3}
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  {/* Image / Photo Upload */}
                   <div className="space-y-2">
                     <Label htmlFor="image_url">
                       {formData.slug === 'hero' ? 'Hero Profile Photo' : 'Section Image / Media'}
@@ -271,7 +388,7 @@ export default function SectionsPage() {
                     <div className="space-y-3">
                       <div className="flex items-center gap-3">
                         <label className="flex-1">
-                          <Button variant="outline" className="w-full" disabled={uploading} asChild>
+                          <Button variant="outline" className="w-full pointer-events-none" disabled={uploading} asChild>
                             <span className="cursor-pointer">
                               <Upload className="h-4 w-4 mr-2" />
                               {uploading ? 'Uploading...' : 'Choose photo to upload'}
@@ -292,7 +409,7 @@ export default function SectionsPage() {
                       </div>
 
                       {/* Image Preview Box */}
-                      {formData.image_url ? (
+                      {formData.image_url && (
                         <div className="relative rounded-xl overflow-hidden border bg-muted/20 p-2 flex items-center gap-3">
                           <img
                             src={formData.image_url}
@@ -301,15 +418,9 @@ export default function SectionsPage() {
                           />
                           <div className="min-w-0 flex-1">
                             <p className="text-xs font-mono truncate text-muted-foreground">{formData.image_url}</p>
-                            <p className="text-[11px] text-green-600 dark:text-green-400 mt-0.5">✓ Ready & active</p>
+                            <p className="text-[11px] text-green-600 dark:text-green-400 mt-0.5">Active</p>
                           </div>
                         </div>
-                      ) : (
-                        formData.slug === 'hero' && (
-                          <p className="text-xs text-muted-foreground">
-                            💡 Upload your portrait photo here to display it on the right side of the Hero section.
-                          </p>
-                        )
                       )}
                     </div>
                   </div>
@@ -321,17 +432,18 @@ export default function SectionsPage() {
                     </Label>
                     <Textarea
                       id="content"
-                      value={formData.content}
-                      onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                      value={activeLangTab === 'id' ? formData.content_id || formData.content : formData.content || formData.content_id}
+                      onChange={(e) => {
+                        if (activeLangTab === 'id') {
+                          setFormData({ ...formData, content_id: e.target.value, content: formData.content || e.target.value })
+                        } else {
+                          setFormData({ ...formData, content: e.target.value, content_id: formData.content_id || e.target.value })
+                        }
+                      }}
                       placeholder={formData.slug === 'contact' ? 'e.g. Open to junior developer roles & projects' : 'Optional content...'}
                       rows={formData.slug === 'problem' ? 5 : 2}
                       className={formData.slug === 'problem' ? 'font-mono text-xs' : ''}
                     />
-                    {formData.slug === 'problem' && (
-                      <p className="text-[11px] text-muted-foreground font-mono">
-                        Format: JSON array of cards [{`{"title":"...","desc":"..."}`}]
-                      </p>
-                    )}
                   </div>
 
                   {/* Actions */}
@@ -359,7 +471,7 @@ export default function SectionsPage() {
               </CardHeader>
               <CardContent>
                 {loading ? (
-                  <p className="text-muted-foreground text-center py-8">Loading…</p>
+                  <p className="text-muted-foreground text-center py-8">Loading...</p>
                 ) : sections.length === 0 ? (
                   <p className="text-muted-foreground text-center py-8">No sections found</p>
                 ) : (
@@ -393,6 +505,9 @@ export default function SectionsPage() {
                             )}
                           </div>
                           <h4 className="font-semibold text-sm truncate">{section.title}</h4>
+                          {section.title_id && section.title_id !== section.title && (
+                            <p className="text-xs text-muted-foreground font-mono">ID: {section.title_id}</p>
+                          )}
                           {section.subtitle && (
                             <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
                               {section.subtitle}

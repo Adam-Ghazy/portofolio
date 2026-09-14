@@ -7,18 +7,26 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
 
 export default function SettingsPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [activeLangTab, setActiveLangTab] = useState<'id' | 'en'>('id')
+  const [isTranslating, setIsTranslating] = useState(false)
   const [formData, setFormData] = useState({
     site_title: '',
     site_description: '',
+    site_description_id: '',
     hero_meta: '',
+    hero_meta_id: '',
     footer_tagline: '',
+    footer_tagline_id: '',
     status_left: '',
+    status_left_id: '',
     status_right: '',
+    status_right_id: '',
   })
 
   useEffect(() => {
@@ -28,24 +36,78 @@ export default function SettingsPage() {
         setFormData({
           site_title: data.site_title ?? '',
           site_description: data.site_description ?? '',
+          site_description_id: data.site_description_id ?? '',
           hero_meta: data.hero_meta ?? '',
+          hero_meta_id: data.hero_meta_id ?? '',
           footer_tagline: data.footer_tagline ?? '',
+          footer_tagline_id: data.footer_tagline_id ?? '',
           status_left: data.status_left ?? '',
+          status_left_id: data.status_left_id ?? '',
           status_right: data.status_right ?? '',
+          status_right_id: data.status_right_id ?? '',
         })
       })
       .catch(() => toast.error('Failed to load settings'))
       .finally(() => setLoading(false))
   }, [])
 
+  async function handleAutoTranslate() {
+    setIsTranslating(true)
+    try {
+      const translateField = async (text?: string) => {
+        if (!text || text.trim() === '') return ''
+        const res = await fetch('/api/translate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text, from: 'id', to: 'en' }),
+        })
+        if (!res.ok) return text
+        const data = await res.json()
+        return data.translatedText || text
+      }
+
+      const [enDesc, enMeta, enTagline] = await Promise.all([
+        formData.site_description_id ? translateField(formData.site_description_id) : Promise.resolve(formData.site_description),
+        formData.hero_meta_id ? translateField(formData.hero_meta_id) : Promise.resolve(formData.hero_meta),
+        formData.footer_tagline_id ? translateField(formData.footer_tagline_id) : Promise.resolve(formData.footer_tagline),
+      ])
+
+      setFormData((prev) => ({
+        ...prev,
+        site_description: enDesc || prev.site_description,
+        hero_meta: enMeta || prev.hero_meta,
+        footer_tagline: enTagline || prev.footer_tagline,
+      }))
+      toast.success('Successfully translated Indonesian to English')
+    } catch {
+      toast.error('Failed to auto-translate')
+    } finally {
+      setIsTranslating(false)
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setSaving(true)
     try {
+      const payload = {
+        ...formData,
+        site_description: formData.site_description || formData.site_description_id,
+        site_description_id: formData.site_description_id || formData.site_description,
+        hero_meta: formData.hero_meta || formData.hero_meta_id,
+        hero_meta_id: formData.hero_meta_id || formData.hero_meta,
+        footer_tagline: formData.footer_tagline || formData.footer_tagline_id,
+        footer_tagline_id: formData.footer_tagline_id || formData.footer_tagline,
+        status_left: formData.status_left || formData.status_left_id,
+        status_left_id: formData.status_left_id || formData.status_left,
+        status_right: formData.status_right || formData.status_right_id,
+        status_right_id: formData.status_right_id || formData.status_right,
+      }
+
       const res = await fetch('/api/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       })
       if (!res.ok) throw new Error()
       toast.success('Settings saved')
@@ -92,18 +154,59 @@ export default function SettingsPage() {
       <div className="container mx-auto p-6 max-w-7xl">
         <div className="mb-6">
           <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-          <p className="text-muted-foreground">Manage site configuration</p>
+          <p className="text-muted-foreground">Manage site configuration with bilingual support</p>
         </div>
 
         <div className="grid gap-4 lg:grid-cols-2">
           <Card>
             <CardHeader>
-              <CardTitle>Site Information</CardTitle>
-              <CardDescription>Content shown across the portfolio</CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Site Information</CardTitle>
+                  <CardDescription>Content shown across the portfolio</CardDescription>
+                </div>
+
+                {/* Language Switch Tabs */}
+                <div className="flex items-center rounded-lg border p-0.5 bg-muted/40 font-mono text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setActiveLangTab('id')}
+                    className={`px-2.5 py-1 rounded transition-all ${
+                      activeLangTab === 'id' ? 'bg-primary text-primary-foreground font-semibold shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    ID
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveLangTab('en')}
+                    className={`px-2.5 py-1 rounded transition-all ${
+                      activeLangTab === 'en' ? 'bg-primary text-primary-foreground font-semibold shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    EN
+                  </button>
+                </div>
+              </div>
+
+              {/* Auto Translate Button */}
+              <div className="pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAutoTranslate}
+                  disabled={isTranslating || (!formData.site_description_id && !formData.hero_meta_id && !formData.footer_tagline_id)}
+                  className="w-full text-xs font-mono gap-1.5 h-8"
+                >
+                  <Sparkles className="h-3.5 w-3.5" />
+                  {isTranslating ? 'Translating ID to EN...' : 'Auto-Translate ID to EN'}
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               {loading ? (
-                <p className="text-muted-foreground text-center py-8">Loading…</p>
+                <p className="text-muted-foreground text-center py-8">Loading...</p>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="space-y-2">
@@ -115,34 +218,71 @@ export default function SettingsPage() {
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="site_description">Site Description</Label>
-                    <Textarea
-                      id="site_description"
-                      value={formData.site_description}
-                      onChange={(e) => setFormData({ ...formData, site_description: e.target.value })}
-                      rows={3}
-                    />
-                  </div>
+                  {activeLangTab === 'id' ? (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="site_description_id">Deskripsi Situs (ID)</Label>
+                        <Textarea
+                          id="site_description_id"
+                          value={formData.site_description_id}
+                          onChange={(e) => setFormData({ ...formData, site_description_id: e.target.value })}
+                          rows={3}
+                        />
+                      </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="hero_meta">Hero Meta Line</Label>
-                    <Input
-                      id="hero_meta"
-                      placeholder="junior web developer · react & typescript · open to work"
-                      value={formData.hero_meta}
-                      onChange={(e) => setFormData({ ...formData, hero_meta: e.target.value })}
-                    />
-                  </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="hero_meta_id">Hero Meta Line (ID)</Label>
+                        <Input
+                          id="hero_meta_id"
+                          placeholder="pengembang web junior · flutter, react & laravel · siap bekerja"
+                          value={formData.hero_meta_id}
+                          onChange={(e) => setFormData({ ...formData, hero_meta_id: e.target.value })}
+                        />
+                      </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="footer_tagline">Footer Tagline</Label>
-                    <Input
-                      id="footer_tagline"
-                      value={formData.footer_tagline}
-                      onChange={(e) => setFormData({ ...formData, footer_tagline: e.target.value })}
-                    />
-                  </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="footer_tagline_id">Tagline Footer (ID)</Label>
+                        <Input
+                          id="footer_tagline_id"
+                          placeholder="mengubah masalah menjadi solusi"
+                          value={formData.footer_tagline_id}
+                          onChange={(e) => setFormData({ ...formData, footer_tagline_id: e.target.value })}
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="site_description">Site Description (EN)</Label>
+                        <Textarea
+                          id="site_description"
+                          value={formData.site_description}
+                          onChange={(e) => setFormData({ ...formData, site_description: e.target.value })}
+                          rows={3}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="hero_meta">Hero Meta Line (EN)</Label>
+                        <Input
+                          id="hero_meta"
+                          placeholder="junior software developer · flutter, react & laravel · open to work"
+                          value={formData.hero_meta}
+                          onChange={(e) => setFormData({ ...formData, hero_meta: e.target.value })}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="footer_tagline">Footer Tagline (EN)</Label>
+                        <Input
+                          id="footer_tagline"
+                          placeholder="turning problems into solutions"
+                          value={formData.footer_tagline}
+                          onChange={(e) => setFormData({ ...formData, footer_tagline: e.target.value })}
+                        />
+                      </div>
+                    </>
+                  )}
 
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-2">
@@ -164,7 +304,7 @@ export default function SettingsPage() {
                   </div>
 
                   <Button type="submit" className="w-full" disabled={saving}>
-                    {saving ? 'Saving…' : 'Save Settings'}
+                    {saving ? 'Saving...' : 'Save Settings'}
                   </Button>
                 </form>
               )}

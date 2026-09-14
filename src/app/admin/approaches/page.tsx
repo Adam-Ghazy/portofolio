@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Pencil, Trash2, Workflow, Plus, Layers, CheckCircle2 } from 'lucide-react'
+import { Pencil, Trash2, Workflow, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   AlertDialog,
@@ -24,7 +24,9 @@ import { Approach } from '@/types/admin'
 const emptyForm = {
   step_number: '',
   title: '',
+  title_id: '',
   description: '',
+  description_id: '',
   sort_order: 0,
 }
 
@@ -34,6 +36,8 @@ export default function ApproachesAdminPage() {
   const [editing, setEditing] = useState<Approach | null>(null)
   const [formData, setFormData] = useState(emptyForm)
   const [deleteId, setDeleteId] = useState<number | null>(null)
+  const [activeLangTab, setActiveLangTab] = useState<'id' | 'en'>('id')
+  const [isTranslating, setIsTranslating] = useState(false)
 
   useEffect(() => {
     fetchApproaches()
@@ -53,6 +57,39 @@ export default function ApproachesAdminPage() {
     }
   }
 
+  async function handleAutoTranslate() {
+    setIsTranslating(true)
+    try {
+      const translateField = async (text?: string) => {
+        if (!text || text.trim() === '') return ''
+        const res = await fetch('/api/translate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text, from: 'id', to: 'en' }),
+        })
+        if (!res.ok) return text
+        const data = await res.json()
+        return data.translatedText || text
+      }
+
+      const [enTitle, enDesc] = await Promise.all([
+        formData.title_id ? translateField(formData.title_id) : Promise.resolve(formData.title),
+        formData.description_id ? translateField(formData.description_id) : Promise.resolve(formData.description),
+      ])
+
+      setFormData((prev) => ({
+        ...prev,
+        title: enTitle || prev.title,
+        description: enDesc || prev.description,
+      }))
+      toast.success('Successfully translated Indonesian to English')
+    } catch {
+      toast.error('Failed to auto-translate')
+    } finally {
+      setIsTranslating(false)
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     try {
@@ -60,6 +97,10 @@ export default function ApproachesAdminPage() {
       const method = editing ? 'PUT' : 'POST'
       const body = {
         ...formData,
+        title: formData.title || formData.title_id,
+        title_id: formData.title_id || formData.title,
+        description: formData.description || formData.description_id,
+        description_id: formData.description_id || formData.description,
         sort_order: Number(formData.sort_order) || 0,
         ...(editing ? { id: editing.id, is_active: editing.is_active ?? 1 } : { is_active: 1 }),
       }
@@ -98,7 +139,9 @@ export default function ApproachesAdminPage() {
     setFormData({
       step_number: item.step_number || '',
       title: item.title,
+      title_id: item.title_id ?? '',
       description: item.description || '',
+      description_id: item.description_id ?? '',
       sort_order: item.sort_order || 0,
     })
   }
@@ -115,24 +158,65 @@ export default function ApproachesAdminPage() {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Engineering Approach</h1>
             <p className="text-muted-foreground">
-              Manage &quot;03 // approach - How I Build Software&quot; methodology cards shown on the About page
+              Manage &quot;03 // approach - How I Build Software&quot; methodology cards shown on the About page with bilingual support
             </p>
           </div>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-[460px_1fr]">
+        <div className="grid gap-6 lg:grid-cols-[480px_1fr]">
           {/* Approach Form */}
           <Card className="h-fit">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Workflow className="h-5 w-5 text-primary" />
-                {editing ? 'Edit Approach Step' : 'Add Approach Step'}
-              </CardTitle>
-              <CardDescription>
-                {editing
-                  ? 'Update step details and methodology description'
-                  : 'Add a new step to your engineering methodology'}
-              </CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Workflow className="h-5 w-5 text-primary" />
+                    {editing ? 'Edit Approach Step' : 'Add Approach Step'}
+                  </CardTitle>
+                  <CardDescription>
+                    {editing
+                      ? 'Update step details and methodology description'
+                      : 'Add a new step to your engineering methodology'}
+                  </CardDescription>
+                </div>
+
+                {/* Language Switch Tabs */}
+                <div className="flex items-center rounded-lg border p-0.5 bg-muted/40 font-mono text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setActiveLangTab('id')}
+                    className={`px-2.5 py-1 rounded transition-all ${
+                      activeLangTab === 'id' ? 'bg-primary text-primary-foreground font-semibold shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    ID
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveLangTab('en')}
+                    className={`px-2.5 py-1 rounded transition-all ${
+                      activeLangTab === 'en' ? 'bg-primary text-primary-foreground font-semibold shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    EN
+                  </button>
+                </div>
+              </div>
+
+              {/* Auto Translate Button */}
+              <div className="pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAutoTranslate}
+                  disabled={isTranslating || (!formData.title_id && !formData.description_id)}
+                  className="w-full text-xs font-mono gap-1.5 h-8"
+                >
+                  <Sparkles className="h-3.5 w-3.5" />
+                  {isTranslating ? 'Translating ID to EN...' : 'Auto-Translate ID to EN'}
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -158,46 +242,54 @@ export default function ApproachesAdminPage() {
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="app-title">Step Title *</Label>
-                  <Input
-                    id="app-title"
-                    placeholder="e.g. User & Process Research"
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="app-desc">Description / Execution Details</Label>
-                  <Textarea
-                    id="app-desc"
-                    placeholder="Describe the workflow, actions taken, and engineering mindset for this step..."
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    rows={4}
-                  />
-                </div>
-
-                {/* Live Card Preview */}
-                {(formData.title || formData.step_number || formData.description) && (
-                  <div className="p-3.5 rounded-xl border bg-muted/20 space-y-1.5">
-                    <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
-                      Live Preview (About Page Style):
-                    </span>
-                    <div className="p-4 rounded-2xl border bg-card space-y-2">
-                      <div className="font-mono text-2xl font-bold text-primary">
-                        {formData.step_number || '01'}
-                      </div>
-                      <h4 className="font-semibold text-sm text-foreground">
-                        {formData.title || 'Step Title'}
-                      </h4>
-                      <p className="text-xs text-muted-foreground leading-relaxed">
-                        {formData.description || 'Step description will appear here...'}
-                      </p>
+                {activeLangTab === 'id' ? (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="app-title_id">Judul Tahapan (ID) *</Label>
+                      <Input
+                        id="app-title_id"
+                        placeholder="contoh: Riset Pengguna & Alur Proses"
+                        value={formData.title_id}
+                        onChange={(e) => setFormData({ ...formData, title_id: e.target.value })}
+                        required={!formData.title}
+                      />
                     </div>
-                  </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="app-desc_id">Deskripsi / Detail Eksekusi (ID)</Label>
+                      <Textarea
+                        id="app-desc_id"
+                        placeholder="Jelaskan alur kerja, tindakan nyata, dan pola pikir rekayasa..."
+                        value={formData.description_id}
+                        onChange={(e) => setFormData({ ...formData, description_id: e.target.value })}
+                        rows={4}
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="app-title">Step Title (EN) *</Label>
+                      <Input
+                        id="app-title"
+                        placeholder="e.g. User & Process Research"
+                        value={formData.title}
+                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                        required={!formData.title_id}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="app-desc">Description / Execution Details (EN)</Label>
+                      <Textarea
+                        id="app-desc"
+                        placeholder="Describe the workflow, actions taken, and engineering mindset for this step..."
+                        value={formData.description}
+                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                        rows={4}
+                      />
+                    </div>
+                  </>
                 )}
 
                 <div className="flex gap-2 pt-2">
@@ -252,6 +344,9 @@ export default function ApproachesAdminPage() {
                         <h3 className="font-semibold text-base text-foreground leading-snug">
                           {item.title}
                         </h3>
+                        {item.title_id && item.title_id !== item.title && (
+                          <p className="text-xs text-muted-foreground font-mono">ID: {item.title_id}</p>
+                        )}
 
                         {item.description && (
                           <p className="text-xs text-muted-foreground leading-relaxed pt-1">

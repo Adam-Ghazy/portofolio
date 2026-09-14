@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Pencil, Trash2, TrendingUp } from 'lucide-react'
+import { Pencil, Trash2, TrendingUp, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   AlertDialog,
@@ -23,10 +23,11 @@ interface Stat {
   id: number
   value: string
   label: string
+  label_id?: string
   sort_order: number
 }
 
-const emptyForm = { value: '', label: '' }
+const emptyForm = { value: '', label: '', label_id: '' }
 
 export default function StatsPage() {
   const [stats, setStats] = useState<Stat[]>([])
@@ -34,6 +35,8 @@ export default function StatsPage() {
   const [editing, setEditing] = useState<Stat | null>(null)
   const [deleteId, setDeleteId] = useState<number | null>(null)
   const [formData, setFormData] = useState(emptyForm)
+  const [activeLangTab, setActiveLangTab] = useState<'id' | 'en'>('id')
+  const [isTranslating, setIsTranslating] = useState(false)
 
   useEffect(() => {
     fetchStats()
@@ -51,14 +54,38 @@ export default function StatsPage() {
     }
   }
 
+  async function handleAutoTranslate() {
+    if (!formData.label_id || formData.label_id.trim() === '') return
+    setIsTranslating(true)
+    try {
+      const res = await fetch('/api/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: formData.label_id, from: 'id', to: 'en' }),
+      })
+      if (!res.ok) throw new Error()
+      const data = await res.json()
+      setFormData((prev) => ({ ...prev, label: data.translatedText || prev.label }))
+      toast.success('Successfully translated Indonesian to English')
+    } catch {
+      toast.error('Failed to auto-translate')
+    } finally {
+      setIsTranslating(false)
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     try {
       const url = editing ? `/api/about-stats/${editing.id}` : '/api/about-stats'
       const method = editing ? 'PUT' : 'POST'
-      const body = editing
-        ? { ...formData, sort_order: editing.sort_order, is_active: 1 }
-        : formData
+      const body = {
+        ...formData,
+        label: formData.label || formData.label_id,
+        label_id: formData.label_id || formData.label,
+        sort_order: editing ? editing.sort_order : 0,
+        is_active: 1,
+      }
 
       const res = await fetch(url, {
         method,
@@ -92,7 +119,11 @@ export default function StatsPage() {
 
   function handleEdit(stat: Stat) {
     setEditing(stat)
-    setFormData({ value: stat.value, label: stat.label })
+    setFormData({
+      value: stat.value,
+      label: stat.label,
+      label_id: stat.label_id ?? '',
+    })
   }
 
   function handleCancel() {
@@ -105,16 +136,57 @@ export default function StatsPage() {
       <div className="container mx-auto p-6 max-w-7xl">
         <div className="mb-6">
           <h1 className="text-3xl font-bold tracking-tight">Stats</h1>
-          <p className="text-muted-foreground">Manage about section statistics</p>
+          <p className="text-muted-foreground">Manage about section statistics with bilingual support</p>
         </div>
 
         <div className="grid gap-4 lg:grid-cols-2">
           <Card>
             <CardHeader>
-              <CardTitle>{editing ? 'Edit Stat' : 'Add Stat'}</CardTitle>
-              <CardDescription>
-                {editing ? 'Update statistic' : 'Create a new statistic'}
-              </CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>{editing ? 'Edit Stat' : 'Add Stat'}</CardTitle>
+                  <CardDescription>
+                    {editing ? 'Update statistic' : 'Create a new statistic'}
+                  </CardDescription>
+                </div>
+
+                {/* Language Switch Tabs */}
+                <div className="flex items-center rounded-lg border p-0.5 bg-muted/40 font-mono text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setActiveLangTab('id')}
+                    className={`px-2.5 py-1 rounded transition-all ${
+                      activeLangTab === 'id' ? 'bg-primary text-primary-foreground font-semibold shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    ID
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveLangTab('en')}
+                    className={`px-2.5 py-1 rounded transition-all ${
+                      activeLangTab === 'en' ? 'bg-primary text-primary-foreground font-semibold shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    EN
+                  </button>
+                </div>
+              </div>
+
+              {/* Auto-Translate Button */}
+              <div className="pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAutoTranslate}
+                  disabled={isTranslating || !formData.label_id}
+                  className="w-full text-xs font-mono gap-1.5 h-8"
+                >
+                  <Sparkles className="h-3.5 w-3.5" />
+                  {isTranslating ? 'Translating ID to EN...' : 'Auto-Translate ID to EN'}
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -122,25 +194,38 @@ export default function StatsPage() {
                   <Label htmlFor="value">Value *</Label>
                   <Input
                     id="value"
-                    placeholder="12+"
+                    placeholder="1+ yr"
                     value={formData.value}
                     onChange={(e) => setFormData({ ...formData, value: e.target.value })}
                     required
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="label">Label *</Label>
-                  <Input
-                    id="label"
-                    placeholder="projects built"
-                    value={formData.label}
-                    onChange={(e) => setFormData({ ...formData, label: e.target.value })}
-                    required
-                  />
-                </div>
+                {activeLangTab === 'id' ? (
+                  <div className="space-y-2">
+                    <Label htmlFor="label_id">Label (ID) *</Label>
+                    <Input
+                      id="label_id"
+                      placeholder="contoh: Pengalaman Praktis"
+                      value={formData.label_id}
+                      onChange={(e) => setFormData({ ...formData, label_id: e.target.value })}
+                      required={!formData.label}
+                    />
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Label htmlFor="label">Label (EN) *</Label>
+                    <Input
+                      id="label"
+                      placeholder="e.g. Hands-on Experience"
+                      value={formData.label}
+                      onChange={(e) => setFormData({ ...formData, label: e.target.value })}
+                      required={!formData.label_id}
+                    />
+                  </div>
+                )}
 
-                <div className="flex gap-2">
+                <div className="flex gap-2 pt-2">
                   <Button type="submit" className="flex-1">
                     {editing ? 'Update' : 'Create'}
                   </Button>
@@ -162,7 +247,7 @@ export default function StatsPage() {
               </CardHeader>
               <CardContent>
                 {loading ? (
-                  <p className="text-muted-foreground text-center py-8">Loading…</p>
+                  <p className="text-muted-foreground text-center py-8">Loading...</p>
                 ) : stats.length === 0 ? (
                   <p className="text-muted-foreground text-center py-8">No stats yet</p>
                 ) : (
@@ -177,6 +262,9 @@ export default function StatsPage() {
                                 <p className="text-2xl font-bold">{stat.value}</p>
                               </div>
                               <p className="text-sm text-muted-foreground">{stat.label}</p>
+                              {stat.label_id && stat.label_id !== stat.label && (
+                                <p className="text-xs text-muted-foreground font-mono">ID: {stat.label_id}</p>
+                              )}
                             </div>
                             <div className="flex gap-1 flex-shrink-0">
                               <Button size="icon" variant="ghost" onClick={() => handleEdit(stat)}>
