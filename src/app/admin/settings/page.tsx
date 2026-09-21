@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Sparkles } from 'lucide-react'
+import { AutoTranslateButton, LangTabs } from '@/components/admin/lang-tabs'
 import { toast } from 'sonner'
 
 export default function SettingsPage() {
@@ -151,62 +151,30 @@ export default function SettingsPage() {
 
   return (
     <AdminLayout>
-      <div className="container mx-auto p-6 max-w-7xl">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-          <p className="text-muted-foreground">Manage site configuration with bilingual support</p>
+      <div className="mx-auto max-w-[1400px] space-y-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-body-md text-muted-foreground">Site-wide configuration</p>
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid gap-4 xl:grid-cols-2">
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <CardTitle>Site Information</CardTitle>
                   <CardDescription>Content shown across the portfolio</CardDescription>
                 </div>
-
-                {/* Language Switch Tabs */}
-                <div className="flex items-center rounded-lg border p-0.5 bg-muted/40 font-mono text-xs">
-                  <button
-                    type="button"
-                    onClick={() => setActiveLangTab('id')}
-                    className={`px-2.5 py-1 rounded transition-all ${
-                      activeLangTab === 'id' ? 'bg-primary text-primary-foreground font-semibold shadow-sm' : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    ID
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveLangTab('en')}
-                    className={`px-2.5 py-1 rounded transition-all ${
-                      activeLangTab === 'en' ? 'bg-primary text-primary-foreground font-semibold shadow-sm' : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    EN
-                  </button>
-                </div>
+                <LangTabs value={activeLangTab} onChange={setActiveLangTab} />
               </div>
-
-              {/* Auto Translate Button */}
-              <div className="pt-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleAutoTranslate}
-                  disabled={isTranslating || (!formData.site_description_id && !formData.hero_meta_id && !formData.footer_tagline_id)}
-                  className="w-full text-xs font-mono gap-1.5 h-8"
-                >
-                  <Sparkles className="h-3.5 w-3.5" />
-                  {isTranslating ? 'Translating ID to EN...' : 'Auto-Translate ID to EN'}
-                </Button>
-              </div>
+              <AutoTranslateButton
+                onClick={handleAutoTranslate}
+                busy={isTranslating}
+                disabled={isTranslating || (!formData.site_description_id && !formData.hero_meta_id && !formData.footer_tagline_id)}
+              />
             </CardHeader>
             <CardContent>
               {loading ? (
-                <p className="text-muted-foreground text-center py-8">Loading...</p>
+                <p className="py-8 text-center text-body-md text-muted-foreground">Loading...</p>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="space-y-2">

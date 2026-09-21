@@ -8,7 +8,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Pencil, Trash2, GraduationCap, Award, Calendar, MapPin, Sparkles } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { AutoTranslateButton, LangTabs } from '@/components/admin/lang-tabs'
+import { Pencil, Trash2, GraduationCap, Award, Calendar, MapPin } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   AlertDialog,
@@ -298,82 +300,52 @@ export default function EducationAdminPage() {
 
   return (
     <AdminLayout>
-      <div className="container mx-auto p-6 max-w-7xl">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Education & Certifications</h1>
-            <p className="text-muted-foreground">
-              Manage academic degrees, universities, GPAs, and national professional certifications with bilingual support
-            </p>
-          </div>
+      <div className="mx-auto max-w-[1400px] space-y-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-body-md text-muted-foreground">
+            {educationList.length} degrees · {certList.length} certifications
+          </p>
         </div>
 
-        <Tabs value={activeTab} onValueChange={(val: any) => setActiveTab(val)} className="space-y-6">
+        <Tabs
+          value={activeTab}
+          onValueChange={(value) => {
+            if (value === 'education' || value === 'certifications') setActiveTab(value)
+          }}
+          className="space-y-6"
+        >
           <TabsList className="grid w-full max-w-md grid-cols-2">
             <TabsTrigger value="education" className="flex items-center gap-2">
-              <GraduationCap className="h-4 w-4" />
+              <GraduationCap className="h-4 w-4" strokeWidth={1.5} />
               <span>Academic Education ({educationList.length})</span>
             </TabsTrigger>
             <TabsTrigger value="certifications" className="flex items-center gap-2">
-              <Award className="h-4 w-4" />
+              <Award className="h-4 w-4" strokeWidth={1.5} />
               <span>Certifications ({certList.length})</span>
             </TabsTrigger>
           </TabsList>
 
-          {/* ======================= EDUCATION TAB ======================= */}
           <TabsContent value="education" className="space-y-6">
-            <div className="grid gap-6 lg:grid-cols-[500px_1fr]">
-              {/* Education Form */}
+            <div className="grid gap-6 xl:grid-cols-[minmax(0,460px)_minmax(0,1fr)]">
               <Card className="h-fit">
                 <CardHeader>
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <CardTitle className="flex items-center gap-2">
-                        <GraduationCap className="h-5 w-5 text-primary" />
+                        <GraduationCap className="h-5 w-5" strokeWidth={1.5} />
                         {editingEdu ? 'Edit Education' : 'Add Education'}
                       </CardTitle>
                       <CardDescription>
                         {editingEdu ? 'Update degree and academic institution details' : 'Add a degree or educational qualification'}
                       </CardDescription>
                     </div>
-
-                    {/* Language Switch Tabs */}
-                    <div className="flex items-center rounded-lg border p-0.5 bg-muted/40 font-mono text-xs">
-                      <button
-                        type="button"
-                        onClick={() => setEduLangTab('id')}
-                        className={`px-2.5 py-1 rounded transition-all ${
-                          eduLangTab === 'id' ? 'bg-primary text-primary-foreground font-semibold shadow-sm' : 'text-muted-foreground hover:text-foreground'
-                        }`}
-                      >
-                        ID
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setEduLangTab('en')}
-                        className={`px-2.5 py-1 rounded transition-all ${
-                          eduLangTab === 'en' ? 'bg-primary text-primary-foreground font-semibold shadow-sm' : 'text-muted-foreground hover:text-foreground'
-                        }`}
-                      >
-                        EN
-                      </button>
-                    </div>
+                    <LangTabs value={eduLangTab} onChange={setEduLangTab} />
                   </div>
-
-                  {/* Auto-Translate Button */}
-                  <div className="pt-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={handleAutoTranslateEdu}
-                      disabled={isTranslatingEdu || (!eduFormData.degree_id && !eduFormData.description_id)}
-                      className="w-full text-xs font-mono gap-1.5 h-8"
-                    >
-                      <Sparkles className="h-3.5 w-3.5" />
-                      {isTranslatingEdu ? 'Translating ID to EN...' : 'Auto-Translate ID to EN'}
-                    </Button>
-                  </div>
+                  <AutoTranslateButton
+                    onClick={handleAutoTranslateEdu}
+                    busy={isTranslatingEdu}
+                    disabled={!eduFormData.degree_id && !eduFormData.description_id}
+                  />
                 </CardHeader>
 
                 <CardContent>
@@ -496,7 +468,6 @@ export default function EducationAdminPage() {
                 </CardContent>
               </Card>
 
-              {/* Education List */}
               <Card>
                 <CardHeader>
                   <CardTitle>Academic Records</CardTitle>
@@ -504,130 +475,97 @@ export default function EducationAdminPage() {
                 </CardHeader>
                 <CardContent>
                   {loadingEdu ? (
-                    <p className="text-muted-foreground text-center py-8">Loading education records...</p>
+                    <p className="py-12 text-center text-body-md text-muted-foreground">Loading education records...</p>
                   ) : educationList.length === 0 ? (
-                    <p className="text-muted-foreground text-center py-8">No academic records found.</p>
+                    <p className="py-12 text-center text-body-md text-muted-foreground">No academic records found.</p>
                   ) : (
-                    <div className="space-y-4">
+                    <ul className="divide-y divide-border">
                       {educationList.map((edu) => (
-                        <div
-                          key={edu.id}
-                          className="p-4 rounded-xl border bg-card hover:border-primary/50 transition-colors space-y-3"
-                        >
+                        <li key={edu.id} className="space-y-3 py-4 transition-colors hover:bg-sidebar">
                           <div className="flex items-start justify-between gap-3">
-                            <div className="space-y-1 min-w-0">
+                            <div className="min-w-0 space-y-1">
                               <div className="flex flex-wrap items-center gap-2">
-                                <h3 className="font-semibold text-base">{edu.degree}</h3>
+                                <p className="text-headline-sm text-foreground">{edu.degree}</p>
                                 {edu.degree_id && edu.degree_id !== edu.degree && (
-                                  <span className="text-xs text-muted-foreground">({edu.degree_id})</span>
+                                  <span className="text-label-md text-muted-foreground">({edu.degree_id})</span>
                                 )}
-                                {edu.gpa && (
-                                  <span className="font-mono text-xs px-2 py-0.5 rounded border bg-muted/60 font-medium">
-                                    GPA: {edu.gpa}
-                                  </span>
-                                )}
+                                {edu.gpa && <Badge variant="secondary">GPA {edu.gpa}</Badge>}
                               </div>
-                              <p className="text-sm font-medium text-muted-foreground">{edu.institution}</p>
-                              <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground font-mono">
+                              <p className="text-body-md text-muted-foreground">{edu.institution}</p>
+                              <div className="flex flex-wrap items-center gap-2 text-label-md text-muted-foreground">
                                 {edu.location && (
                                   <span className="flex items-center gap-1">
-                                    <MapPin className="h-3 w-3" />
+                                    <MapPin className="h-3.5 w-3.5" strokeWidth={1.5} />
                                     {edu.location}
                                   </span>
                                 )}
                                 {edu.location && edu.period && <span>•</span>}
                                 {edu.period && (
                                   <span className="flex items-center gap-1">
-                                    <Calendar className="h-3 w-3" />
+                                    <Calendar className="h-3.5 w-3.5" strokeWidth={1.5} />
                                     {edu.period}
                                   </span>
                                 )}
                               </div>
                             </div>
 
-                            <div className="flex items-center gap-1 shrink-0">
-                              <Button size="icon" variant="ghost" onClick={() => handleEduEdit(edu)} title="Edit">
-                                <Pencil className="h-4 w-4" />
+                            <div className="flex shrink-0 items-center gap-1">
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-8 w-8 rounded-[8px]"
+                                onClick={() => handleEduEdit(edu)}
+                                title="Edit"
+                              >
+                                <Pencil className="h-4 w-4" strokeWidth={1.5} />
                               </Button>
                               <Button
                                 size="icon"
                                 variant="ghost"
+                                className="h-8 w-8 rounded-[8px]"
                                 onClick={() => setDeleteEduId(edu.id!)}
                                 title="Delete"
                               >
-                                <Trash2 className="h-4 w-4" />
+                                <Trash2 className="h-4 w-4" strokeWidth={1.5} />
                               </Button>
                             </div>
                           </div>
 
                           {edu.description && (
-                            <p className="text-xs text-muted-foreground leading-relaxed pt-2 border-t">
+                            <p className="border-t border-border pt-3 text-body-sm text-muted-foreground leading-relaxed">
                               {edu.description}
                             </p>
                           )}
-                        </div>
+                        </li>
                       ))}
-                    </div>
+                    </ul>
                   )}
                 </CardContent>
               </Card>
             </div>
           </TabsContent>
 
-          {/* ======================= CERTIFICATIONS TAB ======================= */}
           <TabsContent value="certifications" className="space-y-6">
-            <div className="grid gap-6 lg:grid-cols-[500px_1fr]">
-              {/* Certification Form */}
+            <div className="grid gap-6 xl:grid-cols-[minmax(0,460px)_minmax(0,1fr)]">
               <Card className="h-fit">
                 <CardHeader>
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <CardTitle className="flex items-center gap-2">
-                        <Award className="h-5 w-5 text-primary" />
+                        <Award className="h-5 w-5" strokeWidth={1.5} />
                         {editingCert ? 'Edit Certification' : 'Add Certification'}
                       </CardTitle>
                       <CardDescription>
                         {editingCert ? 'Update certification and credential details' : 'Add a professional or national certification'}
                       </CardDescription>
                     </div>
-
-                    {/* Language Switch Tabs */}
-                    <div className="flex items-center rounded-lg border p-0.5 bg-muted/40 font-mono text-xs">
-                      <button
-                        type="button"
-                        onClick={() => setCertLangTab('id')}
-                        className={`px-2.5 py-1 rounded transition-all ${
-                          certLangTab === 'id' ? 'bg-primary text-primary-foreground font-semibold shadow-sm' : 'text-muted-foreground hover:text-foreground'
-                        }`}
-                      >
-                        ID
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setCertLangTab('en')}
-                        className={`px-2.5 py-1 rounded transition-all ${
-                          certLangTab === 'en' ? 'bg-primary text-primary-foreground font-semibold shadow-sm' : 'text-muted-foreground hover:text-foreground'
-                        }`}
-                      >
-                        EN
-                      </button>
-                    </div>
+                    <LangTabs value={certLangTab} onChange={setCertLangTab} />
                   </div>
-
-                  {/* Auto-Translate Button */}
-                  <div className="pt-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={handleAutoTranslateCert}
-                      disabled={isTranslatingCert || (!certFormData.title_id && !certFormData.credential_info_id)}
-                      className="w-full text-xs font-mono gap-1.5 h-8"
-                    >
-                      <Sparkles className="h-3.5 w-3.5" />
-                      {isTranslatingCert ? 'Translating ID to EN...' : 'Auto-Translate ID to EN'}
-                    </Button>
-                  </div>
+                  <AutoTranslateButton
+                    onClick={handleAutoTranslateCert}
+                    busy={isTranslatingCert}
+                    disabled={!certFormData.title_id && !certFormData.credential_info_id}
+                  />
                 </CardHeader>
 
                 <CardContent>
@@ -739,7 +677,6 @@ export default function EducationAdminPage() {
                 </CardContent>
               </Card>
 
-              {/* Certifications List */}
               <Card>
                 <CardHeader>
                   <CardTitle>Professional Certifications</CardTitle>
@@ -747,66 +684,66 @@ export default function EducationAdminPage() {
                 </CardHeader>
                 <CardContent>
                   {loadingCerts ? (
-                    <p className="text-muted-foreground text-center py-8">Loading certifications...</p>
+                    <p className="py-12 text-center text-body-md text-muted-foreground">Loading certifications...</p>
                   ) : certList.length === 0 ? (
-                    <p className="text-muted-foreground text-center py-8">No certifications found.</p>
+                    <p className="py-12 text-center text-body-md text-muted-foreground">No certifications found.</p>
                   ) : (
-                    <div className="space-y-4">
+                    <ul className="divide-y divide-border">
                       {certList.map((cert) => (
-                        <div
-                          key={cert.id}
-                          className="p-4 rounded-xl border bg-card hover:border-primary/50 transition-colors space-y-3"
-                        >
+                        <li key={cert.id} className="space-y-3 py-4 transition-colors hover:bg-sidebar">
                           <div className="flex items-start justify-between gap-3">
-                            <div className="space-y-1 min-w-0">
+                            <div className="min-w-0 space-y-1">
                               <div className="flex flex-wrap items-center gap-2">
-                                <h3 className="font-semibold text-base">{cert.title}</h3>
+                                <p className="text-headline-sm text-foreground">{cert.title}</p>
                                 {cert.title_id && cert.title_id !== cert.title && (
-                                  <span className="text-xs text-muted-foreground">({cert.title_id})</span>
+                                  <span className="text-label-md text-muted-foreground">({cert.title_id})</span>
                                 )}
-                                {cert.issue_date && (
-                                  <span className="font-mono text-xs px-2 py-0.5 rounded border bg-muted/60 font-medium">
-                                    {cert.issue_date}
-                                  </span>
-                                )}
+                                {cert.issue_date && <Badge variant="secondary">{cert.issue_date}</Badge>}
                               </div>
-                              <p className="text-sm font-medium text-muted-foreground">{cert.issuer}</p>
-                              <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground font-mono">
+                              <p className="text-body-md text-muted-foreground">{cert.issuer}</p>
+                              <div className="flex flex-wrap items-center gap-2 text-label-md text-muted-foreground">
                                 {cert.location && (
                                   <span className="flex items-center gap-1">
-                                    <MapPin className="h-3 w-3" />
+                                    <MapPin className="h-3.5 w-3.5" strokeWidth={1.5} />
                                     {cert.location}
                                   </span>
                                 )}
                               </div>
                             </div>
 
-                            <div className="flex items-center gap-1 shrink-0">
-                              <Button size="icon" variant="ghost" onClick={() => handleCertEdit(cert)} title="Edit">
-                                <Pencil className="h-4 w-4" />
+                            <div className="flex shrink-0 items-center gap-1">
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-8 w-8 rounded-[8px]"
+                                onClick={() => handleCertEdit(cert)}
+                                title="Edit"
+                              >
+                                <Pencil className="h-4 w-4" strokeWidth={1.5} />
                               </Button>
                               <Button
                                 size="icon"
                                 variant="ghost"
+                                className="h-8 w-8 rounded-[8px]"
                                 onClick={() => setDeleteCertId(cert.id!)}
                                 title="Delete"
                               >
-                                <Trash2 className="h-4 w-4" />
+                                <Trash2 className="h-4 w-4" strokeWidth={1.5} />
                               </Button>
                             </div>
                           </div>
 
                           {cert.credential_info && (
-                            <div className="p-3 rounded-lg border bg-muted/30 text-xs text-muted-foreground leading-relaxed">
-                              <span className="font-mono text-[10px] uppercase font-semibold block mb-0.5 text-foreground/80">
+                            <div className="rounded-[12px] border border-border bg-sidebar p-3 text-body-sm text-muted-foreground leading-relaxed">
+                              <span className="mb-1 block text-label-section uppercase text-foreground">
                                 Coverage & Competency:
                               </span>
                               {cert.credential_info}
                             </div>
                           )}
-                        </div>
+                        </li>
                       ))}
-                    </div>
+                    </ul>
                   )}
                 </CardContent>
               </Card>
@@ -814,7 +751,6 @@ export default function EducationAdminPage() {
           </TabsContent>
         </Tabs>
 
-        {/* Delete Confirmation Dialog for Education */}
         <AlertDialog open={deleteEduId !== null} onOpenChange={() => setDeleteEduId(null)}>
           <AlertDialogContent>
             <AlertDialogHeader>
@@ -825,12 +761,11 @@ export default function EducationAdminPage() {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleEduDelete}>Delete</AlertDialogAction>
+              <AlertDialogAction variant="destructive" onClick={handleEduDelete}>Delete</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
 
-        {/* Delete Confirmation Dialog for Certification */}
         <AlertDialog open={deleteCertId !== null} onOpenChange={() => setDeleteCertId(null)}>
           <AlertDialogContent>
             <AlertDialogHeader>
@@ -841,7 +776,7 @@ export default function EducationAdminPage() {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleCertDelete}>Delete</AlertDialogAction>
+              <AlertDialogAction variant="destructive" onClick={handleCertDelete}>Delete</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>

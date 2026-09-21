@@ -3,8 +3,17 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { AdminLayout } from '@/components/admin/layout-wrapper'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { FileText, Briefcase, Building2, Wrench, BarChart3, GraduationCap, Workflow } from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import {
+  BarChart3,
+  Briefcase,
+  Building2,
+  FileText,
+  GraduationCap,
+  Workflow,
+  Wrench,
+} from 'lucide-react'
 
 interface DashboardStats {
   sections: number
@@ -57,90 +66,101 @@ export default function AdminDashboard() {
       .finally(() => setLoading(false))
   }, [])
 
+  // KPI summaries sit above the records they summarise.
   const cards = [
     { title: 'Sections', description: 'Content sections', value: stats.sections, icon: FileText, href: '/admin/sections' },
     { title: 'Experience', description: 'Work & internship history', value: stats.experiences, icon: Building2, href: '/admin/experiences' },
     { title: 'Projects', description: 'Portfolio projects', value: stats.projects, icon: Briefcase, href: '/admin/my-projects' },
-    { title: 'Education & Certs', description: `${stats.education} Degrees · ${stats.certifications} Certifications`, value: stats.education + stats.certifications, icon: GraduationCap, href: '/admin/education' },
+    { title: 'Education & Certs', description: `${stats.education} degrees · ${stats.certifications} ${stats.certifications === 1 ? 'certification' : 'certifications'}`, value: stats.education + stats.certifications, icon: GraduationCap, href: '/admin/education' },
     { title: 'Approach', description: 'Engineering approach steps', value: stats.approaches, icon: Workflow, href: '/admin/approaches' },
     { title: 'Skills', description: 'Skill offerings', value: stats.skills, icon: Wrench, href: '/admin/skills' },
     { title: 'Stats', description: 'About statistics', value: stats.stats, icon: BarChart3, href: '/admin/stats' },
   ]
 
+  const quickActions = [
+    { title: 'Education & Certifications', description: 'Academic degrees, GPAs, and national certifications', href: '/admin/education', icon: GraduationCap },
+    { title: 'Work Experience', description: 'Professional roles and systems delivered', href: '/admin/experiences', icon: Building2 },
+    { title: 'Projects & Case Studies', description: 'Problem, solution, and impact write-ups', href: '/admin/my-projects', icon: Briefcase },
+  ]
+
+  const systemInfo = [
+    { label: 'Framework', value: 'Next.js App Router' },
+    { label: 'Database', value: 'SQLite (WAL)' },
+    { label: 'Auth', value: 'JWT + httpOnly cookie' },
+  ]
+
   return (
     <AdminLayout>
-      <div className="container mx-auto p-6 max-w-7xl">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground">Overview of your portfolio content</p>
+      <div className="mx-auto max-w-[1400px] space-y-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-body-md text-muted-foreground">
+            Overview of every managed record in the portfolio.
+          </p>
+          <Badge variant={loading ? 'pending' : 'active'}>
+            {loading ? 'Syncing' : 'In sync'}
+          </Badge>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {cards.map((card) => (
-            <Link key={card.title} href={card.href}>
-              <Card className="hover:border-primary transition-colors cursor-pointer h-full">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">{card.title}</CardTitle>
-                  <card.icon className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{loading ? '…' : card.value}</div>
-                  <p className="text-xs text-muted-foreground">{card.description}</p>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
-        </div>
+        <section aria-labelledby="kpi-heading" className="space-y-3">
+          <h2 id="kpi-heading" className="text-label-section uppercase text-muted-foreground">
+            Record counts
+          </h2>
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {cards.map((card) => (
+              <Link key={card.title} href={card.href} className="group">
+                <Card className="h-full transition-colors group-hover:border-border-strong">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-body-md text-muted-foreground">{card.title}</CardTitle>
+                    <card.icon className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-headline-lg tabular-nums text-foreground">
+                      {loading ? '—' : card.value}
+                    </div>
+                    <p className="mt-1 text-label-md text-muted-foreground">{card.description}</p>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </section>
 
-        <div className="grid gap-4 md:grid-cols-2 mt-4">
+        <div className="grid gap-4 xl:grid-cols-2">
           <Card>
             <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-              <CardDescription>Manage your portfolio content</CardDescription>
+              <CardTitle>Quick actions</CardTitle>
             </CardHeader>
-            <CardContent className="grid gap-4">
-              <Link href="/admin/education" className="flex items-center gap-4 rounded-lg border p-4 hover:bg-accent transition-colors">
-                <GraduationCap className="h-8 w-8 text-primary" />
-                <div>
-                  <p className="font-medium">Manage Education & Certifications</p>
-                  <p className="text-sm text-muted-foreground">Update academic degrees, GPAs, and national certifications</p>
-                </div>
-              </Link>
-              <Link href="/admin/experiences" className="flex items-center gap-4 rounded-lg border p-4 hover:bg-accent transition-colors">
-                <Building2 className="h-8 w-8 text-primary" />
-                <div>
-                  <p className="font-medium">Manage Work Experience</p>
-                  <p className="text-sm text-muted-foreground">Add or update professional roles and systems</p>
-                </div>
-              </Link>
-              <Link href="/admin/my-projects" className="flex items-center gap-4 rounded-lg border p-4 hover:bg-accent transition-colors">
-                <Briefcase className="h-8 w-8 text-primary" />
-                <div>
-                  <p className="font-medium">Manage Projects & Case Studies</p>
-                  <p className="text-sm text-muted-foreground">Showcase your latest work with problem-solution-impact</p>
-                </div>
-              </Link>
+            <CardContent className="space-y-2">
+              {quickActions.map((action) => (
+                <Link
+                  key={action.href}
+                  href={action.href}
+                  className="flex items-center gap-4 rounded-[12px] border border-border px-4 py-3 transition-colors hover:bg-sidebar hover:border-border-strong"
+                >
+                  <action.icon className="h-5 w-5 shrink-0 text-foreground" strokeWidth={1.5} />
+                  <div className="min-w-0">
+                    <p className="text-headline-sm text-foreground">{action.title}</p>
+                    <p className="text-label-md text-muted-foreground">{action.description}</p>
+                  </div>
+                </Link>
+              ))}
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle>System Info</CardTitle>
-              <CardDescription>Portfolio admin details</CardDescription>
+              <CardTitle>System</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Framework</span>
-                <span className="font-medium">Next.js App Router</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Database</span>
-                <span className="font-medium">SQLite (WAL)</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Auth</span>
-                <span className="font-medium">JWT + httpOnly cookie</span>
-              </div>
+            <CardContent className="space-y-0">
+              {systemInfo.map((row) => (
+                <div
+                  key={row.label}
+                  className="flex items-center justify-between border-b border-border py-3 last:border-b-0"
+                >
+                  <span className="text-label-md text-muted-foreground">{row.label}</span>
+                  <span className="text-body-md text-foreground">{row.value}</span>
+                </div>
+              ))}
             </CardContent>
           </Card>
         </div>

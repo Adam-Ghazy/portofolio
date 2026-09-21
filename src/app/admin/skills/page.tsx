@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from "react"
 import { AdminLayout } from "@/components/admin/layout-wrapper"
+import { AutoTranslateButton, LangTabs } from "@/components/admin/lang-tabs"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Pencil, Trash2, Wrench, Sparkles, Terminal } from "lucide-react"
+import { Pencil, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import {
   AlertDialog,
@@ -137,65 +138,30 @@ export default function SkillsPage() {
 
   return (
     <AdminLayout>
-      <div className="container mx-auto p-6 max-w-7xl">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Skills & Tech Stack</h1>
-            <p className="text-muted-foreground">Manage core technologies, categories, and interpersonal skills with bilingual support</p>
-          </div>
-        </div>
+      <div className="mx-auto max-w-[1400px] space-y-6">
+        <p className="text-body-md text-muted-foreground">{skills.length} records</p>
 
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,460px)_minmax(0,1fr)]">
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <CardTitle>{editing ? 'Edit Skill' : 'Add Skill'}</CardTitle>
                   <CardDescription>
                     {editing ? 'Update skill details and categorization' : 'Create a new skill offering'}
                   </CardDescription>
                 </div>
-
-                {/* Language Switch Tabs */}
-                <div className="flex items-center rounded-lg border p-0.5 bg-muted/40 font-mono text-xs">
-                  <button
-                    type="button"
-                    onClick={() => setActiveLangTab('id')}
-                    className={`px-2.5 py-1 rounded transition-all ${
-                      activeLangTab === 'id' ? 'bg-primary text-primary-foreground font-semibold shadow-sm' : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    ID
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveLangTab('en')}
-                    className={`px-2.5 py-1 rounded transition-all ${
-                      activeLangTab === 'en' ? 'bg-primary text-primary-foreground font-semibold shadow-sm' : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    EN
-                  </button>
-                </div>
-              </div>
-
-              {/* Auto Translate Button */}
-              <div className="pt-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleAutoTranslate}
-                  disabled={isTranslating || !formData.description_id}
-                  className="w-full text-xs font-mono gap-1.5 h-8"
-                >
-                  <Sparkles className="h-3.5 w-3.5" />
-                  {isTranslating ? 'Translating ID to EN...' : 'Auto-Translate Category ID to EN'}
-                </Button>
+                <LangTabs value={activeLangTab} onChange={setActiveLangTab} />
               </div>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
+                <AutoTranslateButton
+                  onClick={handleAutoTranslate}
+                  busy={isTranslating}
+                  disabled={!formData.description_id}
+                />
+
                 <div className="space-y-2">
                   <Label htmlFor="title">Skill Name *</Label>
                   <Input
@@ -219,14 +185,15 @@ export default function SkillsPage() {
                     />
                     <div className="flex flex-wrap gap-1.5 pt-1">
                       {['Pemrograman & Pengembangan', 'Backend & API', 'Basis Data', 'Alat & Infrastruktur', 'Metodologi Pengembangan', 'Keterampilan Interpersonal'].map((cat) => (
-                        <button
+                        <Button
                           key={cat}
                           type="button"
+                          variant="outline"
+                          size="sm"
                           onClick={() => setFormData({ ...formData, description_id: cat })}
-                          className="text-[11px] font-mono px-2 py-0.5 rounded border hover:bg-accent hover:text-accent-foreground transition-colors"
                         >
                           +{cat}
-                        </button>
+                        </Button>
                       ))}
                     </div>
                   </div>
@@ -242,14 +209,15 @@ export default function SkillsPage() {
                     />
                     <div className="flex flex-wrap gap-1.5 pt-1">
                       {['Programming & Development', 'Backend & API', 'Database', 'Tools & Infrastructure', 'Development Practices', 'Soft Skills'].map((cat) => (
-                        <button
+                        <Button
                           key={cat}
                           type="button"
+                          variant="outline"
+                          size="sm"
                           onClick={() => setFormData({ ...formData, description: cat })}
-                          className="text-[11px] font-mono px-2 py-0.5 rounded border hover:bg-accent hover:text-accent-foreground transition-colors"
                         >
                           +{cat}
-                        </button>
+                        </Button>
                       ))}
                     </div>
                   </div>
@@ -269,62 +237,60 @@ export default function SkillsPage() {
             </CardContent>
           </Card>
 
-          <div className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Existing Skills</CardTitle>
-                <CardDescription>{skills.length} skills total</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {loading ? (
-                  <p className="text-muted-foreground text-center py-8">Loading...</p>
-                ) : skills.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-8">No skills yet</p>
-                ) : (
-                  <div className="space-y-3">
-                    {skills.map((skill) => (
-                      <Card key={skill.id}>
-                        <CardContent className="p-3.5">
-                          <div className="flex items-center justify-between gap-3">
-                            <div className="flex items-center gap-3 min-w-0">
-                              <div className="w-8 h-8 rounded-lg border bg-muted/40 flex items-center justify-center font-mono text-xs font-semibold text-primary shrink-0">
-                                <Terminal className="h-4 w-4" />
-                              </div>
-                              <div className="min-w-0">
-                                <h3 className="font-semibold text-sm leading-tight">{skill.title}</h3>
-                                <p className="text-xs text-muted-foreground font-mono">
-                                  {skill.description}
-                                  {skill.description_id && skill.description_id !== skill.description && (
-                                    <span> / {skill.description_id}</span>
-                                  )}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="flex gap-1 flex-shrink-0">
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                onClick={() => handleEdit(skill)}
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                onClick={() => setDeleteId(skill.id)}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Existing Skills</CardTitle>
+              <CardDescription>{skills.length} skills total</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <p className="py-12 text-center text-body-md text-muted-foreground">Loading...</p>
+              ) : skills.length === 0 ? (
+                <p className="py-12 text-center text-body-md text-muted-foreground">No skills yet</p>
+              ) : (
+                <ul className="divide-y divide-border">
+                  {skills.map((skill) => (
+                    <li
+                      key={skill.id}
+                      className="flex items-start justify-between gap-4 py-4 transition-colors hover:bg-sidebar"
+                    >
+                      <div className="min-w-0">
+                        <p className="text-headline-sm text-foreground">{skill.title}</p>
+                        <p className="mt-1 text-body-sm text-muted-foreground">
+                          {skill.description}
+                          {skill.description_id && skill.description_id !== skill.description && (
+                            <span className="ml-2 text-label-md text-muted-foreground">
+                              ID: {skill.description_id}
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                      <div className="flex shrink-0 gap-1">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8 rounded-[8px]"
+                          onClick={() => handleEdit(skill)}
+                          aria-label="Edit skill"
+                        >
+                          <Pencil className="h-4 w-4" strokeWidth={1.5} />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8 rounded-[8px]"
+                          onClick={() => setDeleteId(skill.id)}
+                          aria-label="Delete skill"
+                        >
+                          <Trash2 className="h-4 w-4" strokeWidth={1.5} />
+                        </Button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
         <AlertDialog open={deleteId !== null} onOpenChange={() => setDeleteId(null)}>
@@ -337,7 +303,7 @@ export default function SkillsPage() {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+              <AlertDialogAction variant="destructive" onClick={handleDelete}>Delete</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>

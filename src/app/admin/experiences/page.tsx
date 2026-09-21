@@ -7,8 +7,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Pencil, Trash2, Plus, Building2, Layers, Sparkles, Globe } from 'lucide-react'
+import { Pencil, Trash2, Plus, Layers } from 'lucide-react'
 import { toast } from 'sonner'
+import { LangTabs, AutoTranslateButton } from '@/components/admin/lang-tabs'
+import { Badge } from '@/components/ui/badge'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -261,59 +263,34 @@ export default function ExperiencesPage() {
 
   return (
     <AdminLayout>
-      <div className="container mx-auto p-6 max-w-7xl">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold tracking-tight">Work Experience</h1>
-          <p className="text-muted-foreground">Manage your work history, company roles, and system contributions with bilingual support</p>
-        </div>
+      <div className="mx-auto max-w-[1400px] space-y-6">
+        <p className="text-body-md text-muted-foreground">{experiences.length} records</p>
 
-        <div className="grid gap-6 lg:grid-cols-[520px_1fr]">
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,520px)_minmax(0,1fr)]">
           {/* Left Form */}
           <Card className="h-fit">
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <CardTitle>{editing ? 'Edit Experience' : 'Add Experience'}</CardTitle>
                   <CardDescription>
                     {editing ? 'Update experience and system responsibilities' : 'Add a new work experience record'}
                   </CardDescription>
                 </div>
-                {/* Language Switch Tabs for Form */}
-                <div className="flex items-center rounded-lg border p-0.5 bg-muted/40 font-mono text-xs">
-                  <button
-                    type="button"
-                    onClick={() => setActiveLangTab('id')}
-                    className={`px-2.5 py-1 rounded transition-all ${
-                      activeLangTab === 'id' ? 'bg-primary text-primary-foreground font-semibold shadow-sm' : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    Indonesian (ID)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveLangTab('en')}
-                    className={`px-2.5 py-1 rounded transition-all ${
-                      activeLangTab === 'en' ? 'bg-primary text-primary-foreground font-semibold shadow-sm' : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    English (EN)
-                  </button>
-                </div>
+                <LangTabs
+                  value={activeLangTab}
+                  onChange={setActiveLangTab}
+                  idLabel="Indonesian (ID)"
+                  enLabel="English (EN)"
+                />
               </div>
 
-              {/* Auto translate helper button */}
               <div className="pt-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
+                <AutoTranslateButton
                   onClick={handleAutoTranslateToEn}
-                  disabled={isTranslating || (!formData.position_id && !formData.description_id)}
-                  className="w-full text-xs font-mono gap-1.5 h-8"
-                >
-                  <Sparkles className="h-3.5 w-3.5" />
-                  {isTranslating ? 'Translating ID to EN...' : 'Auto-Translate ID to EN'}
-                </Button>
+                  busy={isTranslating}
+                  disabled={!formData.position_id && !formData.description_id}
+                />
               </div>
             </CardHeader>
 
@@ -473,36 +450,36 @@ export default function ExperiencesPage() {
                 </div>
 
                 {/* Sub-Systems / Projects Sub-Manager */}
-                <div className="p-3.5 rounded-xl border bg-muted/20 space-y-3">
+                <div className="space-y-3 rounded-[12px] border border-border bg-sidebar p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <span className="font-mono text-xs font-semibold uppercase tracking-wider text-primary">
+                      <span className="text-label-section text-muted-foreground">
                         Contributed Digital Systems
                       </span>
-                      <p className="text-[11px] text-muted-foreground">Specific systems developed during this role</p>
+                      <p className="text-body-sm text-muted-foreground">Specific systems developed during this role</p>
                     </div>
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
                       onClick={handleAddSystem}
-                      className="h-7 text-xs font-mono gap-1"
+                      className="gap-1.5"
                     >
-                      <Plus className="h-3.5 w-3.5" />
+                      <Plus className="h-4 w-4" strokeWidth={1.5} />
                       Add System
                     </Button>
                   </div>
 
                   {systemsList.length === 0 ? (
-                    <p className="text-xs text-muted-foreground italic text-center py-2">
+                    <p className="py-3 text-center text-body-sm text-muted-foreground">
                       No specific sub-systems added yet. Click &quot;Add System&quot; to highlight key internal projects.
                     </p>
                   ) : (
                     <div className="space-y-3">
                       {systemsList.map((sys, idx) => (
-                        <div key={idx} className="p-3 rounded-lg border bg-card space-y-2 relative">
+                        <div key={idx} className="relative space-y-2 rounded-[12px] border border-border bg-surface p-3">
                           <div className="flex items-center justify-between gap-2">
-                            <span className="text-[11px] font-mono font-semibold text-muted-foreground">
+                            <span className="text-label-section uppercase text-muted-foreground">
                               System #{idx + 1} ({activeLangTab.toUpperCase()})
                             </span>
                             <Button
@@ -510,15 +487,15 @@ export default function ExperiencesPage() {
                               variant="ghost"
                               size="icon"
                               onClick={() => handleRemoveSystem(idx)}
-                              className="h-6 w-6 text-destructive hover:bg-destructive/10"
+                              className="h-6 w-6 rounded-[8px] text-destructive hover:bg-destructive/10"
                             >
-                              <Trash2 className="h-3.5 w-3.5" />
+                              <Trash2 className="h-3.5 w-3.5" strokeWidth={1.5} />
                             </Button>
                           </div>
 
                           <div className="grid grid-cols-2 gap-2">
                             <div>
-                              <Label className="text-[10px] text-muted-foreground">Title ({activeLangTab.toUpperCase()}) *</Label>
+                              <Label>Title ({activeLangTab.toUpperCase()}) *</Label>
                               <Input
                                 placeholder="e.g. Paperless Inspection System"
                                 value={activeLangTab === 'id' ? sys.title_id ?? sys.title : sys.title ?? sys.title_id}
@@ -531,12 +508,11 @@ export default function ExperiencesPage() {
                                     if (!sys.title_id) handleUpdateSystem(idx, 'title_id', e.target.value)
                                   }
                                 }}
-                                className="h-8 text-xs"
                                 required
                               />
                             </div>
                             <div>
-                              <Label className="text-[10px] text-muted-foreground">Tagline ({activeLangTab.toUpperCase()})</Label>
+                              <Label>Tagline ({activeLangTab.toUpperCase()})</Label>
                               <Input
                                 placeholder="e.g. QA/QC Workflow Digitalization"
                                 value={activeLangTab === 'id' ? sys.tagline_id ?? sys.tagline : sys.tagline ?? sys.tagline_id}
@@ -549,13 +525,12 @@ export default function ExperiencesPage() {
                                     if (!sys.tagline_id) handleUpdateSystem(idx, 'tagline_id', e.target.value)
                                   }
                                 }}
-                                className="h-8 text-xs"
                               />
                             </div>
                           </div>
 
                           <div>
-                            <Label className="text-[10px] text-muted-foreground">Description ({activeLangTab.toUpperCase()})</Label>
+                            <Label>Description ({activeLangTab.toUpperCase()})</Label>
                             <Textarea
                               placeholder="Describe the system workflow, replacement of manual paper, etc..."
                               value={activeLangTab === 'id' ? sys.description_id ?? sys.description : sys.description ?? sys.description_id}
@@ -569,17 +544,16 @@ export default function ExperiencesPage() {
                                 }
                               }}
                               rows={2}
-                              className="text-xs"
                             />
                           </div>
 
                           <div>
-                            <Label className="text-[10px] text-muted-foreground">Tech Stack</Label>
+                            <Label>Tech Stack</Label>
                             <Input
                               placeholder="e.g. Laravel, REST API, Data Synchronization, MySQL"
                               value={sys.tech || ''}
                               onChange={(e) => handleUpdateSystem(idx, 'tech', e.target.value)}
-                              className="h-8 text-xs font-mono"
+                              className="font-mono"
                             />
                           </div>
                         </div>
@@ -590,7 +564,7 @@ export default function ExperiencesPage() {
 
                 <div className="flex gap-2 pt-2">
                   <Button type="submit" className="flex-1">
-                    {editing ? 'Update Experience' : 'Create Experience'}
+                    {editing ? 'Update Experience' : 'Add Experience'}
                   </Button>
                   {editing && (
                     <Button type="button" variant="outline" onClick={handleCancel}>
@@ -610,11 +584,11 @@ export default function ExperiencesPage() {
             </CardHeader>
             <CardContent>
               {loading ? (
-                <p className="text-muted-foreground text-center py-8">Loading...</p>
+                <p className="py-12 text-center text-body-md text-muted-foreground">Loading...</p>
               ) : experiences.length === 0 ? (
-                <p className="text-muted-foreground text-center py-8">No experience entries found.</p>
+                <p className="py-12 text-center text-body-md text-muted-foreground">No experience entries found.</p>
               ) : (
-                <div className="space-y-4">
+                <ul className="divide-y divide-border">
                   {experiences.map((exp) => {
                     let parsedSystems: SystemItem[] = []
                     try {
@@ -624,69 +598,70 @@ export default function ExperiencesPage() {
                     }
 
                     return (
-                      <div
-                        key={exp.id}
-                        className="p-5 rounded-xl border bg-card hover:border-primary/50 transition-colors space-y-4"
-                      >
+                      <li key={exp.id} className="space-y-4 py-4 transition-colors hover:bg-sidebar">
                         {/* Header */}
                         <div className="flex items-start justify-between gap-4">
-                          <div className="space-y-1 min-w-0">
+                          <div className="min-w-0 space-y-1">
                             <div className="flex flex-wrap items-center gap-2">
-                              <h3 className="font-semibold text-lg">{exp.company}</h3>
-                              {exp.program && (
-                                <span className="font-mono text-xs px-2 py-0.5 rounded border bg-muted/60">
-                                  {exp.program}
-                                </span>
-                              )}
+                              <h3 className="text-headline-sm text-foreground">{exp.company}</h3>
+                              {exp.program && <Badge variant="outline">{exp.program}</Badge>}
                             </div>
-                            <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                              <span className="font-mono font-medium text-foreground">{exp.position}</span>
+                            <div className="flex flex-wrap items-center gap-2 text-body-sm text-muted-foreground">
+                              <span className="text-body-sm text-foreground">{exp.position}</span>
                               {exp.position_id && exp.position_id !== exp.position && (
-                                <span className="font-mono text-[11px] text-muted-foreground">({exp.position_id})</span>
+                                <span className="text-body-sm text-muted-foreground">({exp.position_id})</span>
                               )}
                               <span>•</span>
                               <span>{exp.location}</span>
                               <span>•</span>
-                              <span className="font-mono">{exp.period}</span>
+                              <span className="tabular-nums">{exp.period}</span>
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-1 shrink-0">
-                            <Button size="icon" variant="ghost" onClick={() => handleEdit(exp)} title="Edit">
-                              <Pencil className="h-4 w-4" />
+                          <div className="flex shrink-0 items-center gap-1">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-8 w-8 rounded-[8px]"
+                              onClick={() => handleEdit(exp)}
+                              title="Edit"
+                              aria-label="Edit"
+                            >
+                              <Pencil className="h-4 w-4" strokeWidth={1.5} />
                             </Button>
-                            <Button size="icon" variant="ghost" onClick={() => setDeleteId(exp.id)} title="Delete">
-                              <Trash2 className="h-4 w-4" />
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-8 w-8 rounded-[8px]"
+                              onClick={() => setDeleteId(exp.id)}
+                              title="Delete"
+                              aria-label="Delete"
+                            >
+                              <Trash2 className="h-4 w-4" strokeWidth={1.5} />
                             </Button>
                           </div>
                         </div>
 
                         {/* Description */}
-                        <p className="text-sm text-muted-foreground leading-relaxed">
-                          {exp.description}
-                        </p>
+                        <p className="text-body-md text-muted-foreground">{exp.description}</p>
 
                         {/* Systems Grid */}
                         {parsedSystems.length > 0 && (
-                          <div className="space-y-2 pt-2 border-t">
-                            <span className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1.5">
-                              <Layers className="h-3.5 w-3.5" />
+                          <div className="space-y-2 border-t border-border pt-2">
+                            <span className="flex items-center gap-1.5 text-label-section uppercase text-muted-foreground">
+                              <Layers className="h-3.5 w-3.5" strokeWidth={1.5} />
                               Systems & Projects ({parsedSystems.length})
                             </span>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                            <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
                               {parsedSystems.map((sys, sIdx) => (
-                                <div key={sIdx} className="p-3 rounded-lg border bg-muted/30 space-y-1">
+                                <div key={sIdx} className="space-y-1 rounded-[12px] border border-border bg-sidebar p-3">
                                   <div className="flex items-center justify-between gap-2">
-                                    <span className="font-semibold text-xs text-foreground">{sys.title}</span>
-                                    {sys.tagline && (
-                                      <span className="text-[10px] font-mono px-1.5 py-0.2 rounded border bg-background text-muted-foreground">
-                                        {sys.tagline}
-                                      </span>
-                                    )}
+                                    <span className="text-body-sm text-foreground">{sys.title}</span>
+                                    {sys.tagline && <Badge variant="outline">{sys.tagline}</Badge>}
                                   </div>
-                                  <p className="text-xs text-muted-foreground line-clamp-2">{sys.description}</p>
+                                  <p className="text-body-sm text-muted-foreground line-clamp-2">{sys.description}</p>
                                   {sys.tech && (
-                                    <p className="text-[10px] font-mono text-muted-foreground pt-0.5">
+                                    <p className="pt-0.5 text-label-sm text-muted-foreground font-mono">
                                       Stack: {sys.tech}
                                     </p>
                                   )}
@@ -698,36 +673,30 @@ export default function ExperiencesPage() {
 
                         {/* Collaboration Badges */}
                         {exp.collaboration && (
-                          <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t">
-                            <span className="font-mono text-[11px] text-muted-foreground">Collaboration:</span>
+                          <div className="flex flex-wrap items-center gap-1.5 border-t border-border pt-2">
+                            <span className="text-label-sm text-muted-foreground">Collaboration:</span>
                             {exp.collaboration.split(',').map((team, cIdx) => (
-                              <span
-                                key={cIdx}
-                                className="font-mono text-[11px] px-2 py-0.5 rounded border bg-muted/50 text-muted-foreground"
-                              >
+                              <Badge key={cIdx} variant="outline">
                                 {team.trim()}
-                              </span>
+                              </Badge>
                             ))}
                           </div>
                         )}
 
                         {/* Tech Badges Footer */}
                         {exp.technologies && (
-                          <div className="flex flex-wrap gap-1.5 pt-2 border-t">
+                          <div className="flex flex-wrap gap-1.5 border-t border-border pt-2">
                             {exp.technologies.split(',').map((tech, tIdx) => (
-                              <span
-                                key={tIdx}
-                                className="font-mono text-[11px] px-2 py-0.5 rounded border bg-secondary"
-                              >
+                              <Badge key={tIdx} variant="secondary" className="font-mono">
                                 {tech.trim()}
-                              </span>
+                              </Badge>
                             ))}
                           </div>
                         )}
-                      </div>
+                      </li>
                     )
                   })}
-                </div>
+                </ul>
               )}
             </CardContent>
           </Card>
@@ -744,7 +713,7 @@ export default function ExperiencesPage() {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+              <AlertDialogAction variant="destructive" onClick={handleDelete}>Delete</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>

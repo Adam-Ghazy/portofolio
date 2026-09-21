@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Pencil, Trash2, Upload, Image as ImageIcon, Sparkles } from 'lucide-react'
+import { Pencil, Trash2, Upload, Image as ImageIcon } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   AlertDialog,
@@ -19,6 +19,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { LangTabs, AutoTranslateButton } from '@/components/admin/lang-tabs'
+import { Badge } from '@/components/ui/badge'
 
 interface Section {
   id: number
@@ -236,301 +238,267 @@ export default function SectionsPage() {
 
   return (
     <AdminLayout>
-      <div className="container mx-auto p-6 max-w-7xl">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold tracking-tight">Sections</h1>
-          <p className="text-muted-foreground">Manage and customize your portfolio landing page sections with bilingual support</p>
-        </div>
+      <div className="mx-auto max-w-[1400px] space-y-6">
+        <p className="text-body-md text-muted-foreground">{sections.length} records</p>
 
-        <div className="grid gap-6 lg:grid-cols-12">
-          {/* Form Column */}
-          <div className="lg:col-span-5">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>{editing ? `Edit: ${formData.slug || 'Section'}` : 'Add Section'}</CardTitle>
-                    <CardDescription>
-                      {activeGuide ? activeGuide.desc : 'Configure section content, titles, and media'}
-                    </CardDescription>
-                  </div>
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,460px)_minmax(0,1fr)]">
+          <Card>
+            <CardHeader>
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <CardTitle>{editing ? `Edit: ${formData.slug || 'Section'}` : 'Add Section'}</CardTitle>
+                  <CardDescription>
+                    {activeGuide ? activeGuide.desc : 'Configure section content, titles, and media'}
+                  </CardDescription>
+                </div>
+                <LangTabs value={activeLangTab} onChange={setActiveLangTab} />
+              </div>
 
-                  {/* Language Switch Tabs */}
-                  <div className="flex items-center rounded-lg border p-0.5 bg-muted/40 font-mono text-xs">
-                    <button
-                      type="button"
-                      onClick={() => setActiveLangTab('id')}
-                      className={`px-2.5 py-1 rounded transition-all ${
-                        activeLangTab === 'id' ? 'bg-primary text-primary-foreground font-semibold shadow-sm' : 'text-muted-foreground hover:text-foreground'
-                      }`}
-                    >
-                      ID
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setActiveLangTab('en')}
-                      className={`px-2.5 py-1 rounded transition-all ${
-                        activeLangTab === 'en' ? 'bg-primary text-primary-foreground font-semibold shadow-sm' : 'text-muted-foreground hover:text-foreground'
-                      }`}
-                    >
-                      EN
-                    </button>
-                  </div>
+              <div className="pt-2">
+                <AutoTranslateButton
+                  onClick={handleAutoTranslateToEn}
+                  busy={isTranslating}
+                  disabled={isTranslating || (!formData.title_id && !formData.subtitle_id)}
+                />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="slug">Section Identifier (Slug) *</Label>
+                  <Input
+                    id="slug"
+                    value={formData.slug}
+                    onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().trim() })}
+                    placeholder="hero, problem, about, contact..."
+                    required
+                    disabled={!!editing}
+                  />
+                  {!editing && (
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      {['hero', 'problem', 'about', 'projects', 'skills', 'contact'].map((s) => (
+                        <button
+                          key={s}
+                          type="button"
+                          onClick={() => setFormData({ ...formData, slug: s })}
+                          className="rounded-[12px] border px-2 py-0.5 text-label-md transition-colors hover:bg-accent hover:text-accent-foreground"
+                        >
+                          +{s}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
-                {/* Auto Translate Button */}
-                <div className="pt-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={handleAutoTranslateToEn}
-                    disabled={isTranslating || (!formData.title_id && !formData.subtitle_id)}
-                    className="w-full text-xs font-mono gap-1.5 h-8"
-                  >
-                    <Sparkles className="h-3.5 w-3.5" />
-                    {isTranslating ? 'Translating ID to EN...' : 'Auto-Translate ID to EN'}
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  {/* Slug field & presets */}
-                  <div className="space-y-2">
-                    <Label htmlFor="slug">Section Identifier (Slug) *</Label>
-                    <Input
-                      id="slug"
-                      value={formData.slug}
-                      onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().trim() })}
-                      placeholder="hero, problem, about, contact..."
-                      required
-                      disabled={!!editing}
-                    />
-                    {!editing && (
-                      <div className="flex flex-wrap gap-1.5 pt-1">
-                        {['hero', 'problem', 'about', 'projects', 'skills', 'contact'].map((s) => (
-                          <button
-                            key={s}
-                            type="button"
-                            onClick={() => setFormData({ ...formData, slug: s })}
-                            className="text-[11px] font-mono px-2 py-0.5 rounded border hover:bg-accent hover:text-accent-foreground transition-colors"
-                          >
-                            +{s}
-                          </button>
-                        ))}
+                {activeLangTab === 'id' ? (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="title_id">
+                        {formData.slug === 'hero' ? 'Nama / Judul Utama (ID) *' : 'Judul Seksi (ID) *'}
+                      </Label>
+                      <Input
+                        id="title_id"
+                        value={formData.title_id}
+                        onChange={(e) => setFormData({ ...formData, title_id: e.target.value })}
+                        placeholder="contoh: Adam Ghazy Al Falah"
+                        required={!formData.title}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="subtitle_id">
+                        {formData.slug === 'hero' ? 'Ringkasan Bio / Subjudul (ID)' : 'Subjudul / Tagline (ID)'}
+                      </Label>
+                      <Textarea
+                        id="subtitle_id"
+                        value={formData.subtitle_id}
+                        onChange={(e) => setFormData({ ...formData, subtitle_id: e.target.value })}
+                        placeholder="Teks deskripsi ringkas..."
+                        rows={3}
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="title">
+                        {formData.slug === 'hero' ? 'Headline / Main Title (EN) *' : 'Section Title (EN) *'}
+                      </Label>
+                      <Input
+                        id="title"
+                        value={formData.title}
+                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                        placeholder="e.g. Adam Ghazy Al Falah"
+                        required={!formData.title_id}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="subtitle">
+                        {formData.slug === 'hero' ? 'Bio / Subtitle Description (EN)' : 'Subtitle / Tagline (EN)'}
+                      </Label>
+                      <Textarea
+                        id="subtitle"
+                        value={formData.subtitle}
+                        onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
+                        placeholder="Short descriptive text..."
+                        rows={3}
+                      />
+                    </div>
+                  </>
+                )}
+
+                <div className="space-y-2">
+                  <Label htmlFor="image_url">
+                    {formData.slug === 'hero' ? 'Hero Profile Photo' : 'Section Image / Media'}
+                  </Label>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <label className="flex-1">
+                        <Button variant="outline" className="w-full pointer-events-none" disabled={uploading} asChild>
+                          <span className="cursor-pointer">
+                            <Upload className="mr-2 h-4 w-4" strokeWidth={1.5} />
+                            {uploading ? 'Uploading...' : 'Choose photo to upload'}
+                          </span>
+                        </Button>
+                        <input type="file" onChange={handleFileUpload} className="hidden" accept="image/*" />
+                      </label>
+                      {formData.image_url && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setFormData({ ...formData, image_url: '' })}
+                        >
+                          Remove
+                        </Button>
+                      )}
+                    </div>
+
+                    {formData.image_url && (
+                      <div className="relative flex items-center gap-3 overflow-hidden rounded-[12px] border bg-muted/20 p-2">
+                        <img
+                          src={formData.image_url}
+                          alt="preview"
+                          className="h-16 w-16 rounded-[12px] border object-cover"
+                        />
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-label-md text-muted-foreground">{formData.image_url}</p>
+                          <Badge variant="active">Active</Badge>
+                        </div>
                       </div>
                     )}
                   </div>
+                </div>
 
-                  {activeLangTab === 'id' ? (
-                    <>
-                      <div className="space-y-2">
-                        <Label htmlFor="title_id">
-                          {formData.slug === 'hero' ? 'Nama / Judul Utama (ID) *' : 'Judul Seksi (ID) *'}
-                        </Label>
-                        <Input
-                          id="title_id"
-                          value={formData.title_id}
-                          onChange={(e) => setFormData({ ...formData, title_id: e.target.value })}
-                          placeholder="contoh: Adam Ghazy Al Falah"
-                          required={!formData.title}
-                        />
-                      </div>
+                <div className="space-y-2">
+                  <Label htmlFor="content">
+                    {formData.slug === 'contact' ? 'Availability Tag / Note' : 'Extra Content / Data'}
+                  </Label>
+                  <Textarea
+                    id="content"
+                    value={activeLangTab === 'id' ? formData.content_id || formData.content : formData.content || formData.content_id}
+                    onChange={(e) => {
+                      if (activeLangTab === 'id') {
+                        setFormData({ ...formData, content_id: e.target.value, content: formData.content || e.target.value })
+                      } else {
+                        setFormData({ ...formData, content: e.target.value, content_id: formData.content_id || e.target.value })
+                      }
+                    }}
+                    placeholder={formData.slug === 'contact' ? 'e.g. Open to junior developer roles & projects' : 'Optional content...'}
+                    rows={formData.slug === 'problem' ? 5 : 2}
+                  />
+                </div>
 
-                      <div className="space-y-2">
-                        <Label htmlFor="subtitle_id">
-                          {formData.slug === 'hero' ? 'Ringkasan Bio / Subjudul (ID)' : 'Subjudul / Tagline (ID)'}
-                        </Label>
-                        <Textarea
-                          id="subtitle_id"
-                          value={formData.subtitle_id}
-                          onChange={(e) => setFormData({ ...formData, subtitle_id: e.target.value })}
-                          placeholder="Teks deskripsi ringkas..."
-                          rows={3}
-                        />
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="space-y-2">
-                        <Label htmlFor="title">
-                          {formData.slug === 'hero' ? 'Headline / Main Title (EN) *' : 'Section Title (EN) *'}
-                        </Label>
-                        <Input
-                          id="title"
-                          value={formData.title}
-                          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                          placeholder="e.g. Adam Ghazy Al Falah"
-                          required={!formData.title_id}
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="subtitle">
-                          {formData.slug === 'hero' ? 'Bio / Subtitle Description (EN)' : 'Subtitle / Tagline (EN)'}
-                        </Label>
-                        <Textarea
-                          id="subtitle"
-                          value={formData.subtitle}
-                          onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
-                          placeholder="Short descriptive text..."
-                          rows={3}
-                        />
-                      </div>
-                    </>
+                <div className="flex gap-2 pt-2">
+                  <Button type="submit" className="flex-1">
+                    {editing ? 'Update Section' : 'Add Section'}
+                  </Button>
+                  {editing && (
+                    <Button type="button" variant="outline" onClick={handleCancel}>
+                      Cancel
+                    </Button>
                   )}
+                </div>
+              </form>
+            </CardContent>
+          </Card>
 
-                  {/* Image / Photo Upload */}
-                  <div className="space-y-2">
-                    <Label htmlFor="image_url">
-                      {formData.slug === 'hero' ? 'Hero Profile Photo' : 'Section Image / Media'}
-                    </Label>
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-3">
-                        <label className="flex-1">
-                          <Button variant="outline" className="w-full pointer-events-none" disabled={uploading} asChild>
-                            <span className="cursor-pointer">
-                              <Upload className="h-4 w-4 mr-2" />
-                              {uploading ? 'Uploading...' : 'Choose photo to upload'}
-                            </span>
-                          </Button>
-                          <input type="file" onChange={handleFileUpload} className="hidden" accept="image/*" />
-                        </label>
-                        {formData.image_url && (
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setFormData({ ...formData, image_url: '' })}
-                          >
-                            Remove
-                          </Button>
+          <Card>
+            <CardHeader>
+              <CardTitle>Configured Sections</CardTitle>
+              <CardDescription>{sections.length} active sections on your homepage</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <p className="py-12 text-center text-body-md text-muted-foreground">Loading...</p>
+              ) : sections.length === 0 ? (
+                <p className="py-12 text-center text-body-md text-muted-foreground">No sections found</p>
+              ) : (
+                <ul className="divide-y divide-border">
+                  {sections.map((section) => (
+                    <li
+                      key={section.id}
+                      className="flex items-start gap-4 py-4 transition-colors hover:bg-sidebar"
+                    >
+                      <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-[12px] border bg-muted/30">
+                        {section.image_url ? (
+                          <img src={section.image_url} alt={section.title} className="h-full w-full object-cover" />
+                        ) : (
+                          <span className="text-label-section uppercase text-muted-foreground">
+                            {section.slug.slice(0, 3)}
+                          </span>
                         )}
                       </div>
 
-                      {/* Image Preview Box */}
-                      {formData.image_url && (
-                        <div className="relative rounded-xl overflow-hidden border bg-muted/20 p-2 flex items-center gap-3">
-                          <img
-                            src={formData.image_url}
-                            alt="preview"
-                            className="w-16 h-16 rounded-lg object-cover border"
-                          />
-                          <div className="min-w-0 flex-1">
-                            <p className="text-xs font-mono truncate text-muted-foreground">{formData.image_url}</p>
-                            <p className="text-[11px] text-green-600 dark:text-green-400 mt-0.5">Active</p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Content field */}
-                  <div className="space-y-2">
-                    <Label htmlFor="content">
-                      {formData.slug === 'contact' ? 'Availability Tag / Note' : 'Extra Content / Data'}
-                    </Label>
-                    <Textarea
-                      id="content"
-                      value={activeLangTab === 'id' ? formData.content_id || formData.content : formData.content || formData.content_id}
-                      onChange={(e) => {
-                        if (activeLangTab === 'id') {
-                          setFormData({ ...formData, content_id: e.target.value, content: formData.content || e.target.value })
-                        } else {
-                          setFormData({ ...formData, content: e.target.value, content_id: formData.content_id || e.target.value })
-                        }
-                      }}
-                      placeholder={formData.slug === 'contact' ? 'e.g. Open to junior developer roles & projects' : 'Optional content...'}
-                      rows={formData.slug === 'problem' ? 5 : 2}
-                      className={formData.slug === 'problem' ? 'font-mono text-xs' : ''}
-                    />
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex gap-2 pt-2">
-                    <Button type="submit" className="flex-1">
-                      {editing ? 'Update Section' : 'Add Section'}
-                    </Button>
-                    {editing && (
-                      <Button type="button" variant="outline" onClick={handleCancel}>
-                        Cancel
-                      </Button>
-                    )}
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Table Column */}
-          <div className="lg:col-span-7">
-            <Card>
-              <CardHeader>
-                <CardTitle>Configured Sections</CardTitle>
-                <CardDescription>{sections.length} active sections on your homepage</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {loading ? (
-                  <p className="text-muted-foreground text-center py-8">Loading...</p>
-                ) : sections.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-8">No sections found</p>
-                ) : (
-                  <div className="space-y-3">
-                    {sections.map((section) => (
-                      <div
-                        key={section.id}
-                        className="rounded-xl border p-4 flex items-start gap-4 hover:border-primary/50 transition-colors bg-card"
-                      >
-                        {/* Section Thumbnail / Icon */}
-                        <div className="w-14 h-14 rounded-lg border bg-muted/30 flex items-center justify-center shrink-0 overflow-hidden">
-                          {section.image_url ? (
-                            <img src={section.image_url} alt={section.title} className="w-full h-full object-cover" />
-                          ) : (
-                            <span className="font-mono text-xs font-semibold text-muted-foreground uppercase">
-                              {section.slug.slice(0, 3)}
+                      <div className="min-w-0 flex-1">
+                        <div className="mb-1 flex items-center gap-2">
+                          <Badge variant="secondary">{section.slug}</Badge>
+                          {section.image_url && (
+                            <span className="flex items-center gap-1 text-label-md text-muted-foreground">
+                              <ImageIcon className="h-3.5 w-3.5" strokeWidth={1.5} /> photo
                             </span>
                           )}
                         </div>
-
-                        {/* Details */}
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="font-mono text-[10px] px-2 py-0.5 rounded uppercase font-semibold bg-accent text-accent-foreground">
-                              {section.slug}
-                            </span>
-                            {section.image_url && (
-                              <span className="text-[10px] text-muted-foreground flex items-center gap-1 font-mono">
-                                <ImageIcon className="w-3 h-3" /> photo
-                              </span>
-                            )}
-                          </div>
-                          <h4 className="font-semibold text-sm truncate">{section.title}</h4>
-                          {section.title_id && section.title_id !== section.title && (
-                            <p className="text-xs text-muted-foreground font-mono">ID: {section.title_id}</p>
-                          )}
-                          {section.subtitle && (
-                            <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
-                              {section.subtitle}
-                            </p>
-                          )}
-                        </div>
-
-                        {/* Actions */}
-                        <div className="flex gap-1 shrink-0">
-                          <Button size="icon" variant="ghost" onClick={() => handleEdit(section)} title="Edit Section">
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button size="icon" variant="ghost" onClick={() => setDeleteId(section.id)} title="Delete Section">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
+                        <h4 className="truncate text-headline-sm text-foreground">{section.title}</h4>
+                        {section.title_id && section.title_id !== section.title && (
+                          <p className="text-label-md text-muted-foreground">ID: {section.title_id}</p>
+                        )}
+                        {section.subtitle && (
+                          <p className="mt-0.5 line-clamp-2 text-body-sm text-muted-foreground">
+                            {section.subtitle}
+                          </p>
+                        )}
                       </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+
+                      <div className="flex shrink-0 gap-1">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8 rounded-[8px]"
+                          onClick={() => handleEdit(section)}
+                          title="Edit Section"
+                          aria-label="Edit Section"
+                        >
+                          <Pencil className="h-4 w-4" strokeWidth={1.5} />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8 rounded-[8px]"
+                          onClick={() => setDeleteId(section.id)}
+                          title="Delete Section"
+                          aria-label="Delete Section"
+                        >
+                          <Trash2 className="h-4 w-4" strokeWidth={1.5} />
+                        </Button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
         <AlertDialog open={deleteId !== null} onOpenChange={() => setDeleteId(null)}>
@@ -541,7 +509,7 @@ export default function SectionsPage() {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+              <AlertDialogAction variant="destructive" onClick={handleDelete}>Delete</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>

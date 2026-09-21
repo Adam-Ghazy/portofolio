@@ -226,6 +226,12 @@ See [DEPLOYMENT.md](./DEPLOYMENT.md) for full instructions covering:
 
 ## Changelog
 
+### Unreleased
+
+- Admin dashboard now has a dark palette, toggled from the header (and the login screen) and
+  persisted separately from the public site's preference. Pre-paint bootstrap in `src/lib/theme.ts`
+  means neither surface flashes the wrong theme on load.
+
 ### v2.0 — July 2026
 
 - Admin dashboard with full CRUD

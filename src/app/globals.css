@@ -2,29 +2,211 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ---------------------------------------------------------------------------
+   Theme tokens
+   - Public site: runtime vars (--bg-*, --text-*, --border-*, --accent, ...) in
+     :root / .dark, consumed via inline `var()` styles.
+   - Admin ("Industrial Governance", see DESIGN.md): static design tokens below,
+     consumed through Tailwind utilities (bg-card, text-muted-foreground, ...).
+     The palette is monochrome with exactly one accent (#222222 light / #F1F3F4
+     dark) and colour appears only inside status pills. Both palettes live in
+     this file: the light values in `@theme`, their dark counterparts in the
+     `.dark` block right below it. The admin is authored light-first, so `.dark`
+     reaches it only when the operator asks for it (see lib/theme.ts).
+--------------------------------------------------------------------------- */
 @theme {
-  --color-cream: #F4F4F4;
-  --color-cream-dark: #1a1a1e;
-  --color-sand: #F0ECE4;
-  --color-sand-dark: #242428;
-  --color-ink: #191818;
-  --color-ink-light: #e8e8e8;
-  --color-blue: #1B5DEF;
-  --color-blue-light: #4A7FF7;
-  --color-orange: #E25327;
-  --color-orange-light: #E8734B;
-  --color-green: #22C55E;
-  --color-red: #FF5F57;
-  --color-yellow: #FFBD2E;
-
-  --color-surface: #F4F4F4;
-  --color-surface-alt: #F0ECE4;
-  --color-surface-dark: #1a1a1e;
-  --color-surface-dark-alt: #222226;
-
   --font-display: "Plus Jakarta Sans", system-ui, sans-serif;
   --font-body: "Plus Jakarta Sans", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* Industrial Governance — canvas, structure, ink */
+  /* Admin type uses the same family as the public site (Plus Jakarta Sans via
+     --font-body); no second typeface is loaded. */
+
+  --color-background: #f8f8f8;
+  --color-surface: #ffffff;
+  --color-sidebar: #fafafa;
+  --color-sidebar-foreground: #636e72;
+  --color-sidebar-accent: #ffffff;
+  --color-sidebar-accent-foreground: #2d3436;
+  --color-sidebar-border: #efefef;
+  --color-sidebar-ring: #222222;
+  --color-border: #efefef;
+  --color-border-strong: #dfdfdf;
+  --color-text-primary: #2d3436;
+  --color-text-secondary: #636e72;
+  --color-primary: #222222;
+  --color-primary-hover: #333333;
+  --color-on-primary: #ffffff;
+  --color-destructive: #c5221f;
+
+  /* Lifecycle status — the only permitted colour application */
+  --color-status-active-bg: #e6f4ea;
+  --color-status-active-text: #137333;
+  --color-status-pending-bg: #fef7e0;
+  --color-status-pending-text: #8f4f00;
+  --color-status-expired-bg: #fce8e6;
+  --color-status-expired-text: #c5221f;
+  --color-status-draft-bg: #f1f3f4;
+  --color-status-draft-text: #5f6368;
+
+  /* Semantic aliases used by the admin primitives */
+  --color-foreground: #2d3436;
+  --color-card: #ffffff;
+  --color-card-foreground: #2d3436;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #2d3436;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #fafafa;
+  --color-secondary-foreground: #2d3436;
+  --color-muted: #f1f3f4;
+  --color-muted-foreground: #636e72;
+  --color-accent: #f1f3f4;
+  --color-accent-foreground: #2d3436;
+  --color-destructive-foreground: #ffffff;
+  /* Inputs are control outlines that must read as interactive — DESIGN.md
+     reserves #DFDFDF for exactly that, not for the structural hairline. */
+  --color-input: #dfdfdf;
+  --color-ring: #222222;
+  /* Placeholder sits ~3.1:1 on white: clearly lighter than a real value
+     (12.7:1), so an empty field never reads as a filled one. */
+  --color-placeholder: #8a9497;
+
+  /* Type scale — size / leading / weight / tracking in one utility.
+     Tuned for a dense operational surface: row text never drops below 13px. */
+  --text-headline-lg: 22px;
+  --text-headline-lg--line-height: 30px;
+  --text-headline-lg--font-weight: 600;
+  --text-headline-lg--letter-spacing: -0.015em;
+  --text-headline-md: 18px;
+  --text-headline-md--line-height: 26px;
+  --text-headline-md--font-weight: 600;
+  --text-headline-md--letter-spacing: -0.01em;
+  --text-headline-sm: 15px;
+  --text-headline-sm--line-height: 22px;
+  --text-headline-sm--font-weight: 600;
+  --text-body-lg: 15px;
+  --text-body-lg--line-height: 22px;
+  --text-body-lg--font-weight: 400;
+  --text-body-md: 13px;
+  --text-body-md--line-height: 20px;
+  --text-body-md--font-weight: 400;
+  --text-body-sm: 13px;
+  --text-body-sm--line-height: 18px;
+  --text-body-sm--font-weight: 400;
+  --text-label-section: 10px;
+  --text-label-section--line-height: 14px;
+  --text-label-section--font-weight: 600;
+  --text-label-section--letter-spacing: 0.08em;
+  --text-label-md: 12px;
+  --text-label-md--line-height: 16px;
+  --text-label-md--font-weight: 500;
+  --text-label-sm: 11px;
+  --text-label-sm--line-height: 14px;
+  --text-label-sm--font-weight: 500;
+  --text-tabular-numeric: 13px;
+  --text-tabular-numeric--line-height: 20px;
+  --text-tabular-numeric--font-weight: 500;
+
+  /* Shape — the only two radii this system consumes as bare utilities.
+     `rounded-sm` (8px) is the compact trigger; `rounded-md` (12px) is the
+     workhorse for containers and controls.
+
+     Deliberately NOT defined: `--radius-lg` / `--radius-xl`. The public site
+     owns those at Tailwind's defaults (8px / 12px), and re-pointing them here
+     would re-round every public button and card. Admin therefore never uses a
+     bare `rounded-lg`/`rounded-xl`; it uses explicit `rounded-[12px]`, and
+     `rounded-[8px]` for compact icon triggers.
+
+     Trap: `rounded-md` (12px) is LARGER than `rounded-lg` (8px). Reaching for
+     `rounded-lg` expecting a bigger radius silently gives you a smaller one. */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+
+  /* Elevation — restrained, low diffusion. Only the alpha is themed: Tailwind
+     inlines `--shadow-*` into the `shadow-*` utility, so overriding the token in
+     `.dark` would be dead code. The indirection through `--elevation-*-alpha`
+     keeps one geometry and lets the ink density flip with the palette. */
+  --shadow-card: 0 2px 8px rgb(0 0 0 / var(--elevation-card-alpha, 0.04));
+  --shadow-layer: 0 4px 16px rgb(0 0 0 / var(--elevation-layer-alpha, 0.06));
+  --shadow-modal: 0 12px 32px rgb(0 0 0 / var(--elevation-modal-alpha, 0.08));
+}
+
+/* ---------------------------------------------------------------------------
+   Admin dark palette — the same system, inverted.
+   Inversion is structural, not literal: the canvas drops below the panels
+   instead of above them (background #0F1115 < sidebar #14171B < surface
+   #1A1D23), and the sole accent flips from near-black to near-white so it keeps
+   carrying active navigation, primary buttons and focus rings.
+
+   Ratios are matched to the light palette they replace (see DESIGN.md § Colors),
+   measured against `surface`:
+     text-primary     15.3:1  (light 12.7:1)     placeholder      3.7:1 (3.1:1)
+     text-secondary    5.9:1  ( 5.2:1)           border           1.17:1 (1.15:1)
+     accent/primary   15.2:1  (15.9:1)           border-strong    1.63:1 (1.33:1)
+   The two hairlines keep the documented "barely perceptible boundary" trade-off;
+   `border-strong` runs slightly hotter than light mode because a 1.33:1 outline
+   on a dark surface reads as no outline at all, and it is the token that makes an
+   input look interactive. Status pill pairs stay at or above WCAG AA:
+     active 5.2:1 · pending 5.9:1 · expired 5.7:1 · draft 5.4:1
+   Shadows gain alpha: black-on-near-black has to work harder to read as depth.
+--------------------------------------------------------------------------- */
+.dark {
+  /* Native chrome (scrollbars, autofill, date pickers) follows the palette. */
+  color-scheme: dark;
+
+  --color-background: #0f1115;
+  --color-surface: #1a1d23;
+  --color-sidebar: #14171b;
+  --color-sidebar-foreground: #929a9e;
+  --color-sidebar-accent: #23272f;
+  --color-sidebar-accent-foreground: #f2f4f5;
+  --color-sidebar-border: #23272e;
+  --color-sidebar-ring: #e8eaed;
+  --color-border: #262a31;
+  --color-border-strong: #3a4149;
+  --color-text-primary: #f2f4f5;
+  --color-text-secondary: #929a9e;
+  --color-primary: #f1f3f4;
+  --color-primary-hover: #ffffff;
+  --color-on-primary: #16181c;
+  --color-destructive: #f2857f;
+
+  /* Lifecycle status — deep tint, bright glyph */
+  --color-status-active-bg: #10281a;
+  --color-status-active-text: #5fb37c;
+  --color-status-pending-bg: #2c2210;
+  --color-status-pending-text: #c99c47;
+  --color-status-expired-bg: #331a19;
+  --color-status-expired-text: #e27c76;
+  --color-status-draft-bg: #22262d;
+  --color-status-draft-text: #949ca1;
+
+  /* Semantic aliases used by the admin primitives */
+  --color-foreground: #f2f4f5;
+  --color-card: #1a1d23;
+  --color-card-foreground: #f2f4f5;
+  --color-popover: #1e2229;
+  --color-popover-foreground: #f2f4f5;
+  --color-primary-foreground: #16181c;
+  --color-secondary: #1e2229;
+  --color-secondary-foreground: #f2f4f5;
+  --color-muted: #22262d;
+  --color-muted-foreground: #929a9e;
+  --color-accent: #22262d;
+  --color-accent-foreground: #f2f4f5;
+  --color-destructive-foreground: #2a1210;
+  --color-input: #3a4149;
+  --color-ring: #e8eaed;
+  /* Same 4.1x gap to a real value that the light palette holds (3.1:1 vs 12.7:1),
+     so an empty field never reads as a filled one. */
+  --color-placeholder: #6e777c;
+
+  /* Elevation ink: black-on-near-black has to work harder to read as depth, and
+     the light-mode alpha is invisible on #0F1115. */
+  --elevation-card-alpha: 0.5;
+  --elevation-layer-alpha: 0.6;
+  --elevation-modal-alpha: 0.7;
 }
 
 :root {
@@ -37,48 +219,22 @@
   --text-tertiary: rgba(15, 23, 42, 0.45);
   --border-color: rgba(15, 23, 42, 0.08);
   --border-subtle: rgba(15, 23, 42, 0.04);
-  
+
   --accent: #0F172A;
   --accent-hover: #1E293B;
   --accent-contrast: #FFFFFF;
   --signal: #E25327;
   --signal-green: #10B981;
-  
+
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
   --shadow-md: 0 4px 12px rgba(0,0,0,0.07);
   --shadow-lg: 0 10px 30px rgba(0,0,0,0.1);
 
   --sidebar-width: 16rem;
   --sidebar-width-icon: 3rem;
-  --sidebar: hsl(0 0% 98%);
-  --sidebar-foreground: hsl(240 5.3% 26.1%);
-  --sidebar-primary: hsl(240 5.9% 10%);
-  --sidebar-primary-foreground: hsl(0 0% 98%);
-  --sidebar-accent: hsl(240 4.8% 95.9%);
-  --sidebar-accent-foreground: hsl(240 5.9% 10%);
-  --sidebar-border: hsl(220 13% 91%);
-  --sidebar-ring: hsl(217.2 91.2% 59.8%);
 
-  --background: 0 0% 100%;
-  --foreground: 240 10% 3.9%;
-  --card: 0 0% 100%;
-  --card-foreground: 240 10% 3.9%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 240 10% 3.9%;
-  --primary: 240 5.9% 10%;
-  --primary-foreground: 0 0% 98%;
-  --secondary: 240 4.8% 95.9%;
-  --secondary-foreground: 240 5.9% 10%;
-  --muted: 240 4.8% 95.9%;
-  --muted-foreground: 240 3.8% 46.1%;
-  --accent-muted: 240 4.8% 95.9%;
-  --accent-foreground: 240 5.9% 10%;
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 0 0% 98%;
-  --border: 240 5.9% 90%;
-  --input: 240 5.9% 90%;
-  --ring: 240 5.9% 10%;
-  --radius: 0.5rem;
+  /* Translucent chrome that follows the active theme */
+  --header-bg: color-mix(in srgb, var(--bg-primary) 85%, transparent);
 }
 
 .dark {
@@ -91,49 +247,25 @@
   --text-tertiary: rgba(248, 250, 252, 0.45);
   --border-color: rgba(255, 255, 255, 0.08);
   --border-subtle: rgba(255, 255, 255, 0.04);
-  
+
   --accent: #F8FAFC;
   --accent-hover: #E2E8F0;
   --accent-contrast: #0B0D11;
   --signal: #F97316;
   --signal-green: #22C55E;
-  
+
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.4);
   --shadow-md: 0 4px 12px rgba(0,0,0,0.5);
   --shadow-lg: 0 10px 30px rgba(0,0,0,0.6);
 
   --sidebar-width: 16rem;
   --sidebar-width-icon: 3rem;
-  --sidebar: hsl(240 5.9% 10%);
-  --sidebar-foreground: hsl(240 4.8% 95.9%);
-  --sidebar-primary: hsl(224.3 76.3% 48%);
-  --sidebar-primary-foreground: hsl(0 0% 100%);
-  --sidebar-accent: hsl(240 3.7% 15.9%);
-  --sidebar-accent-foreground: hsl(240 4.8% 95.9%);
-  --sidebar-border: hsl(240 3.7% 15.9%);
-  --sidebar-ring: hsl(217.2 91.2% 59.8%);
-
-  --background: 240 10% 3.9%;
-  --foreground: 0 0% 98%;
-  --card: 240 10% 3.9%;
-  --card-foreground: 0 0% 98%;
-  --popover: 240 10% 3.9%;
-  --popover-foreground: 0 0% 98%;
-  --primary: 0 0% 98%;
-  --primary-foreground: 240 5.9% 10%;
-  --secondary: 240 3.7% 15.9%;
-  --secondary-foreground: 0 0% 98%;
-  --muted: 240 3.7% 15.9%;
-  --muted-foreground: 240 5% 64.9%;
-  --accent-muted: 240 3.7% 15.9%;
-  --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 0 0% 98%;
-  --border: 240 3.7% 15.9%;
-  --input: 240 3.7% 15.9%;
-  --ring: 240 4.9% 83.9%;
 }
 
 html {
+  /* Light is the floor; `.dark` (equal specificity, class) must not be beaten by
+     a later `:root` declaration, so this lives on the element selector. */
+  color-scheme: light;
   scroll-behavior: smooth;
 }
 
@@ -255,17 +387,10 @@ a:focus-visible, button:focus-visible {
   outline-offset: 2px;
 }
 
+/* Selection tint must survive every surface. `--accent` flips with the theme, so
+   the highlight does too, and no explicit `color` is set: the surface's own ink
+   stays legible over it in both directions (7.0:1 on light, 6.4:1 on dark).
+   The mix percentage is load-bearing — at 20% the dark highlight disappears. */
 ::selection {
-  background: rgba(27, 93, 239, 0.2);
-}
-
-@theme inline {
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
+  background: color-mix(in srgb, var(--accent) 28%, transparent);
 }

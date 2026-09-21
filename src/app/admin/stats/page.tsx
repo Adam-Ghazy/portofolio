@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Pencil, Trash2, TrendingUp, Sparkles } from 'lucide-react'
+import { Pencil, Trash2, TrendingUp } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   AlertDialog,
@@ -18,6 +18,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { AutoTranslateButton, LangTabs } from '@/components/admin/lang-tabs'
 
 interface Stat {
   id: number
@@ -133,63 +134,32 @@ export default function StatsPage() {
 
   return (
     <AdminLayout>
-      <div className="container mx-auto p-6 max-w-7xl">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold tracking-tight">Stats</h1>
-          <p className="text-muted-foreground">Manage about section statistics with bilingual support</p>
+      <div className="mx-auto max-w-[1400px] space-y-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-body-md text-muted-foreground">{stats.length} records</p>
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,440px)_minmax(0,1fr)]">
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <CardTitle>{editing ? 'Edit Stat' : 'Add Stat'}</CardTitle>
                   <CardDescription>
                     {editing ? 'Update statistic' : 'Create a new statistic'}
                   </CardDescription>
                 </div>
-
-                {/* Language Switch Tabs */}
-                <div className="flex items-center rounded-lg border p-0.5 bg-muted/40 font-mono text-xs">
-                  <button
-                    type="button"
-                    onClick={() => setActiveLangTab('id')}
-                    className={`px-2.5 py-1 rounded transition-all ${
-                      activeLangTab === 'id' ? 'bg-primary text-primary-foreground font-semibold shadow-sm' : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    ID
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveLangTab('en')}
-                    className={`px-2.5 py-1 rounded transition-all ${
-                      activeLangTab === 'en' ? 'bg-primary text-primary-foreground font-semibold shadow-sm' : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    EN
-                  </button>
-                </div>
-              </div>
-
-              {/* Auto-Translate Button */}
-              <div className="pt-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleAutoTranslate}
-                  disabled={isTranslating || !formData.label_id}
-                  className="w-full text-xs font-mono gap-1.5 h-8"
-                >
-                  <Sparkles className="h-3.5 w-3.5" />
-                  {isTranslating ? 'Translating ID to EN...' : 'Auto-Translate ID to EN'}
-                </Button>
+                <LangTabs value={activeLangTab} onChange={setActiveLangTab} />
               </div>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
+                <AutoTranslateButton
+                  onClick={handleAutoTranslate}
+                  busy={isTranslating}
+                  disabled={!formData.label_id}
+                />
+
                 <div className="space-y-2">
                   <Label htmlFor="value">Value *</Label>
                   <Input
@@ -227,7 +197,7 @@ export default function StatsPage() {
 
                 <div className="flex gap-2 pt-2">
                   <Button type="submit" className="flex-1">
-                    {editing ? 'Update' : 'Create'}
+                    {editing ? 'Update Stat' : 'Add Stat'}
                   </Button>
                   {editing && (
                     <Button type="button" variant="outline" onClick={handleCancel}>
@@ -239,50 +209,62 @@ export default function StatsPage() {
             </CardContent>
           </Card>
 
-          <div className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Existing Stats</CardTitle>
-                <CardDescription>{stats.length} stats total</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {loading ? (
-                  <p className="text-muted-foreground text-center py-8">Loading...</p>
-                ) : stats.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-8">No stats yet</p>
-                ) : (
-                  <div className="grid gap-4 md:grid-cols-2">
-                    {stats.map((stat) => (
-                      <Card key={stat.id}>
-                        <CardContent className="p-4">
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-1">
-                                <TrendingUp className="h-4 w-4 text-primary" />
-                                <p className="text-2xl font-bold">{stat.value}</p>
-                              </div>
-                              <p className="text-sm text-muted-foreground">{stat.label}</p>
-                              {stat.label_id && stat.label_id !== stat.label && (
-                                <p className="text-xs text-muted-foreground font-mono">ID: {stat.label_id}</p>
-                              )}
-                            </div>
-                            <div className="flex gap-1 flex-shrink-0">
-                              <Button size="icon" variant="ghost" onClick={() => handleEdit(stat)}>
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                              <Button size="icon" variant="ghost" onClick={() => setDeleteId(stat.id)}>
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Existing Stats</CardTitle>
+              <CardDescription>{stats.length} stats total</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <p className="py-12 text-center text-body-md text-muted-foreground">Loading...</p>
+              ) : stats.length === 0 ? (
+                <p className="py-12 text-center text-body-md text-muted-foreground">No stats yet</p>
+              ) : (
+                <ul className="divide-y divide-border">
+                  {stats.map((stat) => (
+                    <li
+                      key={stat.id}
+                      className="flex items-start justify-between gap-4 py-4 transition-colors hover:bg-sidebar"
+                    >
+                      <div className="flex min-w-0 gap-3">
+                        <TrendingUp
+                          className="mt-1 h-4 w-4 shrink-0 text-muted-foreground"
+                          strokeWidth={1.5}
+                        />
+                        <div className="min-w-0">
+                          <p className="text-headline-lg tabular-nums text-foreground">{stat.value}</p>
+                          <p className="mt-1 text-body-sm text-muted-foreground">{stat.label}</p>
+                          {stat.label_id && stat.label_id !== stat.label && (
+                            <p className="mt-1 text-label-md text-muted-foreground">ID: {stat.label_id}</p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex shrink-0 gap-1">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8 rounded-[8px]"
+                          onClick={() => handleEdit(stat)}
+                          aria-label="Edit"
+                        >
+                          <Pencil className="h-4 w-4" strokeWidth={1.5} />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8 rounded-[8px]"
+                          onClick={() => setDeleteId(stat.id)}
+                          aria-label="Delete"
+                        >
+                          <Trash2 className="h-4 w-4" strokeWidth={1.5} />
+                        </Button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
         <AlertDialog open={deleteId !== null} onOpenChange={() => setDeleteId(null)}>
@@ -293,7 +275,9 @@ export default function StatsPage() {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+              <AlertDialogAction variant={'destructive' as never} onClick={handleDelete}>
+                Delete
+              </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>

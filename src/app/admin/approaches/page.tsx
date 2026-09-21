@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from 'react'
 import { AdminLayout } from '@/components/admin/layout-wrapper'
+import { LangTabs, AutoTranslateButton } from '@/components/admin/lang-tabs'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Pencil, Trash2, Workflow, Sparkles } from 'lucide-react'
+import { Pencil, Trash2, Workflow } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   AlertDialog,
@@ -153,24 +155,17 @@ export default function ApproachesAdminPage() {
 
   return (
     <AdminLayout>
-      <div className="container mx-auto p-6 max-w-7xl">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Engineering Approach</h1>
-            <p className="text-muted-foreground">
-              Manage &quot;03 // approach - How I Build Software&quot; methodology cards shown on the About page with bilingual support
-            </p>
-          </div>
-        </div>
+      <div className="mx-auto max-w-[1400px] space-y-6">
+        <p className="text-body-md text-muted-foreground">{approaches.length} steps configured</p>
 
-        <div className="grid gap-6 lg:grid-cols-[480px_1fr]">
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,480px)_minmax(0,1fr)]">
           {/* Approach Form */}
           <Card className="h-fit">
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <CardTitle className="flex items-center gap-2">
-                    <Workflow className="h-5 w-5 text-primary" />
+                    <Workflow className="h-5 w-5 text-primary" strokeWidth={1.5} />
                     {editing ? 'Edit Approach Step' : 'Add Approach Step'}
                   </CardTitle>
                   <CardDescription>
@@ -179,47 +174,17 @@ export default function ApproachesAdminPage() {
                       : 'Add a new step to your engineering methodology'}
                   </CardDescription>
                 </div>
-
-                {/* Language Switch Tabs */}
-                <div className="flex items-center rounded-lg border p-0.5 bg-muted/40 font-mono text-xs">
-                  <button
-                    type="button"
-                    onClick={() => setActiveLangTab('id')}
-                    className={`px-2.5 py-1 rounded transition-all ${
-                      activeLangTab === 'id' ? 'bg-primary text-primary-foreground font-semibold shadow-sm' : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    ID
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveLangTab('en')}
-                    className={`px-2.5 py-1 rounded transition-all ${
-                      activeLangTab === 'en' ? 'bg-primary text-primary-foreground font-semibold shadow-sm' : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    EN
-                  </button>
-                </div>
-              </div>
-
-              {/* Auto Translate Button */}
-              <div className="pt-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleAutoTranslate}
-                  disabled={isTranslating || (!formData.title_id && !formData.description_id)}
-                  className="w-full text-xs font-mono gap-1.5 h-8"
-                >
-                  <Sparkles className="h-3.5 w-3.5" />
-                  {isTranslating ? 'Translating ID to EN...' : 'Auto-Translate ID to EN'}
-                </Button>
+                <LangTabs value={activeLangTab} onChange={setActiveLangTab} />
               </div>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
+                <AutoTranslateButton
+                  onClick={handleAutoTranslate}
+                  busy={isTranslating}
+                  disabled={!formData.title_id && !formData.description_id}
+                />
+
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
                     <Label htmlFor="app-num">Step Number</Label>
@@ -309,70 +274,59 @@ export default function ApproachesAdminPage() {
           {/* Approaches List */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span>Approach Steps</span>
-                <span className="text-sm font-normal text-muted-foreground">
-                  {approaches.length} steps configured
-                </span>
-              </CardTitle>
+              <CardTitle>Approach Steps</CardTitle>
               <CardDescription>
                 These steps will appear in chronological sequence in the &quot;How I Build Software&quot; grid
               </CardDescription>
             </CardHeader>
             <CardContent>
               {loading ? (
-                <p className="text-muted-foreground text-center py-8">Loading approach steps...</p>
+                <p className="text-body-md text-muted-foreground text-center py-12">Loading approach steps...</p>
               ) : approaches.length === 0 ? (
-                <p className="text-muted-foreground text-center py-8">No approach steps found.</p>
+                <p className="text-body-md text-muted-foreground text-center py-12">No approach steps found.</p>
               ) : (
                 <div className="grid gap-4 sm:grid-cols-2">
                   {approaches.map((item, idx) => (
                     <div
                       key={item.id || idx}
-                      className="p-5 rounded-2xl border bg-card hover:border-primary/50 transition-colors flex flex-col justify-between space-y-3"
+                      className="flex flex-col justify-between space-y-3 rounded-[12px] border border-border bg-surface p-4 transition-colors hover:border-border-strong"
                     >
                       <div className="space-y-2">
                         <div className="flex items-center justify-between gap-2">
-                          <div className="font-mono text-2xl font-bold text-primary">
+                          <div className="text-headline-md tabular-nums text-foreground">
                             {item.step_number || String(idx + 1).padStart(2, '0')}
                           </div>
-                          <span className="text-[11px] font-mono px-2 py-0.5 rounded border bg-muted/60 text-muted-foreground">
-                            Order: {item.sort_order ?? 0}
-                          </span>
+                          <Badge variant="secondary">Order {item.sort_order ?? 0}</Badge>
                         </div>
 
-                        <h3 className="font-semibold text-base text-foreground leading-snug">
-                          {item.title}
-                        </h3>
+                        <h3 className="text-headline-sm text-foreground">{item.title}</h3>
                         {item.title_id && item.title_id !== item.title && (
-                          <p className="text-xs text-muted-foreground font-mono">ID: {item.title_id}</p>
+                          <p className="text-label-md text-muted-foreground">ID: {item.title_id}</p>
                         )}
 
                         {item.description && (
-                          <p className="text-xs text-muted-foreground leading-relaxed pt-1">
-                            {item.description}
-                          </p>
+                          <p className="pt-1 text-body-sm text-muted-foreground">{item.description}</p>
                         )}
                       </div>
 
-                      <div className="flex items-center justify-end gap-1 pt-2 border-t">
+                      <div className="flex items-center justify-end gap-1 border-t border-border pt-2">
                         <Button
-                          size="sm"
+                          size="icon"
                           variant="ghost"
                           onClick={() => handleEdit(item)}
-                          className="h-8 px-2 text-xs flex items-center gap-1.5"
+                          className="h-8 w-8 rounded-[8px]"
+                          aria-label="Edit approach step"
                         >
-                          <Pencil className="h-3.5 w-3.5" />
-                          <span>Edit</span>
+                          <Pencil className="h-4 w-4" strokeWidth={1.5} />
                         </Button>
                         <Button
-                          size="sm"
+                          size="icon"
                           variant="ghost"
                           onClick={() => setDeleteId(item.id!)}
-                          className="h-8 px-2 text-xs text-destructive hover:text-destructive flex items-center gap-1.5"
+                          className="h-8 w-8 rounded-[8px] text-destructive hover:text-destructive"
+                          aria-label="Delete approach step"
                         >
-                          <Trash2 className="h-3.5 w-3.5" />
-                          <span>Delete</span>
+                          <Trash2 className="h-4 w-4" strokeWidth={1.5} />
                         </Button>
                       </div>
                     </div>
@@ -394,7 +348,9 @@ export default function ApproachesAdminPage() {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+              <AlertDialogAction variant="destructive" onClick={handleDelete}>
+                Delete
+              </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
