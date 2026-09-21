@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
 import { I18nextProvider, useTranslation as useI18nTranslation } from 'react-i18next';
+import { useMounted } from '@/hooks/use-mounted';
 import i18n from '@/lib/i18n';
 import enTranslation from '@/locales/en.json';
 
@@ -38,17 +39,16 @@ function getNestedValue(obj: any, path: string): string | undefined {
 
 function LanguageContextInner({ children }: { children: React.ReactNode }) {
   const { t: i18nTranslate, i18n: i18nInstance } = useI18nTranslation();
-  const [mounted, setMounted] = useState(false);
-  const [currentLng, setCurrentLng] = useState<'en' | 'id'>('en');
+  const mounted = useMounted();
+  const [currentLng, setCurrentLng] = useState<'en' | 'id'>(() => {
+    const saved = typeof window !== 'undefined' ? localStorage.getItem('i18nextLng') : null;
+    const lng = (saved?.startsWith('id') || i18nInstance.language?.startsWith('id')) ? 'id' : 'en';
+    return lng;
+  });
 
   useEffect(() => {
-    setMounted(true);
-    // Determine language from i18n instance or localStorage after mount
-    const saved = typeof window !== 'undefined' ? localStorage.getItem('i18nextLng') : null;
-    const initialLng = (saved?.startsWith('id') || i18nInstance.language?.startsWith('id')) ? 'id' : 'en';
-    setCurrentLng(initialLng);
-    if (i18nInstance.language !== initialLng) {
-      i18nInstance.changeLanguage(initialLng);
+    if (i18nInstance.language !== currentLng) {
+      i18nInstance.changeLanguage(currentLng);
     }
 
     const handleLanguageChange = (lng: string) => {
@@ -59,7 +59,7 @@ function LanguageContextInner({ children }: { children: React.ReactNode }) {
     return () => {
       i18nInstance.off('languageChanged', handleLanguageChange);
     };
-  }, [i18nInstance]);
+  }, [i18nInstance, currentLng]);
 
   const setLocale = (lng: 'en' | 'id') => {
     i18nInstance.changeLanguage(lng);

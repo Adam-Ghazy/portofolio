@@ -12,7 +12,7 @@ export default function Header() {
     <header 
       className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl border-b"
       style={{ 
-        background: 'var(--header-bg, rgba(11,13,17,0.85))',
+        background: 'var(--header-bg)',
         borderColor: 'var(--border-color)'
       }}
     >
@@ -97,6 +97,7 @@ export default function Header() {
 
           <button
             onClick={toggle}
+            suppressHydrationWarning
             className="w-8 h-8 flex items-center justify-center rounded-lg transition-colors duration-200 border"
             style={{ 
               background: 'var(--bg-card)',
