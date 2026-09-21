@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Pencil, Trash2, ExternalLink, Upload, Sparkles } from 'lucide-react'
+import { Pencil, Trash2, ExternalLink, Upload, ArrowUp, ArrowDown, Images, Film } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   AlertDialog,
@@ -19,6 +19,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { LangTabs, AutoTranslateButton } from '@/components/admin/lang-tabs'
+import { Badge } from '@/components/ui/badge'
+
+interface MediaItem {
+  media_type: string
+  url: string
+  caption: string
+  caption_id: string
+}
 
 interface Project {
   id: number
@@ -32,6 +41,8 @@ interface Project {
   solution_id?: string
   impact?: string
   impact_id?: string
+  contributions?: string
+  contributions_id?: string
   image_url?: string
   year: string
   role: string
@@ -40,6 +51,7 @@ interface Project {
   link?: string
   sort_order: number
   is_active: number
+  media?: MediaItem[]
 }
 
 const emptyForm = {
@@ -53,12 +65,15 @@ const emptyForm = {
   solution_id: '',
   impact: '',
   impact_id: '',
+  contributions: '',
+  contributions_id: '',
   year: '',
   role: '',
   role_id: '',
   tags: '',
   link: '',
   image_url: '',
+  media: [] as MediaItem[],
 }
 
 export default function ProjectsPage() {
@@ -68,6 +83,7 @@ export default function ProjectsPage() {
   const [deleteId, setDeleteId] = useState<number | null>(null)
   const [formData, setFormData] = useState(emptyForm)
   const [uploading, setUploading] = useState(false)
+  const [uploadingMedia, setUploadingMedia] = useState(false)
   const [activeLangTab, setActiveLangTab] = useState<'id' | 'en'>('id')
   const [isTranslating, setIsTranslating] = useState(false)
 
@@ -102,12 +118,13 @@ export default function ProjectsPage() {
         return data.translatedText || text
       }
 
-      const [enTitle, enDesc, enProblem, enSolution, enImpact, enRole] = await Promise.all([
+      const [enTitle, enDesc, enProblem, enSolution, enImpact, enContrib, enRole] = await Promise.all([
         formData.title_id ? translateField(formData.title_id) : Promise.resolve(formData.title),
         formData.description_id ? translateField(formData.description_id) : Promise.resolve(formData.description),
         formData.problem_id ? translateField(formData.problem_id) : Promise.resolve(formData.problem),
         formData.solution_id ? translateField(formData.solution_id) : Promise.resolve(formData.solution),
         formData.impact_id ? translateField(formData.impact_id) : Promise.resolve(formData.impact),
+        formData.contributions_id ? translateField(formData.contributions_id) : Promise.resolve(formData.contributions),
         formData.role_id ? translateField(formData.role_id) : Promise.resolve(formData.role),
       ])
 
@@ -118,6 +135,7 @@ export default function ProjectsPage() {
         problem: enProblem || prev.problem,
         solution: enSolution || prev.solution,
         impact: enImpact || prev.impact,
+        contributions: enContrib || prev.contributions,
         role: enRole || prev.role,
       }))
       toast.success('Successfully translated Indonesian to English')
@@ -145,8 +163,11 @@ export default function ProjectsPage() {
         solution_id: formData.solution_id || formData.solution,
         impact: formData.impact || formData.impact_id,
         impact_id: formData.impact_id || formData.impact,
+        contributions: formData.contributions || formData.contributions_id,
+        contributions_id: formData.contributions_id || formData.contributions,
         role: formData.role || formData.role_id,
         role_id: formData.role_id || formData.role,
+        media: formData.media.map((m, i) => ({ ...m, sort_order: i })),
         ...(editing ? { sort_order: editing.sort_order, is_active: editing.is_active } : { sort_order: 0, is_active: 1 }),
       }
 
@@ -221,6 +242,69 @@ export default function ProjectsPage() {
     }
   }
 
+  async function handleMediaUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const isVideo = file.type.startsWith('video/')
+    const allowedImages = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml']
+
+    if (!isVideo && !allowedImages.includes(file.type)) {
+      toast.error('Format tidak didukung. Gunakan JPG, PNG, WEBP, GIF, SVG, MP4, WEBM, atau MOV.')
+      return
+    }
+
+    const maxSize = isVideo ? 50 * 1024 * 1024 : 5 * 1024 * 1024
+    if (file.size > maxSize) {
+      toast.error(isVideo ? 'Video terlalu besar. Maksimal 50MB.' : 'Gambar terlalu besar. Maksimal 5MB.')
+      return
+    }
+
+    setUploadingMedia(true)
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+
+      const res = await fetch('/api/upload', { method: 'POST', body: fd })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || 'Upload failed')
+      }
+      const data = await res.json()
+      setFormData((prev) => ({
+        ...prev,
+        media: [...prev.media, { media_type: data.media_type || 'image', url: data.url, caption: '', caption_id: '' }],
+      }))
+      toast.success(isVideo ? 'Video berhasil diupload' : 'Gambar berhasil diupload & dikonversi ke WebP')
+    } catch (err: any) {
+      toast.error(err.message || 'Gagal mengupload media')
+    } finally {
+      setUploadingMedia(false)
+      e.target.value = ''
+    }
+  }
+
+  function updateMedia(idx: number, patch: Partial<MediaItem>) {
+    setFormData((prev) => ({
+      ...prev,
+      media: prev.media.map((m, i) => (i === idx ? { ...m, ...patch } : m)),
+    }))
+  }
+
+  function moveMedia(idx: number, dir: -1 | 1) {
+    setFormData((prev) => {
+      const next = [...prev.media]
+      const target = idx + dir
+      if (target < 0 || target >= next.length) return prev
+      ;[next[idx], next[target]] = [next[target], next[idx]]
+      return { ...prev, media: next }
+    })
+  }
+
+  function removeMedia(idx: number) {
+    setFormData((prev) => ({ ...prev, media: prev.media.filter((_, i) => i !== idx) }))
+  }
+
   function handleEdit(p: Project) {
     setEditing(p)
     setFormData({
@@ -234,12 +318,20 @@ export default function ProjectsPage() {
       solution_id: p.solution_id ?? '',
       impact: p.impact ?? '',
       impact_id: p.impact_id ?? '',
+      contributions: p.contributions ?? '',
+      contributions_id: p.contributions_id ?? '',
       year: p.year ?? '',
       role: p.role ?? '',
       role_id: p.role_id ?? '',
       tags: p.tags ?? '',
       link: p.link ?? '',
       image_url: p.image_url ?? '',
+      media: (p.media || []).map((m) => ({
+        media_type: m.media_type || 'image',
+        url: m.url,
+        caption: m.caption ?? '',
+        caption_id: m.caption_id ?? '',
+      })),
     })
   }
 
@@ -250,60 +342,31 @@ export default function ProjectsPage() {
 
   return (
     <AdminLayout>
-      <div className="container mx-auto p-6 max-w-7xl">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold tracking-tight">Projects</h1>
-          <p className="text-muted-foreground">Manage portfolio projects and deep-dive case studies with bilingual support</p>
-        </div>
+      <div className="mx-auto max-w-[1400px] space-y-6">
+        <p className="text-body-md text-muted-foreground">{projects.length} records</p>
 
-        <div className="grid gap-6 lg:grid-cols-[500px_1fr]">
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,500px)_minmax(0,1fr)]">
           <Card className="h-fit">
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <CardTitle>{editing ? 'Edit Project' : 'Add Project'}</CardTitle>
                   <CardDescription>
                     {editing ? 'Update project details and case study metrics' : 'Add a new portfolio project with bilingual details'}
                   </CardDescription>
                 </div>
-
-                {/* Language Switch Tabs for Form */}
-                <div className="flex items-center rounded-lg border p-0.5 bg-muted/40 font-mono text-xs">
-                  <button
-                    type="button"
-                    onClick={() => setActiveLangTab('id')}
-                    className={`px-2.5 py-1 rounded transition-all ${
-                      activeLangTab === 'id' ? 'bg-primary text-primary-foreground font-semibold shadow-sm' : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    Indonesian (ID)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveLangTab('en')}
-                    className={`px-2.5 py-1 rounded transition-all ${
-                      activeLangTab === 'en' ? 'bg-primary text-primary-foreground font-semibold shadow-sm' : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    English (EN)
-                  </button>
-                </div>
+                <LangTabs
+                  value={activeLangTab}
+                  onChange={setActiveLangTab}
+                  idLabel="Indonesian (ID)"
+                  enLabel="English (EN)"
+                />
               </div>
-
-              {/* Auto-Translate Button */}
-              <div className="pt-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleAutoTranslateToEn}
-                  disabled={isTranslating || (!formData.title_id && !formData.description_id)}
-                  className="w-full text-xs font-mono gap-1.5 h-8"
-                >
-                  <Sparkles className="h-3.5 w-3.5" />
-                  {isTranslating ? 'Translating ID to EN...' : 'Auto-Translate ID to EN'}
-                </Button>
-              </div>
+              <AutoTranslateButton
+                onClick={handleAutoTranslateToEn}
+                busy={isTranslating}
+                disabled={isTranslating || (!formData.title_id && !formData.description_id)}
+              />
             </CardHeader>
 
             <CardContent>
@@ -344,46 +407,54 @@ export default function ProjectsPage() {
                     </div>
 
                     {/* Case Study Fields ID */}
-                    <div className="p-3.5 rounded-xl border bg-muted/20 space-y-3">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs font-semibold uppercase tracking-wider text-primary">Studi Kasus (ID)</span>
-                      </div>
+                    <div className="space-y-3 rounded-[12px] border border-border bg-sidebar p-4">
+                      <span className="text-label-section text-muted-foreground">Studi Kasus (ID)</span>
 
                       <div className="space-y-1.5">
-                        <Label htmlFor="problem_id" className="text-xs font-semibold">1. Masalah Operasional (ID)</Label>
+                        <Label htmlFor="problem_id">1. Masalah Operasional (ID)</Label>
                         <Textarea
                           id="problem_id"
                           placeholder="contoh: Kantin kampus mengalami penumpukan antrean parah..."
                           value={formData.problem_id}
                           onChange={(e) => setFormData({ ...formData, problem_id: e.target.value })}
                           rows={2}
-                          className="text-xs"
                         />
                       </div>
 
                       <div className="space-y-1.5">
-                        <Label htmlFor="solution_id" className="text-xs font-semibold">2. Solusi Rekayasa (ID)</Label>
+                        <Label htmlFor="solution_id">2. Solusi Rekayasa (ID)</Label>
                         <Textarea
                           id="solution_id"
                           placeholder="contoh: Merancang dan merilis FoodLAB dengan Flutter & notifikasi push..."
                           value={formData.solution_id}
                           onChange={(e) => setFormData({ ...formData, solution_id: e.target.value })}
                           rows={2}
-                          className="text-xs"
                         />
                       </div>
 
                       <div className="space-y-1.5">
-                        <Label htmlFor="impact_id" className="text-xs font-semibold">3. Dampak Terukur (ID)</Label>
+                        <Label htmlFor="impact_id">3. Dampak Terukur (ID)</Label>
                         <Textarea
                           id="impact_id"
                           placeholder="contoh: Meraih pendanaan Rp20 Juta · 300+ pengguna aktif · Pangkas waktu tunggu 60%..."
                           value={formData.impact_id}
                           onChange={(e) => setFormData({ ...formData, impact_id: e.target.value })}
                           rows={2}
-                          className="text-xs"
                         />
                       </div>
+                    </div>
+
+                    {/* Contributions ID */}
+                    <div className="space-y-1.5 rounded-[12px] border border-border bg-sidebar p-4">
+                      <Label htmlFor="contributions_id">Kontribusi Saya (ID)</Label>
+                      <Textarea
+                        id="contributions_id"
+                        placeholder={'Satu kontribusi per baris, contoh:\nMerancang arsitektur aplikasi Flutter dengan Provider.\nMembangun integrasi REST API untuk alur pemesanan.'}
+                        value={formData.contributions_id}
+                        onChange={(e) => setFormData({ ...formData, contributions_id: e.target.value })}
+                        rows={4}
+                      />
+                      <p className="text-label-md text-muted-foreground">Tampilkan apa saja yang Anda kerjakan di proyek ini — satu poin per baris.</p>
                     </div>
                   </>
                 ) : (
@@ -422,46 +493,54 @@ export default function ProjectsPage() {
                     </div>
 
                     {/* Case Study Fields EN */}
-                    <div className="p-3.5 rounded-xl border bg-muted/20 space-y-3">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs font-semibold uppercase tracking-wider text-primary">Case Study Breakdown (EN)</span>
-                      </div>
+                    <div className="space-y-3 rounded-[12px] border border-border bg-sidebar p-4">
+                      <span className="text-label-section text-muted-foreground">Case Study Breakdown (EN)</span>
 
                       <div className="space-y-1.5">
-                        <Label htmlFor="problem" className="text-xs font-semibold">1. Operational Problem (EN)</Label>
+                        <Label htmlFor="problem">1. Operational Problem (EN)</Label>
                         <Textarea
                           id="problem"
                           placeholder="e.g. The campus canteen experienced severe overcrowding with 200+ students queuing daily..."
                           value={formData.problem}
                           onChange={(e) => setFormData({ ...formData, problem: e.target.value })}
                           rows={2}
-                          className="text-xs"
                         />
                       </div>
 
                       <div className="space-y-1.5">
-                        <Label htmlFor="solution" className="text-xs font-semibold">2. Technical Solution (EN)</Label>
+                        <Label htmlFor="solution">2. Technical Solution (EN)</Label>
                         <Textarea
                           id="solution"
                           placeholder="e.g. Engineered and launched FoodLAB mobile ordering platform with real-time push notifications..."
                           value={formData.solution}
                           onChange={(e) => setFormData({ ...formData, solution: e.target.value })}
                           rows={2}
-                          className="text-xs"
                         />
                       </div>
 
                       <div className="space-y-1.5">
-                        <Label htmlFor="impact" className="text-xs font-semibold">3. Impact & Metrics (EN)</Label>
+                        <Label htmlFor="impact">3. Impact & Metrics (EN)</Label>
                         <Textarea
                           id="impact"
                           placeholder="e.g. Secured IDR 20M funding · 300+ users · 60% wait reduction · Published on Google Play Store..."
                           value={formData.impact}
                           onChange={(e) => setFormData({ ...formData, impact: e.target.value })}
                           rows={2}
-                          className="text-xs"
                         />
                       </div>
+                    </div>
+
+                    {/* Contributions EN */}
+                    <div className="space-y-1.5 rounded-[12px] border border-border bg-sidebar p-4">
+                      <Label htmlFor="contributions">My Contributions (EN)</Label>
+                      <Textarea
+                        id="contributions"
+                        placeholder={'One contribution per line, e.g.:\nEngineered the Flutter app architecture with Provider.\nBuilt the REST API integration for ordering flows.'}
+                        value={formData.contributions}
+                        onChange={(e) => setFormData({ ...formData, contributions: e.target.value })}
+                        rows={4}
+                      />
+                      <p className="text-label-md text-muted-foreground">Explain what you personally worked on in this project — one point per line.</p>
                     </div>
                   </>
                 )}
@@ -503,31 +582,21 @@ export default function ProjectsPage() {
                   <Label>Image</Label>
                   <div className="flex items-center gap-3">
                     <label className="flex-1 cursor-pointer">
-                      <Button type="button" variant="outline" className="w-full pointer-events-none" disabled={uploading} asChild>
+                      <Button type="button" variant="outline" className="pointer-events-none w-full" disabled={uploading} asChild>
                         <span>
-                          <Upload className="h-4 w-4 mr-2" />
+                          <Upload className="mr-2 h-4 w-4" strokeWidth={1.5} />
                           {uploading ? 'Uploading...' : 'Pilih Gambar'}
                         </span>
                       </Button>
-                      <input 
-                        type="file" 
-                        onChange={handleFileUpload} 
-                        className="hidden" 
-                        accept=".jpg,.jpeg,.png,.webp,.gif,.svg"
-                        disabled={uploading}
-                      />
+                      <input type="file" onChange={handleFileUpload} className="hidden" accept=".jpg,.jpeg,.png,.webp,.gif,.svg" disabled={uploading} />
                     </label>
                     {formData.image_url && (
-                      <div className="relative group w-16 h-16 shrink-0">
-                        <img
-                          src={formData.image_url}
-                          className="w-16 h-16 rounded-lg object-cover border"
-                          alt="preview"
-                        />
+                      <div className="relative h-16 w-16 shrink-0 group">
+                        <img src={formData.image_url} className="h-16 w-16 rounded-[12px] border border-border object-cover" alt="preview" />
                         <button
                           type="button"
                           onClick={() => setFormData({ ...formData, image_url: '' })}
-                          className="absolute inset-0 bg-black/50 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center rounded-lg text-xs"
+                          className="absolute inset-0 flex items-center justify-center rounded-[12px] border border-border bg-sidebar/90 text-label-md text-foreground opacity-0 transition-opacity group-hover:opacity-100"
                         >
                           Hapus
                         </button>
@@ -536,15 +605,68 @@ export default function ProjectsPage() {
                   </div>
                 </div>
 
-                <div className="flex gap-2">
-                  <Button type="submit" className="flex-1">
-                    {editing ? 'Update Project' : 'Create Project'}
-                  </Button>
-                  {editing && (
-                    <Button type="button" variant="outline" onClick={handleCancel}>
-                      Cancel
+                {/* Evidence Media Gallery Manager */}
+                <div className="space-y-3 rounded-[12px] border border-border bg-sidebar p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <Label className="flex items-center gap-1.5">
+                      <Images className="h-4 w-4" strokeWidth={1.5} />
+                      Media Bukti (Gambar / Video)
+                    </Label>
+                    <span className="text-label-md text-muted-foreground">{formData.media.length} media</span>
+                  </div>
+                  <label className="block cursor-pointer">
+                    <Button type="button" variant="outline" className="pointer-events-none w-full" disabled={uploadingMedia} asChild>
+                      <span>
+                        <Upload className="mr-2 h-4 w-4" strokeWidth={1.5} />
+                        {uploadingMedia ? 'Uploading...' : 'Upload Gambar / Video Bukti'}
+                      </span>
                     </Button>
-                  )}
+                    <input type="file" onChange={handleMediaUpload} className="hidden" accept=".jpg,.jpeg,.png,.webp,.gif,.svg,.mp4,.webm,.mov,.mkv,image/*,video/mp4,video/webm,video/quicktime" disabled={uploadingMedia} />
+                  </label>
+                  <p className="text-body-sm leading-relaxed text-muted-foreground">
+                    Gambar otomatis dikonversi ke WebP (maks 5MB). Video MP4/WEBM/MOV/MKV disimpan apa adanya (maks 50MB). Urutan bisa diatur dengan tombol panah — media tampil sebagai galeri bukti di halaman proyek.
+                  </p>
+
+                  {formData.media.map((m, idx) => (
+                    <div key={idx} className="space-y-2 rounded-[12px] border border-border bg-surface p-3">
+                      <div className="flex items-center gap-2.5">
+                        <div className="flex h-12 w-20 shrink-0 items-center justify-center overflow-hidden rounded-[8px] border border-border bg-muted">
+                          {m.media_type === 'video' ? (
+                            <video src={`${m.url}#t=0.001`} preload="metadata" muted playsInline className="h-full w-full object-cover" />
+                          ) : (
+                            <img src={m.url} alt={`media ${idx + 1}`} className="h-full w-full object-cover" />
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <Badge variant="secondary">
+                            {m.media_type === 'video' ? <Film className="h-3 w-3" strokeWidth={1.5} /> : null}
+                            {m.media_type === 'video' ? 'VIDEO' : 'IMAGE'}-{String(idx + 1).padStart(2, '0')}
+                          </Badge>
+                          <span className="mt-0.5 block truncate text-label-md text-muted-foreground">{m.url}</span>
+                        </div>
+                        <div className="flex shrink-0 items-center gap-0.5">
+                          <Button type="button" size="icon" variant="ghost" className="h-7 w-7 rounded-[8px]" onClick={() => moveMedia(idx, -1)} disabled={idx === 0} title="Naikkan urutan" aria-label="Naikkan urutan">
+                            <ArrowUp className="h-3.5 w-3.5" strokeWidth={1.5} />
+                          </Button>
+                          <Button type="button" size="icon" variant="ghost" className="h-7 w-7 rounded-[8px]" onClick={() => moveMedia(idx, 1)} disabled={idx === formData.media.length - 1} title="Turunkan urutan" aria-label="Turunkan urutan">
+                            <ArrowDown className="h-3.5 w-3.5" strokeWidth={1.5} />
+                          </Button>
+                          <Button type="button" size="icon" variant="ghost" className="h-7 w-7 rounded-[8px] text-destructive hover:text-destructive" onClick={() => removeMedia(idx)} title="Hapus media" aria-label="Hapus media">
+                            <Trash2 className="h-3.5 w-3.5" strokeWidth={1.5} />
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                        <Input placeholder="Caption (ID) — opsional" value={m.caption_id} onChange={(e) => updateMedia(idx, { caption_id: e.target.value })} />
+                        <Input placeholder="Caption (EN) — optional" value={m.caption} onChange={(e) => updateMedia(idx, { caption: e.target.value })} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex gap-2 pt-2">
+                  <Button type="submit" className="flex-1">{editing ? 'Update Project' : 'Add Project'}</Button>
+                  {editing && <Button type="button" variant="outline" onClick={handleCancel}>Cancel</Button>}
                 </div>
               </form>
             </CardContent>
@@ -557,85 +679,68 @@ export default function ProjectsPage() {
             </CardHeader>
             <CardContent>
               {loading ? (
-                <p className="text-muted-foreground text-center py-8">Loading...</p>
+                <p className="py-12 text-center text-body-md text-muted-foreground">Loading...</p>
               ) : projects.length === 0 ? (
-                <p className="text-muted-foreground text-center py-8">No projects yet</p>
+                <p className="py-12 text-center text-body-md text-muted-foreground">No projects yet</p>
               ) : (
-                <div className="space-y-4">
+                <ul className="divide-y divide-border">
                   {projects.map((p) => (
-                    <div key={p.id} className="p-4 rounded-xl border bg-card hover:border-primary/50 transition-colors space-y-3">
+                    <li key={p.id} className="space-y-3 py-4 transition-colors hover:bg-sidebar">
                       <div className="flex items-start justify-between gap-4">
-                        <div className="space-y-1 min-w-0">
+                        <div className="min-w-0 space-y-1">
                           <div className="flex flex-wrap items-center gap-2">
-                            <h3 className="font-semibold text-base">{p.title}</h3>
-                            {p.title_id && p.title_id !== p.title && (
-                              <span className="text-xs text-muted-foreground">({p.title_id})</span>
-                            )}
-                            {p.year && (
-                              <span className="font-mono text-xs px-2 py-0.5 rounded border bg-muted/50">
-                                {p.year}
-                              </span>
-                            )}
+                            <h3 className="text-headline-sm text-foreground">{p.title}</h3>
+                            {p.title_id && p.title_id !== p.title && <span className="text-label-md text-muted-foreground">({p.title_id})</span>}
+                            {p.year && <Badge variant="secondary">{p.year}</Badge>}
                           </div>
-                          <p className="text-xs text-muted-foreground font-mono">{p.role || 'Developer'}</p>
+                          <p className="text-label-md text-muted-foreground">{p.role || 'Developer'}</p>
                         </div>
-
-                        <div className="flex items-center gap-1 shrink-0">
+                        <div className="flex shrink-0 items-center gap-1">
                           {p.link && (
-                            <Button size="icon" variant="ghost" asChild title="Open Link">
-                              <a href={p.link} target="_blank" rel="noopener noreferrer">
-                                <ExternalLink className="h-4 w-4" />
+                            <Button size="icon" variant="ghost" className="h-8 w-8 rounded-[8px]" asChild title="Open Link">
+                              <a href={p.link} target="_blank" rel="noopener noreferrer" aria-label="Open project link">
+                                <ExternalLink className="h-4 w-4" strokeWidth={1.5} />
                               </a>
                             </Button>
                           )}
-                          <Button size="icon" variant="ghost" onClick={() => handleEdit(p)} title="Edit">
-                            <Pencil className="h-4 w-4" />
+                          <Button size="icon" variant="ghost" className="h-8 w-8 rounded-[8px]" onClick={() => handleEdit(p)} title="Edit" aria-label="Edit project">
+                            <Pencil className="h-4 w-4" strokeWidth={1.5} />
                           </Button>
-                          <Button size="icon" variant="ghost" onClick={() => setDeleteId(p.id)} title="Delete">
-                            <Trash2 className="h-4 w-4" />
+                          <Button size="icon" variant="ghost" className="h-8 w-8 rounded-[8px]" onClick={() => setDeleteId(p.id)} title="Delete" aria-label="Delete project">
+                            <Trash2 className="h-4 w-4" strokeWidth={1.5} />
                           </Button>
                         </div>
                       </div>
-
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {p.description}
-                      </p>
-
-                      {/* Problem, Solution, Impact Badges / Preview */}
+                      <p className="text-body-md text-muted-foreground line-clamp-2">{p.description}</p>
                       {(p.problem || p.solution || p.impact) && (
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 pt-2 border-t text-xs">
-                          <div className="p-2 rounded bg-muted/40 border">
-                            <span className="font-mono font-semibold block text-[10px] uppercase text-muted-foreground mb-0.5">Problem</span>
-                            <p className="line-clamp-2 text-foreground/80">{p.problem || p.problem_id || '-'}</p>
+                        <div className="grid grid-cols-1 gap-2 border-t border-border pt-2 md:grid-cols-3">
+                          <div className="rounded-[12px] border border-border bg-sidebar p-3">
+                            <span className="mb-1 block text-label-section uppercase text-muted-foreground">Problem</span>
+                            <p className="text-body-sm text-foreground line-clamp-2">{p.problem || p.problem_id || '-'}</p>
                           </div>
-                          <div className="p-2 rounded bg-muted/40 border">
-                            <span className="font-mono font-semibold block text-[10px] uppercase text-muted-foreground mb-0.5">Solution</span>
-                            <p className="line-clamp-2 text-foreground/80">{p.solution || p.solution_id || '-'}</p>
+                          <div className="rounded-[12px] border border-border bg-sidebar p-3">
+                            <span className="mb-1 block text-label-section uppercase text-muted-foreground">Solution</span>
+                            <p className="text-body-sm text-foreground line-clamp-2">{p.solution || p.solution_id || '-'}</p>
                           </div>
-                          <div className="p-2 rounded bg-muted/40 border">
-                            <span className="font-mono font-semibold block text-[10px] uppercase text-muted-foreground mb-0.5">Impact</span>
-                            <p className="line-clamp-2 font-medium text-foreground/90">{p.impact || p.impact_id || '-'}</p>
+                          <div className="rounded-[12px] border border-border bg-sidebar p-3">
+                            <span className="mb-1 block text-label-section uppercase text-muted-foreground">Impact</span>
+                            <p className="text-body-sm text-foreground line-clamp-2">{p.impact || p.impact_id || '-'}</p>
                           </div>
                         </div>
                       )}
-
                       <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
                         <div className="flex flex-wrap gap-1">
-                          {p.tags?.split(',').map((tag, i) => (
-                            <span key={i} className="text-[11px] font-mono bg-secondary px-2 py-0.5 rounded border">
-                              {tag.trim()}
-                            </span>
-                          ))}
+                          {p.tags?.split(',').map((tag, i) => <Badge key={i} variant="secondary">{tag.trim()}</Badge>)}
                         </div>
-                        {p.image_url && (
-                          <span className="text-[11px] text-muted-foreground font-mono">
-                            Image attached
+                        {(p.image_url || (p.media && p.media.length > 0)) && (
+                          <span className="text-label-md text-muted-foreground">
+                            {p.media && p.media.length > 0 ? `${p.media.length} media bukti${p.image_url ? ' · cover' : ''}` : 'Image attached'}
                           </span>
                         )}
                       </div>
-                    </div>
+                    </li>
                   ))}
-                </div>
+                </ul>
               )}
             </CardContent>
           </Card>
@@ -649,7 +754,7 @@ export default function ProjectsPage() {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+              <AlertDialogAction variant="destructive" onClick={handleDelete}>Delete</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>

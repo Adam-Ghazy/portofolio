@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import { useLanguage } from './I18nProvider';
+import ProjectMediaGallery, { ProjectMediaItem } from './ProjectMediaGallery';
+import ProjectContributions from './ProjectContributions';
 
 interface ProjectItem {
   id?: number;
@@ -15,12 +17,15 @@ interface ProjectItem {
   solution_id?: string;
   impact?: string;
   impact_id?: string;
+  contributions?: string;
+  contributions_id?: string;
   image_url?: string;
   year?: string;
   role?: string;
   role_id?: string;
   tags?: string;
   link?: string;
+  media?: ProjectMediaItem[];
 }
 
 const DEFAULT_PROJECTS: ProjectItem[] = [
@@ -39,6 +44,8 @@ const DEFAULT_PROJECTS: ProjectItem[] = [
     solution_id: 'Membangun dan merilis FoodLAB, platform mobile yang menghubungkan mahasiswa langsung dengan 10+ penjual makanan dengan status pesanan real-time.',
     impact: 'Secured IDR 20M university funding · 300+ active users · 60% reduction in average canteen waiting time · 10+ campus vendors · Published on Google Play Store with 4.5+ rating.',
     impact_id: 'Mendapatkan pendanaan universitas Rp20 Juta · 300+ pengguna aktif · Penurunan 60% waktu tunggu rata-rata · 10+ tenant terintegrasi · Rilis di Google Play Store rating 4.5+.',
+    contributions: 'Engineered the complete Flutter mobile application architecture with Provider state management.\nBuilt the REST API integration layer for menu browsing, cart, and order placement flows.\nImplemented the real-time push notification service for live order status updates.\nCoordinated vendor onboarding for 10+ campus food tenants.',
+    contributions_id: 'Merancang arsitektur aplikasi mobile Flutter secara menyeluruh dengan manajemen state Provider.\nMembangun lapisan integrasi REST API untuk alur menu, keranjang, dan pemesanan.\nMengimplementasikan layanan notifikasi push real-time untuk status pesanan langsung.\nMengoordinasikan onboarding 10+ tenant makanan kampus.',
     tags: 'Flutter, Dart, Provider, REST API, Push Notifications, Agile Scrum',
     link: 'https://play.google.com',
   },
@@ -57,6 +64,8 @@ const DEFAULT_PROJECTS: ProjectItem[] = [
     solution_id: 'Mengembangkan dan merilis sistem antrean mobile real-time yang mendukung banyak loket pelayanan dengan pelacakan antrean langsung.',
     impact: 'Reduced manual administrative processes by 40% · Cut average service time from 15 min to 7 min · Enabled multi-counter management · Published on Google Play Store.',
     impact_id: 'Mengurangi proses manual sebesar 40% · Mempersingkat waktu layanan rata-rata dari 15 menit menjadi 7 menit · Mendukung multi-loket · Rilis di Google Play Store untuk layanan publik.',
+    contributions: 'Developed the real-time queue mobile application with WebSocket live synchronization.\nDesigned multi-counter queue state management and the live tracking UI.\nDeployed and maintained the production application at the urban village office.\nLed user onboarding sessions for office staff and citizens.',
+    contributions_id: 'Mengembangkan aplikasi mobile antrean real-time dengan sinkronisasi WebSocket.\nMerancang manajemen state antrean multi-loket dan UI pelacakan langsung.\nMelakukan deployment dan pemeliharaan aplikasi produksi di kantor kelurahan.\nMemandu sesi onboarding bagi staf kantor dan warga.',
     tags: 'Flutter, Dart, REST API, WebSocket, Real-Time Sync',
     link: 'https://play.google.com',
   },
@@ -178,6 +187,13 @@ export default function Projects({ section, projects = [] }: { section?: any; pr
                 </p>
               </div>
 
+              {/* Evidence Media Gallery (images / videos) */}
+              <ProjectMediaGallery
+                media={project.media || []}
+                projectTitle={l(project, 'title')}
+                maxTiles={3}
+              />
+
               {/* Problem -> Solution -> Impact Grid */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 {/* Problem */}
@@ -228,6 +244,12 @@ export default function Projects({ section, projects = [] }: { section?: any; pr
                   </p>
                 </div>
               </div>
+
+              {/* My Contributions */}
+              <ProjectContributions
+                contributions={project.contributions}
+                contributions_id={project.contributions_id}
+              />
 
               {/* Tags & Tech Footer */}
               <div className="pt-4 border-t flex flex-wrap items-center justify-between gap-3" style={{ borderColor: 'var(--border-subtle)' }}>

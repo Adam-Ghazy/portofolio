@@ -2,11 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import getDb from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
 import { autoTranslate } from '@/lib/translate';
+import { getProjectMediaMap, syncProjectMedia } from '@/lib/project-media';
 
 export async function GET() {
   const db = getDb();
   const projects = db.prepare('SELECT * FROM projects WHERE is_active = 1 ORDER BY sort_order').all();
-  return NextResponse.json(projects);
+  const mediaMap = getProjectMediaMap();
+  return NextResponse.json(
+    (projects as any[]).map((p) => ({ ...p, media: mediaMap[p.id] || [] }))
+  );
 }
 
 export async function POST(request: NextRequest) {
@@ -26,14 +30,12 @@ export async function POST(request: NextRequest) {
     solution_id,
     impact,
     impact_id,
-    image_url,
-    year,
+    contributions,
+    contributions_id,
     role,
     role_id,
-    tags,
-    link,
-    sort_order,
   } = body;
+  const { image_url, year, tags, link, sort_order, media } = body;
 
   // Auto translate if one language provided
   if (title && !title_id) title_id = await autoTranslate(title, 'en', 'id');
@@ -51,6 +53,9 @@ export async function POST(request: NextRequest) {
   if (impact && !impact_id) impact_id = await autoTranslate(impact, 'en', 'id');
   if (impact_id && !impact) impact = await autoTranslate(impact_id, 'id', 'en');
 
+  if (contributions && !contributions_id) contributions_id = await autoTranslate(contributions, 'en', 'id');
+  if (contributions_id && !contributions) contributions = await autoTranslate(contributions_id, 'id', 'en');
+
   if (role && !role_id) role_id = await autoTranslate(role, 'en', 'id');
   if (role_id && !role) role = await autoTranslate(role_id, 'id', 'en');
 
@@ -58,9 +63,10 @@ export async function POST(request: NextRequest) {
     `INSERT INTO projects (
       title, title_id, description, description_id,
       problem, problem_id, solution, solution_id,
-      impact, impact_id, image_url, year, role, role_id,
+      impact, impact_id, contributions, contributions_id,
+      image_url, year, role, role_id,
       tags, link, sort_order
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   ).run(
     title || '',
     title_id || title || '',
@@ -72,6 +78,8 @@ export async function POST(request: NextRequest) {
     solution_id || solution || '',
     impact || '',
     impact_id || impact || '',
+    contributions || '',
+    contributions_id || contributions || '',
     image_url || '',
     year || '',
     role || '',
@@ -80,6 +88,8 @@ export async function POST(request: NextRequest) {
     link || '',
     sort_order || 0
   );
+
+  await syncProjectMedia(Number(result.lastInsertRowid), media);
 
   return NextResponse.json({ id: result.lastInsertRowid });
 }
@@ -91,7 +101,6 @@ export async function PUT(request: NextRequest) {
   const db = getDb();
   const body = await request.json();
   let {
-    id,
     title,
     title_id,
     description,
@@ -102,15 +111,12 @@ export async function PUT(request: NextRequest) {
     solution_id,
     impact,
     impact_id,
-    image_url,
-    year,
+    contributions,
+    contributions_id,
     role,
     role_id,
-    tags,
-    link,
-    sort_order,
-    is_active,
   } = body;
+  const { id, image_url, year, tags, link, sort_order, is_active, media } = body;
 
   if (title && !title_id) title_id = await autoTranslate(title, 'en', 'id');
   if (title_id && !title) title = await autoTranslate(title_id, 'id', 'en');
@@ -127,6 +133,9 @@ export async function PUT(request: NextRequest) {
   if (impact && !impact_id) impact_id = await autoTranslate(impact, 'en', 'id');
   if (impact_id && !impact) impact = await autoTranslate(impact_id, 'id', 'en');
 
+  if (contributions && !contributions_id) contributions_id = await autoTranslate(contributions, 'en', 'id');
+  if (contributions_id && !contributions) contributions = await autoTranslate(contributions_id, 'id', 'en');
+
   if (role && !role_id) role_id = await autoTranslate(role, 'en', 'id');
   if (role_id && !role) role = await autoTranslate(role_id, 'id', 'en');
 
@@ -134,7 +143,8 @@ export async function PUT(request: NextRequest) {
     `UPDATE projects
      SET title=?, title_id=?, description=?, description_id=?,
          problem=?, problem_id=?, solution=?, solution_id=?,
-         impact=?, impact_id=?, image_url=?, year=?, role=?, role_id=?,
+         impact=?, impact_id=?, contributions=?, contributions_id=?,
+         image_url=?, year=?, role=?, role_id=?,
          tags=?, link=?, sort_order=?, is_active=?, updated_at=CURRENT_TIMESTAMP
      WHERE id=?`
   ).run(
@@ -148,6 +158,8 @@ export async function PUT(request: NextRequest) {
     solution_id || solution || '',
     impact || '',
     impact_id || impact || '',
+    contributions || '',
+    contributions_id || contributions || '',
     image_url || '',
     year || '',
     role || '',
@@ -158,6 +170,8 @@ export async function PUT(request: NextRequest) {
     is_active ?? 1,
     id
   );
+
+  await syncProjectMedia(Number(id), media);
 
   return NextResponse.json({ success: true });
 }

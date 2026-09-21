@@ -71,6 +71,19 @@ function initTables() {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
+    CREATE TABLE IF NOT EXISTS project_media (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      project_id INTEGER NOT NULL,
+      media_type TEXT NOT NULL DEFAULT 'image',
+      url TEXT NOT NULL,
+      caption TEXT,
+      caption_id TEXT,
+      sort_order INTEGER DEFAULT 0,
+      is_active INTEGER DEFAULT 1,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+    );
     CREATE TABLE IF NOT EXISTS experiences (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       company TEXT NOT NULL,
@@ -174,6 +187,8 @@ function initTables() {
   ensureColumn('projects', 'solution_id');
   ensureColumn('projects', 'impact_id');
   ensureColumn('projects', 'role_id');
+  ensureColumn('projects', 'contributions');
+  ensureColumn('projects', 'contributions_id');
 
   ensureColumn('experiences', 'position_id');
   ensureColumn('experiences', 'program_id');
@@ -334,8 +349,33 @@ function seedIndonesianTranslations() {
           description_id = 'Sistem manajemen antrean digital real-time yang diterapkan untuk pelayanan publik di kantor administrasi kelurahan.',
           problem_id = 'Proses antrean pelayanan publik sebelumnya sangat bergantung pada kertas manual dan menimbulkan waktu tunggu yang lama.',
           solution_id = 'Mengembangkan dan merilis sistem antrean mobile real-time yang mendukung banyak loket pelayanan dengan pelacakan antrean langsung.',
-          impact_id = 'Mengurangi proses manual sebesar 40% · Mempersingkat waktu layanan rata-rata dari 15 menit menjadi 7 menit · Mendukung multi-loket · Rilis di Google Play Store untuk layanan publik.'
+          impact_id = 'Mengurangi proses manual sebesar 40% · Mempersingkat waktu layanan rata-rata dari 15 menit menjadi 7 menit · Mendukung multi-loket · Rilis di Google Play Store untuk layanan publik.',
+          contributions_id = 'Mengembangkan aplikasi mobile antrean real-time dengan sinkronisasi WebSocket.\nMerancang manajemen state antrean multi-loket dan UI pelacakan langsung.\nMelakukan deployment dan pemeliharaan aplikasi produksi di kantor kelurahan.\nMemandu sesi onboarding bagi staf kantor dan warga.'
       WHERE id = 2 AND (title_id IS NULL OR title_id = '')
+    `).run();
+
+    db.prepare(`
+      UPDATE projects
+      SET contributions_id = 'Merancang arsitektur aplikasi mobile Flutter secara menyeluruh dengan manajemen state Provider.\nMembangun lapisan integrasi REST API untuk alur menu, keranjang, dan pemesanan.\nMengimplementasikan layanan notifikasi push real-time untuk status pesanan langsung.\nMengoordinasikan onboarding 10+ tenant makanan kampus.'
+      WHERE id = 1 AND (contributions_id IS NULL OR contributions_id = '')
+    `).run();
+
+    db.prepare(`
+      UPDATE projects
+      SET contributions_id = 'Mengembangkan aplikasi mobile antrean real-time dengan sinkronisasi WebSocket.\nMerancang manajemen state antrean multi-loket dan UI pelacakan langsung.\nMelakukan deployment dan pemeliharaan aplikasi produksi di kantor kelurahan.\nMemandu sesi onboarding bagi staf kantor dan warga.'
+      WHERE id = 2 AND (contributions_id IS NULL OR contributions_id = '')
+    `).run();
+
+    db.prepare(`
+      UPDATE projects
+      SET contributions = 'Engineered the complete Flutter mobile application architecture with Provider state management.\nBuilt the REST API integration layer for menu browsing, cart, and order placement flows.\nImplemented the real-time push notification service for live order status updates.\nCoordinated vendor onboarding for 10+ campus food tenants.'
+      WHERE id = 1 AND (contributions IS NULL OR contributions = '')
+    `).run();
+
+    db.prepare(`
+      UPDATE projects
+      SET contributions = 'Developed the real-time queue mobile application with WebSocket live synchronization.\nDesigned multi-counter queue state management and the live tracking UI.\nDeployed and maintained the production application at the urban village office.\nLed user onboarding sessions for office staff and citizens.'
+      WHERE id = 2 AND (contributions IS NULL OR contributions = '')
     `).run();
 
     // Update education
@@ -629,8 +669,8 @@ export function seedDefaults(force = false) {
 
   // 3. Featured Projects
   const insProj = db.prepare(`
-    INSERT OR REPLACE INTO projects (id, title, title_id, description, description_id, problem, problem_id, solution, solution_id, impact, impact_id, year, role, role_id, tags, link, sort_order)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT OR REPLACE INTO projects (id, title, title_id, description, description_id, problem, problem_id, solution, solution_id, impact, impact_id, contributions, contributions_id, year, role, role_id, tags, link, sort_order)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
   insProj.run(
@@ -645,6 +685,8 @@ export function seedDefaults(force = false) {
     'Membangun dan merilis FoodLAB, platform mobile yang menghubungkan mahasiswa langsung dengan 10+ penjual makanan dengan status pesanan real-time.',
     'Secured IDR 20M university funding · 300+ active users · 60% reduction in average waiting time · 10+ vendors adopted · Published on Google Play Store with 4.5+ rating.',
     'Mendapatkan pendanaan universitas Rp20 Juta · 300+ pengguna aktif · Penurunan 60% waktu tunggu rata-rata · 10+ tenant terintegrasi · Rilis di Google Play Store rating 4.5+.',
+    'Engineered the complete Flutter mobile application architecture with Provider state management.\nBuilt the REST API integration layer for menu browsing, cart, and order placement flows.\nImplemented the real-time push notification service for live order status updates.\nCoordinated vendor onboarding for 10+ campus food tenants.',
+    'Merancang arsitektur aplikasi mobile Flutter secara menyeluruh dengan manajemen state Provider.\nMembangun lapisan integrasi REST API untuk alur menu, keranjang, dan pemesanan.\nMengimplementasikan layanan notifikasi push real-time untuk status pesanan langsung.\nMengoordinasikan onboarding 10+ tenant makanan kampus.',
     '2023 - 2025',
     'Mobile App Developer (Flutter)',
     'Pengembang Aplikasi Mobile (Flutter)',
@@ -665,6 +707,8 @@ export function seedDefaults(force = false) {
     'Mengembangkan dan merilis sistem antrean mobile real-time yang mendukung banyak loket pelayanan dengan pelacakan antrean langsung.',
     'Reduced manual processes by 40% · Decreased average service time from 15 min to 7 min · Multi-counter support · Published on Google Play Store for public government service.',
     'Mengurangi proses manual sebesar 40% · Mempersingkat waktu layanan rata-rata dari 15 menit menjadi 7 menit · Mendukung multi-loket · Rilis di Google Play Store untuk layanan publik.',
+    'Developed the real-time queue mobile application with WebSocket live synchronization.\nDesigned multi-counter queue state management and the live tracking UI.\nDeployed and maintained the production application at the urban village office.\nLed user onboarding sessions for office staff and citizens.',
+    'Mengembangkan aplikasi mobile antrean real-time dengan sinkronisasi WebSocket.\nMerancang manajemen state antrean multi-loket dan UI pelacakan langsung.\nMelakukan deployment dan pemeliharaan aplikasi produksi di kantor kelurahan.\nMemandu sesi onboarding bagi staf kantor dan warga.',
     '2024',
     'Mobile App Developer (Flutter)',
     'Pengembang Aplikasi Mobile (Flutter)',

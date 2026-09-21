@@ -6,6 +6,8 @@ import Footer from '@/components/Footer';
 import StatusBar from '@/components/StatusBar';
 import Link from 'next/link';
 import { useLanguage } from '@/components/I18nProvider';
+import ProjectMediaGallery, { ProjectMediaItem } from '@/components/ProjectMediaGallery';
+import ProjectContributions from '@/components/ProjectContributions';
 
 interface ProjectItem {
   id?: number;
@@ -19,12 +21,15 @@ interface ProjectItem {
   solution_id?: string;
   impact?: string;
   impact_id?: string;
+  contributions?: string;
+  contributions_id?: string;
   image_url?: string;
   year?: string;
   role?: string;
   role_id?: string;
   tags?: string;
   link?: string;
+  media?: ProjectMediaItem[];
 }
 
 const DEFAULT_PROJECTS: ProjectItem[] = [
@@ -43,6 +48,8 @@ const DEFAULT_PROJECTS: ProjectItem[] = [
     solution_id: 'Merancang dan merilis FoodLAB sebagai solusi pemesanan mobile lengkap menggunakan Flutter, manajemen state Provider, REST API, dan notifikasi push real-time.',
     impact: 'Secured IDR 20M university development funding · Scaled successfully from a final project MVP into an active production system · Reached 300+ active users across campus · Reduced average waiting time by 60% · Onboarded 10+ campus food vendors · Published on the Google Play Store with a 4.5+ star rating.',
     impact_id: 'Meraih pendanaan pengembangan universitas Rp20 Juta · Berkembang dari MVP tugas akhir menjadi sistem produksi aktif · Menjangkau 300+ pengguna aktif kampus · Memangkas waktu tunggu 60% · Mengintegrasikan 10+ penjual makanan · Rilis di Google Play Store dengan rating 4.5+ bintang.',
+    contributions: 'Engineered the complete Flutter mobile application architecture with Provider state management.\nBuilt the REST API integration layer for menu browsing, cart, and order placement flows.\nImplemented the real-time push notification service for live order status updates.\nCoordinated vendor onboarding for 10+ campus food tenants.',
+    contributions_id: 'Merancang arsitektur aplikasi mobile Flutter secara menyeluruh dengan manajemen state Provider.\nMembangun lapisan integrasi REST API untuk alur menu, keranjang, dan pemesanan.\nMengimplementasikan layanan notifikasi push real-time untuk status pesanan langsung.\nMengoordinasikan onboarding 10+ tenant makanan kampus.',
     tags: 'Flutter, Dart, Provider, REST API, Push Notifications, Agile Scrum',
     link: 'https://play.google.com',
   },
@@ -61,6 +68,8 @@ const DEFAULT_PROJECTS: ProjectItem[] = [
     solution_id: 'Mengembangkan dan merilis aplikasi antrean digital real-time terintegrasi WebSockets dan REST API untuk sinkronisasi loket multi-layanan secara instan.',
     impact: 'Reduced manual administrative processes by 40% · Reduced average citizen service time from 15 minutes down to 7 minutes · Supported multiple service counters simultaneously · Published to Google Play Store and successfully deployed for public local government use.',
     impact_id: 'Mengurangi proses manual administrasi sebesar 40% · Mempersingkat waktu layanan warga dari 15 menit menjadi 7 menit · Mendukung multi-loket simultan · Rilis di Google Play Store untuk pemerintahan lokal.',
+    contributions: 'Developed the real-time queue mobile application with WebSocket live synchronization.\nDesigned multi-counter queue state management and the live tracking UI.\nDeployed and maintained the production application at the urban village office.\nLed user onboarding sessions for office staff and citizens.',
+    contributions_id: 'Mengembangkan aplikasi mobile antrean real-time dengan sinkronisasi WebSocket.\nMerancang manajemen state antrean multi-loket dan UI pelacakan langsung.\nMelakukan deployment dan pemeliharaan aplikasi produksi di kantor kelurahan.\nMemandu sesi onboarding bagi staf kantor dan warga.',
     tags: 'Flutter, Dart, REST API, WebSocket, Real-Time Sync, Public Service',
     link: 'https://play.google.com',
   },
@@ -189,6 +198,12 @@ export default function ProjectsPage() {
                     </p>
                   </div>
 
+                  {/* Evidence Media Gallery (images / videos) */}
+                  <ProjectMediaGallery
+                    media={project.media || []}
+                    projectTitle={l(project, 'title')}
+                  />
+
                   {/* 3-Column Problem -> Solution -> Impact Deep-Dive */}
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-8">
                     
@@ -223,6 +238,12 @@ export default function ProjectsPage() {
                     </div>
 
                   </div>
+
+                  {/* My Contributions */}
+                  <ProjectContributions
+                    contributions={project.contributions}
+                    contributions_id={project.contributions_id}
+                  />
 
                   {/* Footer Stack & Actions */}
                   <div className="pt-5 border-t flex flex-wrap items-center justify-between gap-4" style={{ borderColor: 'var(--border-subtle)' }}>

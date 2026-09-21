@@ -1,8 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { readFile, stat } from 'fs/promises';
+import { NextRequest } from 'next/server';
+import { createReadStream } from 'fs';
+import { stat } from 'fs/promises';
+import { Readable } from 'stream';
 import path from 'path';
 
-// Serves uploaded images directly from disk. Needed because Next.js only
+// Serves uploaded media directly from disk. Needed because Next.js only
 // snapshots public/ at boot: files uploaded while the server is running
 // would otherwise 404 until the next restart.
 
@@ -15,52 +17,90 @@ const MIME: Record<string, string> = {
   '.png': 'image/png',
   '.gif': 'image/gif',
   '.svg': 'image/svg+xml',
+  '.mp4': 'video/mp4',
+  '.webm': 'video/webm',
+  '.mov': 'video/quicktime',
+  '.mkv': 'video/x-matroska',
 };
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ path: string[] }> }
 ) {
   const { path: segments } = await params;
 
   if (!segments || segments.length === 0) {
-    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    return new Response(null, { status: 404 });
   }
 
-  // Only allow flat filenames with whitelisted image extensions
+  // Only allow flat filenames with whitelisted media extensions
   const filename = segments.join('/');
   const ext = path.extname(filename).toLowerCase();
   if (segments.length !== 1 || !MIME[ext] || filename.includes('..') || filename.startsWith('.')) {
-    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    return new Response(null, { status: 404 });
   }
 
   const filePath = path.join(UPLOAD_DIR, filename);
 
   // Defense in depth: resolved path must stay inside UPLOAD_DIR
   if (!filePath.startsWith(UPLOAD_DIR + path.sep)) {
-    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    return new Response(null, { status: 404 });
   }
 
+  let info;
   try {
-    const info = await stat(filePath);
+    info = await stat(filePath);
     if (!info.isFile()) {
-      return NextResponse.json({ error: 'Not found' }, { status: 404 });
+      return new Response(null, { status: 404 });
     }
-
-    const data = await readFile(filePath);
-
-    return new Response(new Uint8Array(data), {
-      status: 200,
-      headers: {
-        'Content-Type': MIME[ext],
-        'Content-Length': String(info.size),
-        'Cache-Control': 'public, max-age=31536000, immutable',
-        'X-Content-Type-Options': 'nosniff',
-      },
-    });
   } catch {
-    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    return new Response(null, { status: 404 });
   }
+
+  const fileSize = info.size;
+  const contentType = MIME[ext];
+  const range = request.headers.get('range');
+
+  // Range support (required for video seeking / progressive playback)
+  if (range) {
+    const match = range.match(/bytes=(\d*)-(\d*)/);
+    if (match) {
+      const start = match[1] ? parseInt(match[1], 10) : 0;
+      const end = match[2] ? Math.min(parseInt(match[2], 10), fileSize - 1) : fileSize - 1;
+
+      if (start >= fileSize || start > end) {
+        return new Response(null, {
+          status: 416,
+          headers: { 'Content-Range': `bytes */${fileSize}` },
+        });
+      }
+
+      const stream = createReadStream(filePath, { start, end });
+      return new Response(Readable.toWeb(stream) as ReadableStream, {
+        status: 206,
+        headers: {
+          'Content-Type': contentType,
+          'Content-Length': String(end - start + 1),
+          'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+          'Accept-Ranges': 'bytes',
+          'Cache-Control': 'public, max-age=31536000, immutable',
+          'X-Content-Type-Options': 'nosniff',
+        },
+      });
+    }
+  }
+
+  const stream = createReadStream(filePath);
+  return new Response(Readable.toWeb(stream) as ReadableStream, {
+    status: 200,
+    headers: {
+      'Content-Type': contentType,
+      'Content-Length': String(fileSize),
+      'Accept-Ranges': 'bytes',
+      'Cache-Control': 'public, max-age=31536000, immutable',
+      'X-Content-Type-Options': 'nosniff',
+    },
+  });
 }

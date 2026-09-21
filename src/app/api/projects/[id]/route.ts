@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import getDb from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
 import { autoTranslate } from '@/lib/translate';
+import { syncProjectMedia } from '@/lib/project-media';
 
 export async function DELETE(
   request: NextRequest,
@@ -40,17 +41,12 @@ export async function PUT(
     solution_id,
     impact,
     impact_id,
-    image_url,
-    year,
+    contributions,
+    contributions_id,
     role,
     role_id,
-    tags,
-    link,
-    sort_order,
-    is_active,
-    technologies,
-    project_url,
   } = body;
+  const { image_url, year, tags, link, sort_order, is_active, media, technologies, project_url } = body;
 
   if (title && !title_id) title_id = await autoTranslate(title, 'en', 'id');
   if (title_id && !title) title = await autoTranslate(title_id, 'id', 'en');
@@ -67,6 +63,9 @@ export async function PUT(
   if (impact && !impact_id) impact_id = await autoTranslate(impact, 'en', 'id');
   if (impact_id && !impact) impact = await autoTranslate(impact_id, 'id', 'en');
 
+  if (contributions && !contributions_id) contributions_id = await autoTranslate(contributions, 'en', 'id');
+  if (contributions_id && !contributions) contributions = await autoTranslate(contributions_id, 'id', 'en');
+
   if (role && !role_id) role_id = await autoTranslate(role, 'en', 'id');
   if (role_id && !role) role = await autoTranslate(role_id, 'id', 'en');
 
@@ -74,7 +73,8 @@ export async function PUT(
     `UPDATE projects
      SET title=?, title_id=?, description=?, description_id=?,
          problem=?, problem_id=?, solution=?, solution_id=?,
-         impact=?, impact_id=?, image_url=?, year=?, role=?, role_id=?,
+         impact=?, impact_id=?, contributions=?, contributions_id=?,
+         image_url=?, year=?, role=?, role_id=?,
          tags=?, link=?, sort_order=?, is_active=?, updated_at=CURRENT_TIMESTAMP
      WHERE id=?`
   ).run(
@@ -88,6 +88,8 @@ export async function PUT(
     solution_id || solution || '',
     impact || '',
     impact_id || impact || '',
+    contributions || '',
+    contributions_id || contributions || '',
     image_url || '',
     year || '',
     role || '',
@@ -98,6 +100,8 @@ export async function PUT(
     is_active ?? 1,
     id
   );
+
+  await syncProjectMedia(Number(id), media);
 
   return NextResponse.json({ success: true });
 }
