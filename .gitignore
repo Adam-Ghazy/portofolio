@@ -49,6 +49,7 @@ next-env.d.ts
 /public/uploads/*
 !/public/uploads/.gitkeep
 
-# internal / AI agent files
+# internal
 REFACTOR_SUMMARY.md
 CLAUDE.md
+DESIGN.md
