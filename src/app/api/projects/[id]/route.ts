@@ -47,7 +47,7 @@ export async function PUT(
     role,
     role_id,
   } = body;
-  const { image_url, year, tags, link, sort_order, is_active, media, technologies, project_url } = body;
+  const { year, tags, link, sort_order, is_active, media, technologies, project_url } = body;
 
   const mediaError = validateProjectMedia(media);
   if (mediaError) return NextResponse.json({ error: mediaError }, { status: 400 });
@@ -78,7 +78,7 @@ export async function PUT(
      SET title=?, title_id=?, description=?, description_id=?,
          problem=?, problem_id=?, solution=?, solution_id=?,
          impact=?, impact_id=?, contributions=?, contributions_id=?,
-         image_url=?, year=?, role=?, role_id=?,
+         year=?, role=?, role_id=?,
          tags=?, link=?, sort_order=?, is_active=?, updated_at=CURRENT_TIMESTAMP
      WHERE id=?`
   ).run(
@@ -94,7 +94,6 @@ export async function PUT(
     impact_id || impact || '',
     contributions || '',
     contributions_id || contributions || '',
-    image_url || '',
     year || '',
     role || '',
     role_id || role || '',

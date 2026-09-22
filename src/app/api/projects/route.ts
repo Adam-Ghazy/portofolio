@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
     role,
     role_id,
   } = body;
-  const { image_url, year, tags, link, sort_order, media } = body;
+  const { year, tags, link, sort_order, media } = body;
 
   const mediaError = validateProjectMedia(media, true);
   if (mediaError) return NextResponse.json({ error: mediaError }, { status: 400 });
@@ -104,9 +104,9 @@ export async function POST(request: NextRequest) {
       title, title_id, description, description_id,
       problem, problem_id, solution, solution_id,
       impact, impact_id, contributions, contributions_id,
-      image_url, year, role, role_id,
+      year, role, role_id,
       tags, link, sort_order
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   ).run(
     title || '',
     title_id || title || '',
@@ -120,7 +120,6 @@ export async function POST(request: NextRequest) {
     impact_id || impact || '',
     contributions || '',
     contributions_id || contributions || '',
-    image_url || '',
     year || '',
     role || '',
     role_id || role || '',
@@ -156,7 +155,7 @@ export async function PUT(request: NextRequest) {
     role,
     role_id,
   } = body;
-  const { id, image_url, year, tags, link, sort_order, is_active, media } = body;
+  const { id, year, tags, link, sort_order, is_active, media } = body;
 
   const mediaError = validateProjectMedia(media);
   if (mediaError) return NextResponse.json({ error: mediaError }, { status: 400 });
@@ -187,7 +186,7 @@ export async function PUT(request: NextRequest) {
      SET title=?, title_id=?, description=?, description_id=?,
          problem=?, problem_id=?, solution=?, solution_id=?,
          impact=?, impact_id=?, contributions=?, contributions_id=?,
-         image_url=?, year=?, role=?, role_id=?,
+         year=?, role=?, role_id=?,
          tags=?, link=?, sort_order=?, is_active=?, updated_at=CURRENT_TIMESTAMP
      WHERE id=?`
   ).run(
@@ -203,7 +202,6 @@ export async function PUT(request: NextRequest) {
     impact_id || impact || '',
     contributions || '',
     contributions_id || contributions || '',
-    image_url || '',
     year || '',
     role || '',
     role_id || role || '',

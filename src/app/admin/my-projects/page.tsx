@@ -44,7 +44,6 @@ interface Project {
   impact_id?: string
   contributions?: string
   contributions_id?: string
-  image_url?: string
   year: string
   role: string
   role_id?: string
@@ -73,7 +72,6 @@ const emptyForm = {
   role_id: '',
   tags: '',
   link: '',
-  image_url: '',
   media: [] as MediaItem[],
 }
 
@@ -83,7 +81,6 @@ export default function ProjectsPage() {
   const [editing, setEditing] = useState<Project | null>(null)
   const [deleteId, setDeleteId] = useState<number | null>(null)
   const [formData, setFormData] = useState(emptyForm)
-  const [uploading, setUploading] = useState(false)
   const [uploadingMedia, setUploadingMedia] = useState(false)
   const [activeLangTab, setActiveLangTab] = useState<'id' | 'en'>('id')
   const [isTranslating, setIsTranslating] = useState(false)
@@ -209,47 +206,6 @@ export default function ProjectsPage() {
     }
   }
 
-  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml']
-    if (!allowed.includes(file.type)) {
-      toast.error('Format tidak didukung. Gunakan JPG, PNG, WEBP, GIF, atau SVG.')
-      return
-    }
-    
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('File terlalu besar. Maksimal 5MB.')
-      return
-    }
-
-    setUploading(true)
-    try {
-      const formDataUpload = new FormData()
-      formDataUpload.append('file', file)
-
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        body: formDataUpload,
-      })
-
-      if (!res.ok) {
-        const errorData = await res.json()
-        throw new Error(errorData.error || 'Upload failed')
-      }
-
-      const data = await res.json()
-      setFormData(prev => ({ ...prev, image_url: data.url }))
-      toast.success('Gambar berhasil diupload')
-    } catch (err: any) {
-      toast.error(err.message || 'Gagal mengupload gambar')
-    } finally {
-      setUploading(false)
-      e.target.value = ''
-    }
-  }
-
   async function handleMediaUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
@@ -333,7 +289,6 @@ export default function ProjectsPage() {
       role_id: p.role_id ?? '',
       tags: p.tags ?? '',
       link: p.link ?? '',
-      image_url: p.image_url ?? '',
       media: (p.media || []).map((m) => ({
         media_type: m.media_type || 'image',
         url: m.url,
@@ -592,33 +547,6 @@ export default function ProjectsPage() {
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label>Image</Label>
-                  <div className="flex items-center gap-3">
-                    <label className="flex-1 cursor-pointer">
-                      <Button type="button" variant="outline" className="pointer-events-none w-full" disabled={uploading} asChild>
-                        <span>
-                          <Upload className="mr-2 h-4 w-4" strokeWidth={1.5} />
-                          {uploading ? 'Uploading...' : 'Pilih Gambar'}
-                        </span>
-                      </Button>
-                      <input type="file" onChange={handleFileUpload} className="hidden" accept=".jpg,.jpeg,.png,.webp,.gif,.svg" disabled={uploading} />
-                    </label>
-                    {formData.image_url && (
-                      <div className="relative h-16 w-16 shrink-0 group">
-                        <img src={formData.image_url} className="h-16 w-16 rounded-[12px] border border-border object-cover" alt="preview" />
-                        <button
-                          type="button"
-                          onClick={() => setFormData({ ...formData, image_url: '' })}
-                          className="absolute inset-0 flex items-center justify-center rounded-[12px] border border-border bg-sidebar/90 text-label-md text-foreground opacity-0 transition-opacity group-hover:opacity-100"
-                        >
-                          Hapus
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
                 {/* Evidence Media Gallery Manager */}
                 <div className="space-y-3 rounded-[12px] border border-border bg-sidebar p-4">
                   <div className="flex items-center justify-between gap-3">
@@ -754,9 +682,9 @@ export default function ProjectsPage() {
                         <div className="flex flex-wrap gap-1">
                           {p.tags?.split(',').map((tag, i) => <Badge key={i} variant="secondary">{tag.trim()}</Badge>)}
                         </div>
-                        {(p.image_url || (p.media && p.media.length > 0)) && (
+                        {p.media && p.media.length > 0 && (
                           <span className="text-label-md text-muted-foreground">
-                            {p.media && p.media.length > 0 ? `${p.media.length} media bukti${p.image_url ? ' · cover' : ''}` : 'Image attached'}
+                            {p.media.length} media bukti
                           </span>
                         )}
                       </div>

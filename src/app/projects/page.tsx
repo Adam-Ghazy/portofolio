@@ -34,7 +34,6 @@ interface ProjectItem {
   metrics?: ProjectMetric[];
   contributions?: string;
   contributions_id?: string;
-  image_url?: string;
   year?: string;
   role?: string;
   role_id?: string;
