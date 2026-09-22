@@ -3,6 +3,7 @@ import getDb from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
 import { autoTranslate } from '@/lib/translate';
 import { syncProjectMedia } from '@/lib/project-media';
+import { validateProjectMedia } from '@/lib/project-media-rules';
 
 export async function DELETE(
   request: NextRequest,
@@ -47,6 +48,9 @@ export async function PUT(
     role_id,
   } = body;
   const { image_url, year, tags, link, sort_order, is_active, media, technologies, project_url } = body;
+
+  const mediaError = validateProjectMedia(media);
+  if (mediaError) return NextResponse.json({ error: mediaError }, { status: 400 });
 
   if (title && !title_id) title_id = await autoTranslate(title, 'en', 'id');
   if (title_id && !title) title = await autoTranslate(title_id, 'id', 'en');

@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { LangTabs, AutoTranslateButton } from '@/components/admin/lang-tabs'
 import { Badge } from '@/components/ui/badge'
+import { MIN_PROJECT_MEDIA, countProjectMedia } from '@/lib/project-media-rules'
 
 interface MediaItem {
   media_type: string
@@ -148,6 +149,13 @@ export default function ProjectsPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+
+    const count = countProjectMedia(formData.media)
+    if (count < MIN_PROJECT_MEDIA) {
+      toast.error(`Minimal ${MIN_PROJECT_MEDIA} media bukti (gambar/video). Saat ini ${count}.`)
+      return
+    }
+
     try {
       const url = editing ? `/api/projects/${editing.id}` : '/api/projects'
       const method = editing ? 'PUT' : 'POST'
@@ -339,6 +347,12 @@ export default function ProjectsPage() {
     setEditing(null)
     setFormData(emptyForm)
   }
+
+  const mediaCount = countProjectMedia(formData.media)
+  const mediaError =
+    mediaCount < MIN_PROJECT_MEDIA
+      ? `Minimal ${MIN_PROJECT_MEDIA} media bukti (gambar/video). Saat ini ${mediaCount}.`
+      : null
 
   return (
     <AdminLayout>
@@ -612,7 +626,9 @@ export default function ProjectsPage() {
                       <Images className="h-4 w-4" strokeWidth={1.5} />
                       Media Bukti (Gambar / Video)
                     </Label>
-                    <span className="text-label-md text-muted-foreground">{formData.media.length} media</span>
+                    <span className="text-label-md text-muted-foreground">
+                      {mediaCount} / {MIN_PROJECT_MEDIA} media
+                    </span>
                   </div>
                   <label className="block cursor-pointer">
                     <Button type="button" variant="outline" className="pointer-events-none w-full" disabled={uploadingMedia} asChild>
@@ -623,9 +639,15 @@ export default function ProjectsPage() {
                     </Button>
                     <input type="file" onChange={handleMediaUpload} className="hidden" accept=".jpg,.jpeg,.png,.webp,.gif,.svg,.mp4,.webm,.mov,.mkv,image/*,video/mp4,video/webm,video/quicktime" disabled={uploadingMedia} />
                   </label>
-                  <p className="text-body-sm leading-relaxed text-muted-foreground">
-                    Gambar otomatis dikonversi ke WebP (maks 5MB). Video MP4/WEBM/MOV/MKV disimpan apa adanya (maks 50MB). Urutan bisa diatur dengan tombol panah — media tampil sebagai galeri bukti di halaman proyek.
+                  <p className="text-body-sm text-muted-foreground">
+                    Gambar → WebP (maks 5MB). Video maks 50MB.
                   </p>
+
+                  {mediaError && (
+                    <p className="text-body-sm text-destructive">
+                      {mediaError} Tambahkan media lewat tombol di atas.
+                    </p>
+                  )}
 
                   {formData.media.map((m, idx) => (
                     <div key={idx} className="space-y-2 rounded-[12px] border border-border bg-surface p-3">
@@ -665,7 +687,7 @@ export default function ProjectsPage() {
                 </div>
 
                 <div className="flex gap-2 pt-2">
-                  <Button type="submit" className="flex-1">{editing ? 'Update Project' : 'Add Project'}</Button>
+                  <Button type="submit" className="flex-1" disabled={!!mediaError}>{editing ? 'Update Project' : 'Add Project'}</Button>
                   {editing && <Button type="button" variant="outline" onClick={handleCancel}>Cancel</Button>}
                 </div>
               </form>

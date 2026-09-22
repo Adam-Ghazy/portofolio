@@ -3,6 +3,7 @@ import getDb from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
 import { autoTranslate } from '@/lib/translate';
 import { getProjectMediaMap, syncProjectMedia } from '@/lib/project-media';
+import { validateProjectMedia } from '@/lib/project-media-rules';
 
 interface ProjectMetric {
   value: string;
@@ -72,6 +73,9 @@ export async function POST(request: NextRequest) {
     role_id,
   } = body;
   const { image_url, year, tags, link, sort_order, media } = body;
+
+  const mediaError = validateProjectMedia(media, true);
+  if (mediaError) return NextResponse.json({ error: mediaError }, { status: 400 });
 
   // Auto translate if one language provided
   if (title && !title_id) title_id = await autoTranslate(title, 'en', 'id');
@@ -153,6 +157,9 @@ export async function PUT(request: NextRequest) {
     role_id,
   } = body;
   const { id, image_url, year, tags, link, sort_order, is_active, media } = body;
+
+  const mediaError = validateProjectMedia(media);
+  if (mediaError) return NextResponse.json({ error: mediaError }, { status: 400 });
 
   if (title && !title_id) title_id = await autoTranslate(title, 'en', 'id');
   if (title_id && !title) title = await autoTranslate(title_id, 'id', 'en');
