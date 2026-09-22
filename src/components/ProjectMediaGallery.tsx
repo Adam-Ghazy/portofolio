@@ -42,32 +42,31 @@ const ArrowIcon = ({ dir }: { dir: 'left' | 'right' }) => (
 
 /**
  * Evidence gallery for a project (images + video proof).
- * Renders a compact bordered grid consistent with the card design and
- * opens a keyboard-navigable lightbox for full-size viewing / playback.
+ * Renders a swipeable carousel — 2 tiles per view on mobile, 3 from sm up — so a
+ * project with more media slides instead of being clipped, and opens a
+ * keyboard-navigable lightbox for full-size viewing / playback.
  */
 export default function ProjectMediaGallery({
   media,
   projectTitle,
-  maxTiles,
 }: {
   media: ProjectMediaItem[];
   projectTitle?: string;
-  maxTiles?: number;
 }) {
   const { t, l, locale } = useLanguage();
   const [lightbox, setLightbox] = useState<number | null>(null);
+  const [scrollable, setScrollable] = useState(false);
+  const [atStart, setAtStart] = useState(true);
+  const [atEnd, setAtEnd] = useState(false);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const originalOverflowRef = useRef<string>('');
 
   const items = (media || []).filter((m) => m && m.url);
-  if (items.length === 0) return null;
+  // `items` arrives asynchronously, so every hook stays above the empty guard:
+  // returning early before them would change the hook count between renders.
+  const single = items.length === 1;
 
-  const limited = typeof maxTiles === 'number' && items.length > maxTiles;
-  const visible = limited ? items.slice(0, maxTiles) : items;
-  const hiddenCount = items.length - visible.length;
-  const gridClass =
-    visible.length === 1 ? 'grid-cols-1' : 'grid-cols-2 sm:grid-cols-3';
-
-  const openAt = (idx: number) => setLightbox(idx);
-  const close = () => setLightbox(null);
+  const close = useCallback(() => setLightbox(null), []);
   const step = useCallback(
     (dir: 1 | -1) => {
       setLightbox((cur) => {
@@ -83,7 +82,6 @@ export default function ProjectMediaGallery({
 
 
   // Lightbox keyboard controls + body scroll lock
-  const originalOverflowRef = useRef<string>('');
   useEffect(() => {
     if (!isOpen) return;
     const onKey = (e: KeyboardEvent) => {
@@ -98,7 +96,37 @@ export default function ProjectMediaGallery({
       window.removeEventListener('keydown', onKey);
       document.body.style.overflow = originalOverflowRef.current;
     };
-  }, [isOpen, step]);
+  }, [isOpen, step, close]);
+
+  // Inline carousel: read the track so the arrows follow the real breakpoint
+  // (2 tiles per view on mobile, 3 from sm up) instead of a guessed count.
+  const syncTrackState = useCallback(() => {
+    const el = trackRef.current;
+    if (!el) return;
+    setScrollable(el.scrollWidth > el.clientWidth + 1);
+    setAtStart(el.scrollLeft <= 1);
+    setAtEnd(el.scrollLeft + el.clientWidth >= el.scrollWidth - 1);
+  }, []);
+
+  useEffect(() => {
+    syncTrackState();
+    const el = trackRef.current;
+    if (!el) return;
+    el.addEventListener('scroll', syncTrackState, { passive: true });
+    window.addEventListener('resize', syncTrackState);
+    return () => {
+      el.removeEventListener('scroll', syncTrackState);
+      window.removeEventListener('resize', syncTrackState);
+    };
+  }, [syncTrackState, items.length]);
+
+  if (items.length === 0) return null;
+
+  const scrollPage = (dir: 1 | -1) => {
+    const el = trackRef.current;
+    if (!el) return;
+    el.scrollBy({ left: dir * el.clientWidth, behavior: 'smooth' });
+  };
 
   const activeIndex =
     lightbox !== null ? Math.max(0, Math.min(lightbox, items.length - 1)) : null;
@@ -108,28 +136,63 @@ export default function ProjectMediaGallery({
   return (
     <div className="mb-6">
       {/* Section Label */}
-      <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-2.5">
         <div className="flex items-center gap-2">
           <span className="font-mono text-[11px] uppercase tracking-wider font-semibold" style={{ color: 'var(--text-primary)' }}>
             {t('projects.media_heading', 'Evidence & Documentation')}
           </span>
         </div>
-        <span className="font-mono text-[11px]" style={{ color: 'var(--text-tertiary)' }}>
-          {String(items.length).padStart(2, '0')} {locale === 'id' ? 'media · klik untuk perbesar' : 'media · click to enlarge'}
-        </span>
+        <div className="flex items-center gap-2.5">
+          <span className="font-mono text-[11px]" style={{ color: 'var(--text-tertiary)' }}>
+            {String(items.length).padStart(2, '0')} {locale === 'id' ? 'media · klik untuk perbesar' : 'media · click to enlarge'}
+          </span>
+          {scrollable && (
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => scrollPage(-1)}
+                disabled={atStart}
+                className="flex items-center justify-center w-7 h-7 rounded-lg border transition-colors hover:bg-[var(--bg-secondary)] disabled:opacity-35 disabled:pointer-events-none"
+                style={{ borderColor: 'var(--border-color)', color: 'var(--text-secondary)', background: 'var(--bg-card)' }}
+                aria-label={locale === 'id' ? 'Geser ke kiri' : 'Scroll left'}
+              >
+                <ArrowIcon dir="left" />
+              </button>
+              <button
+                type="button"
+                onClick={() => scrollPage(1)}
+                disabled={atEnd}
+                className="flex items-center justify-center w-7 h-7 rounded-lg border transition-colors hover:bg-[var(--bg-secondary)] disabled:opacity-35 disabled:pointer-events-none"
+                style={{ borderColor: 'var(--border-color)', color: 'var(--text-secondary)', background: 'var(--bg-card)' }}
+                aria-label={locale === 'id' ? 'Geser ke kanan' : 'Scroll right'}
+              >
+                <ArrowIcon dir="right" />
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Tiles */}
-      <div className={`grid gap-3 ${gridClass}`}>
-        {visible.map((item, idx) => {
+      {/* Carousel — 2 tiles per view on mobile, 3 from sm up; slide for the rest */}
+      <div
+        ref={trackRef}
+        tabIndex={0}
+        role="group"
+        aria-label={locale === 'id' ? 'Galeri media proyek' : 'Project media gallery'}
+        className="flex gap-3 overflow-x-auto snap-x snap-mandatory scroll-smooth py-1 -my-1 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
+        {items.map((item, idx) => {
           const isVideo = item.media_type === 'video';
-          const isMoreTile = limited && idx === visible.length - 1;
           return (
             <button
               key={item.id ?? idx}
               type="button"
-              onClick={() => openAt(isMoreTile && typeof maxTiles === 'number' ? maxTiles : idx)}
-              className="group relative rounded-xl overflow-hidden border text-left transition-all duration-200 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+              onClick={() => setLightbox(idx)}
+              className={`group relative shrink-0 snap-start rounded-xl overflow-hidden border text-left transition-all duration-200 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] ${
+                single
+                  ? 'w-full'
+                  : 'w-[calc((100%_-_0.75rem)/2)] sm:w-[calc((100%_-_1.5rem)/3)]'
+              }`}
               style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-subtle)' }}
               aria-label={l(item, 'caption') || `${projectTitle || 'Project'} media ${idx + 1}`}
             >
@@ -182,16 +245,6 @@ export default function ProjectMediaGallery({
                   >
                     <PlayIcon />
                   </span>
-                </span>
-              )}
-
-              {/* +N overlay on the last clipped tile */}
-              {isMoreTile && (
-                <span
-                  className="absolute inset-0 flex items-center justify-center font-mono text-lg font-semibold"
-                  style={{ background: 'color-mix(in srgb, var(--bg-primary) 72%, transparent)', color: 'var(--text-primary)' }}
-                >
-                  +{hiddenCount}
                 </span>
               )}
 

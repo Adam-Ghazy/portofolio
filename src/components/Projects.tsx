@@ -227,7 +227,6 @@ export default function Projects({ section, projects = [] }: { section?: any; pr
                 <ProjectMediaGallery
                   media={project.media || []}
                   projectTitle={l(project, 'title')}
-                  maxTiles={3}
                 />
 
                 {/* Narrative: operational context + engineering decisions */}
