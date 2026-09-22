@@ -60,6 +60,11 @@ function initTables() {
       solution_id TEXT,
       impact TEXT,
       impact_id TEXT,
+      paragraph1 TEXT,
+      paragraph1_id TEXT,
+      paragraph2 TEXT,
+      paragraph2_id TEXT,
+      metrics TEXT,
       image_url TEXT,
       year TEXT,
       role TEXT,
@@ -189,6 +194,11 @@ function initTables() {
   ensureColumn('projects', 'role_id');
   ensureColumn('projects', 'contributions');
   ensureColumn('projects', 'contributions_id');
+  ensureColumn('projects', 'paragraph1');
+  ensureColumn('projects', 'paragraph1_id');
+  ensureColumn('projects', 'paragraph2');
+  ensureColumn('projects', 'paragraph2_id');
+  ensureColumn('projects', 'metrics');
 
   ensureColumn('experiences', 'position_id');
   ensureColumn('experiences', 'program_id');
@@ -225,7 +235,150 @@ function initTables() {
 
   // Populate default Indonesian translations for initial seed if missing
   seedIndonesianTranslations();
+
+  // Project card narrative: paragraph1/paragraph2 + metrics
+  migrateProjectNarrative();
 }
+
+/**
+ * Project card narrative.
+ *
+ * `problem` / `solution` / `impact` stay in the schema as legacy columns; the card
+ * renders `paragraph1` / `paragraph2` (locale aware), a `metrics` chip strip, and
+ * the contributions checklist.
+ *
+ * Step 1 copies the legacy columns forward for every project that has no narrative
+ * yet, so nothing is lost. Step 2 replaces that copy with authored narrative, keyed
+ * by title so it lands on any deployment regardless of row ids. Step 2 is skipped
+ * once `paragraph1` no longer equals `problem`, so manual admin edits survive.
+ *
+ * `metrics` is only written where the numbers are already claimed elsewhere on the
+ * site (the legacy `impact` line). Projects without verified numbers keep `NULL`,
+ * which the API serves as `[]` and the card renders as no strip at all.
+ */
+function migrateProjectNarrative() {
+  db.prepare(`
+    UPDATE projects SET
+      paragraph1    = COALESCE(paragraph1, problem),
+      paragraph1_id = COALESCE(paragraph1_id, problem_id),
+      paragraph2    = COALESCE(paragraph2, solution),
+      paragraph2_id = COALESCE(paragraph2_id, solution_id)
+    WHERE paragraph1 IS NULL OR paragraph2 IS NULL
+  `).run();
+
+  const setNarrative = db.prepare(`
+    UPDATE projects
+    SET paragraph1 = ?, paragraph1_id = ?, paragraph2 = ?, paragraph2_id = ?, metrics = ?
+    WHERE title = ? AND (paragraph1 IS NULL OR paragraph1 = problem)
+  `);
+
+  const setContributions = db.prepare(`
+    UPDATE projects
+    SET contributions = ?, contributions_id = ?
+    WHERE title = ? AND (contributions IS NULL OR contributions = '')
+  `);
+
+  for (const project of PROJECT_NARRATIVE) {
+    setNarrative.run(
+      project.paragraph1,
+      project.paragraph1_id,
+      project.paragraph2,
+      project.paragraph2_id,
+      project.metrics.length > 0 ? JSON.stringify(project.metrics) : null,
+      project.title
+    );
+    setContributions.run(project.contributions, project.contributions_id, project.title);
+  }
+}
+
+interface ProjectNarrative {
+  title: string;
+  paragraph1: string;
+  paragraph1_id: string;
+  paragraph2: string;
+  paragraph2_id: string;
+  metrics: { value: string; label: string; label_id: string }[];
+  contributions: string;
+  contributions_id: string;
+}
+
+const PROJECT_NARRATIVE: ProjectNarrative[] = [
+  {
+    title: 'FoodLAB - Campus Food Ordering Platform',
+    paragraph1:
+      'The PENS campus canteen hit the same problem every lunch hour: more than 200 students queued in the same window while each food stall ran a single manual ordering line. Queues stretched across the canteen and vendors lost orders from students who chose not to wait.',
+    paragraph1_id:
+      'Kantin kampus PENS mengalami masalah yang sama tiap jam makan siang: lebih dari 200 mahasiswa mengantre di jam yang sama, sementara setiap stan makanan hanya punya satu jalur pemesanan manual. Antrean memanjang dan vendor kehilangan pesanan dari mahasiswa yang memilih tidak menunggu.',
+    paragraph2:
+      'I built the Flutter application on a Provider architecture with a dedicated REST API integration layer for menu browsing, cart, and order placement. A real-time push notification service drives order status updates, so students never walk back to the stall to check progress. I also coordinated vendor onboarding for 10+ canteen tenants, from menu setup through verification.',
+    paragraph2_id:
+      'Saya membangun aplikasi Flutter dengan arsitektur Provider dan lapisan integrasi REST API khusus untuk browsing menu, cart, dan alur pemesanan. Layanan push notification real-time mengirim update status pesanan, jadi mahasiswa tidak perlu kembali ke stan untuk mengecek progres. Saya juga mengoordinasikan onboarding 10+ tenant kantin, dari setup menu sampai verifikasi.',
+    metrics: [
+      { value: '300+', label: 'Active Users', label_id: 'Pengguna Aktif' },
+      { value: '60%', label: 'Waiting Time Cut', label_id: 'Waktu Tunggu Turun' },
+      { value: '10+', label: 'Vendors Onboarded', label_id: 'Tenant Terintegrasi' },
+      { value: 'Rp 20jt', label: 'University Funding', label_id: 'Pendanaan Universitas' },
+      { value: '4.5+', label: 'Play Store Rating', label_id: 'Rating Play Store' },
+    ],
+    contributions:
+      'Engineered the complete Flutter mobile application architecture with Provider state management.\nBuilt the REST API integration layer for menu browsing, cart, and order placement flows.\nImplemented the real-time push notification service for live order status updates.\nCoordinated vendor onboarding for 10+ campus food tenants.',
+    contributions_id:
+      'Merancang arsitektur aplikasi mobile Flutter secara menyeluruh dengan manajemen state Provider.\nMembangun lapisan integrasi REST API untuk alur menu, keranjang, dan pemesanan.\nMengimplementasikan layanan notifikasi push real-time untuk status pesanan langsung.\nMengoordinasikan onboarding 10+ tenant makanan kampus.',
+  },
+  {
+    title: 'Real-Time Queue Management System',
+    paragraph1:
+      'Citizen administration at the Gebang Putih urban village office ran on physical paper tickets. Staff issued numbers by hand, waiting halls filled up with no signal of how long the wait would be, and average service time sat at 15 minutes per citizen. With several counters open at once, nobody had a shared view of which counter was free.',
+    paragraph1_id:
+      'Pelayanan administrasi warga di kantor kelurahan Gebang Putih berjalan dengan tiket kertas fisik. Staf menerbitkan nomor antrean secara manual, ruang tunggu penuh tanpa kejelasan berapa lama warga harus menunggu, dan waktu layanan rata-rata 15 menit per warga. Dengan beberapa loket dibuka bersamaan, tidak ada gambaran bersama loket mana yang sedang kosong.',
+    paragraph2:
+      'I developed and deployed the queue application on Flutter, with WebSockets keeping every counter state synchronized so citizens watch the line move live instead of waiting blind. Counter state is managed centrally, which lets staff open or close service counters without reissuing tickets. I handled the production deployment at the village office and ran the onboarding sessions for staff and citizens.',
+    paragraph2_id:
+      'Saya mengembangkan dan merilis aplikasi antrean berbasis Flutter, dengan WebSocket menjaga state setiap loket tetap tersinkron sehingga warga bisa memantau antrean bergerak langsung alih-alih menunggu tanpa kepastian. State loket dikelola terpusat, jadi staf bisa membuka atau menutup loket tanpa menerbitkan ulang tiket. Saya menangani deployment produksi di kantor kelurahan dan memandu sesi onboarding untuk staf maupun warga.',
+    metrics: [
+      { value: '40%', label: 'Manual Process Cut', label_id: 'Proses Manual Turun' },
+      { value: '15→7 min', label: 'Service Time', label_id: 'Waktu Layanan' },
+      { value: 'Multi', label: 'Counter Support', label_id: 'Dukungan Loket' },
+      { value: 'Play', label: 'Store Published', label_id: 'Rilis Play Store' },
+    ],
+    contributions:
+      'Developed the real-time queue mobile application with WebSocket live synchronization.\nDesigned multi-counter queue state management and the live tracking UI.\nDeployed and maintained the production application at the urban village office.\nLed user onboarding sessions for office staff and citizens.',
+    contributions_id:
+      'Mengembangkan aplikasi mobile antrean real-time dengan sinkronisasi WebSocket.\nMerancang manajemen state antrean multi-loket dan UI pelacakan langsung.\nMelakukan deployment dan pemeliharaan aplikasi produksi di kantor kelurahan.\nMemandu sesi onboarding bagi staf kantor dan warga.',
+  },
+  {
+    title: 'Paperless Inspection System',
+    paragraph1:
+      'Every QA/QC inspection at PT INKA ran on paper. Inspectors filled forms by hand on the production floor, then the sheets travelled between shifts, supervisors, and the QA archive. With several production lines inspected in parallel, forms went missing, handwriting was misread, and inspections were repeated just to recover data that had already been captured.',
+    paragraph1_id:
+      'Setiap inspeksi QA/QC di PT INKA jalan di atas kertas. Inspektur ngisi form manual di lantai produksi, lalu lembarannya berpindah antar shift, supervisor, dan arsip QA. Dengan beberapa lini produksi diinspeksi paralel, form hilang, tulisan salah baca, dan inspeksi harus diulang cuma buat memulihkan data yang sudah pernah dicatat.',
+    paragraph2:
+      'I built the Laravel + REST API backend driving the digital inspection flow. A template engine renders a different checklist per production line, so inspectors only see the fields their station needs. Role-based access separates inspectors, supervisors, and QA leads, and every submission carries a timestamped audit trail — any record can be traced to who entered it and when. MySQL stores records on a normalized schema, and Docker keeps staging identical to production.',
+    paragraph2_id:
+      'Gue bangun backend Laravel + REST API yang menjalankan alur inspeksi digitalnya. Ada template engine yang me-render checklist berbeda per lini produksi, jadi inspektur cuma lihat field yang stasiunnya butuh. Role-based access memisahkan inspektur, supervisor, dan QA lead, dan setiap submission punya audit trail bertimestamp — satu record selalu bisa dilacak siapa yang input dan kapan. MySQL menyimpan record dengan skema ternormalisasi, dan Docker menjaga staging identik dengan production.',
+    metrics: [],
+    contributions:
+      'Built the Laravel + REST API backend driving the digital QA/QC inspection flow.\nEngineered the checklist template engine that renders a different form per production line.\nImplemented role-based access separating inspectors, supervisors, and QA leads.\nAdded timestamped audit trails so every record traces back to who entered it and when.',
+    contributions_id:
+      'Membangun backend Laravel + REST API yang menjalankan alur inspeksi QA/QC digital.\nMerancang template engine checklist yang me-render form berbeda per lini produksi.\nMengimplementasikan role-based access yang memisahkan inspektur, supervisor, dan QA lead.\nMenambahkan audit trail bertimestamp agar setiap record terlacak siapa penginputnya dan kapan.',
+  },
+  {
+    title: 'Surat Jalan Online',
+    paragraph1:
+      'The delivery-order process at PT INKA moved on paper. PPO raised the order, Logistics prepared the shipment, Security verified the gate pass, and the external courier carried a physical document that had to be signed and returned before the record could close. Every handoff was manual, and no team downstream could see an order status without calling the desk before it.',
+    paragraph1_id:
+      'Proses surat jalan di PT INKA berjalan di atas kertas. PPO menerbitkan order, Logistik menyiapkan pengiriman, Keamanan memverifikasi surat jalan, dan kurir eksternal membawa dokumen fisik yang harus ditandatangani dan dikembalikan sebelum record bisa ditutup. Setiap serah terima manual, dan tim di hilir tidak bisa melihat status order tanpa menelepon meja sebelumnya.',
+    paragraph2:
+      'I contributed to the Laravel + REST API backend behind the digital delivery order. The workflow automation layer routes each order through its stages — issuance at PPO, preparation in Logistics, gate verification by Security, then handoff to the external courier — and updates status live, so all four teams read the same state instead of chasing paper. Every stage transition is recorded, which means a delivery order can be traced from issuance through receipt.',
+    paragraph2_id:
+      'Saya berkontribusi pada backend Laravel + REST API di balik surat jalan digital. Lapisan otomasi alur mengarahkan setiap order melewati tahapannya — penerbitan di PPO, penyiapan di Logistik, verifikasi gerbang oleh Keamanan, lalu serah terima ke kurir eksternal — dan memperbarui status secara langsung, jadi keempat tim membaca state yang sama alih-alih mengejar kertas. Setiap perpindahan tahap tercatat, sehingga surat jalan bisa dilacak dari penerbitan sampai penerimaan.',
+    metrics: [],
+    contributions:
+      'Contributed to the Laravel + REST API backend behind the digital delivery order.\nAutomated the multi-stage workflow across PPO, Logistics, Security, and external couriers.\nDelivered live status tracking so all four teams read one shared order state.\nRecorded every stage transition so each order traces from issuance to receipt.',
+    contributions_id:
+      'Berkontribusi pada backend Laravel + REST API di balik surat jalan digital.\nMengotomasi alur multi-tahap lintas PPO, Logistik, Keamanan, dan kurir eksternal.\nMenghadirkan pelacakan status langsung agar keempat tim membaca satu state order bersama.\nMencatat setiap perpindahan tahap sehingga tiap order terlacak dari penerbitan sampai penerimaan.',
+  },
+];
 
 function seedIndonesianTranslations() {
   try {

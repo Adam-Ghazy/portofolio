@@ -4,12 +4,48 @@ import { requireAuth } from '@/lib/auth';
 import { autoTranslate } from '@/lib/translate';
 import { getProjectMediaMap, syncProjectMedia } from '@/lib/project-media';
 
+interface ProjectMetric {
+  value: string;
+  label?: string;
+  label_id?: string;
+}
+
+interface ProjectRow {
+  id: number;
+  metrics: unknown;
+  [column: string]: unknown;
+}
+
+/**
+ * `metrics` is persisted as a JSON text column. The card always receives an array,
+ * never null, so it can render the chip strip without layered null checks.
+ */
+function parseMetrics(raw: unknown): ProjectMetric[] {
+  if (typeof raw !== 'string' || raw.trim() === '') return [];
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((m): m is ProjectMetric => {
+      if (typeof m !== 'object' || m === null || !('value' in m)) return false;
+      return typeof m.value === 'string';
+    });
+  } catch {
+    return [];
+  }
+}
+
 export async function GET() {
   const db = getDb();
-  const projects = db.prepare('SELECT * FROM projects WHERE is_active = 1 ORDER BY sort_order').all();
+  const projects = db
+    .prepare('SELECT * FROM projects WHERE is_active = 1 ORDER BY sort_order')
+    .all() as ProjectRow[];
   const mediaMap = getProjectMediaMap();
   return NextResponse.json(
-    (projects as any[]).map((p) => ({ ...p, media: mediaMap[p.id] || [] }))
+    projects.map((p) => ({
+      ...p,
+      metrics: parseMetrics(p.metrics),
+      media: mediaMap[p.id] || [],
+    }))
   );
 }
 
