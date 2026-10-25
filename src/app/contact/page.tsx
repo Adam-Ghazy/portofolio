@@ -1,20 +1,34 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
-import StatusBar from '@/components/StatusBar';
 import { useLanguage } from '@/components/I18nProvider';
+import { UntiPage, UntiSection, UntiCard, SectionPill, StatusPill } from '@/components/unti/UntiPrimitives';
+
+const inputStyle = {
+  background: 'var(--bg-secondary)',
+  borderRadius: 'var(--radius-pill)',
+  padding: '10px 20px',
+  fontSize: 16,
+  letterSpacing: '-0.01em',
+  lineHeight: 1.2,
+  color: 'var(--text-primary)',
+  outline: 'none',
+  width: '100%',
+  border: 'none',
+} as const;
 
 export default function ContactPage() {
   const { t, locale } = useLanguage();
-  const [settings, setSettings] = useState<any>({});
+  const [settings, setSettings] = useState<Record<string, string>>({});
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
 
   useEffect(() => {
-    fetch('/api/settings').then(r => (r.ok ? r.json() : {})).then(setSettings).catch(() => {});
+    fetch('/api/settings')
+      .then((r) => (r.ok ? r.json() : {}))
+      .then(setSettings)
+      .catch(() => {});
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -32,193 +46,137 @@ export default function ContactPage() {
         setForm({ name: '', email: '', subject: '', message: '' });
       }
     } catch {
-      // ignore
+      // Network failure: keep the form filled so the visitor can retry.
     } finally {
       setSending(false);
     }
   };
 
+  const footerRows = [
+    settings.email && { label: 'E-mail', content: settings.email, href: `mailto:${settings.email}` },
+    settings.phone && { label: 'Phone', content: settings.phone, href: `tel:${settings.phone.replace(/[^+\d]/g, '')}` },
+    settings.linkedin && { label: 'LinkedIn', content: '/in/adamghazy', href: settings.linkedin, newTab: true },
+    settings.location && { label: 'Location', content: settings.location, href: '#' },
+  ].filter(Boolean) as { label: string; content: string; href: string; newTab?: boolean }[];
+
+  const labelCls = 'unti-meta-sm block mb-[5px]';
+
   return (
-    <div className="min-h-screen flex flex-col pb-6" style={{ background: 'var(--bg-primary)' }}>
-      <Header />
-      
-      <main className="flex-1 pt-24">
-        {/* Header */}
-        <section className="px-6 md:px-8 py-14 md:py-20">
-          <div className="max-w-[1200px] mx-auto">
-            <span className="font-mono text-[11px] tracking-wider uppercase block mb-3" style={{ color: 'var(--text-tertiary)' }}>
-              {t('sections.contact_badge', '01 // connect')}
-            </span>
-            <h1 className="text-[36px] md:text-[52px] font-semibold tracking-tight mb-4" style={{ color: 'var(--text-primary)' }}>
-              {t('contact.title', "Let's Connect")}
-            </h1>
-            <p className="text-[16px] md:text-[18px] leading-relaxed max-w-[660px]" style={{ color: 'var(--text-secondary)' }}>
-              {t('contact.subtitle', 'Whether you have an entry-level software engineering role, a mobile application project, or simply want to connect - feel free to reach out.')}
-            </p>
-          </div>
-        </section>
+    <UntiPage
+      location={settings.location || 'Madiun, Indonesia'}
+      rows={footerRows}
+      copyright={`2026 © ${settings.site_title?.split(' - ')[0] || 'Adam Ghazy Al Falah'}`}
+    >
+      <UntiSection>
+        <UntiCard>
+          <StatusPill label={locale === 'id' ? 'Terbuka untuk kerja' : 'Available for Work'} />
+          <h1 className="unti-title m-0 text-balance">{t('contact.title', "Let's Connect")}</h1>
+          <p className="unti-body m-0 text-pretty">
+            {t(
+              'contact.subtitle',
+              'Whether you have an entry-level software engineering role, a mobile application project, or simply want to connect - feel free to reach out.'
+            )}
+          </p>
+        </UntiCard>
+      </UntiSection>
 
-        {/* Form & Info */}
-        <section className="px-6 md:px-8 pb-20">
-          <div className="max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10">
-            
-            {/* Contact Form (7 cols) */}
-            <div className="lg:col-span-7 rounded-2xl p-6 md:p-8 border" style={{ background: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
-              <h2 className="text-[18px] font-semibold mb-6" style={{ color: 'var(--text-primary)' }}>
-                {locale === 'id' ? 'Kirim Pesan Langsung' : 'Send a Direct Message'}
-              </h2>
-              
-              {sent && (
-                <div className="mb-6 px-4 py-3 rounded-lg text-sm font-medium border" style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)', borderColor: 'var(--border-color)' }}>
-                  {t('contact.success_msg', 'Message sent successfully! I will get back to you as soon as possible.')}
-                </div>
-              )}
+      <UntiSection>
+        <UntiCard>
+          <SectionPill label={locale === 'id' ? 'Kirim Pesan' : 'Send a Message'} />
+          {sent && (
+            <div className="unti-pill" style={{ width: '100%' }}>
+              {t('contact.success_msg', 'Message sent successfully! I will get back to you as soon as possible.')}
+            </div>
+          )}
+          <form onSubmit={handleSubmit} className="flex flex-col gap-[10px]">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-[10px]">
+              <div>
+                <label htmlFor="contact-name" className={labelCls}>
+                  {t('contact.name_label', 'Your Name')}
+                </label>
+                <input
+                  id="contact-name"
+                  type="text"
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  style={inputStyle}
+                  placeholder={t('contact.name_placeholder', 'e.g. Sarah Jenkins')}
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="contact-email" className={labelCls}>
+                  {t('contact.email_label', 'Email Address')}
+                </label>
+                <input
+                  id="contact-email"
+                  type="email"
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  style={inputStyle}
+                  placeholder={t('contact.email_placeholder', 'e.g. sarah@company.com')}
+                  required
+                />
+              </div>
+            </div>
+            <div>
+              <label htmlFor="contact-subject" className={labelCls}>
+                {t('contact.subject_label', 'Subject')}
+              </label>
+              <input
+                id="contact-subject"
+                type="text"
+                value={form.subject}
+                onChange={(e) => setForm({ ...form, subject: e.target.value })}
+                style={inputStyle}
+                placeholder={t('contact.subject_placeholder', 'Junior Developer Opportunity / Project Inquiry')}
+              />
+            </div>
+            <div>
+              <label htmlFor="contact-message" className={labelCls}>
+                {t('contact.message_label', 'Message')}
+              </label>
+              <textarea
+                id="contact-message"
+                value={form.message}
+                onChange={(e) => setForm({ ...form, message: e.target.value })}
+                style={{ ...inputStyle, minHeight: 140, resize: 'vertical' }}
+                placeholder={t('contact.message_placeholder', "Tell me about your team, role opening, or what you'd like to build...")}
+                required
+              />
+            </div>
+            <button type="submit" disabled={sending} className="unti-cta" style={{ width: '100%' }}>
+              {sending ? t('contact.sending_btn', 'Sending...') : t('contact.submit_btn', 'Send Message')}
+            </button>
+          </form>
+        </UntiCard>
+      </UntiSection>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-[11px] font-mono tracking-wider block mb-1.5 uppercase" style={{ color: 'var(--text-tertiary)' }}>
-                      {t('contact.name_label', 'YOUR NAME')}
-                    </label>
-                    <input
-                      type="text"
-                      value={form.name}
-                      onChange={e => setForm({...form, name: e.target.value})}
-                      className="w-full px-4 py-2.5 rounded-lg border text-sm outline-none transition-colors"
-                      style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-color)', color: 'var(--text-primary)' }}
-                      placeholder={t('contact.name_placeholder', 'e.g. Sarah Jenkins')}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[11px] font-mono tracking-wider block mb-1.5 uppercase" style={{ color: 'var(--text-tertiary)' }}>
-                      {t('contact.email_label', 'EMAIL ADDRESS')}
-                    </label>
-                    <input
-                      type="email"
-                      value={form.email}
-                      onChange={e => setForm({...form, email: e.target.value})}
-                      className="w-full px-4 py-2.5 rounded-lg border text-sm outline-none transition-colors"
-                      style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-color)', color: 'var(--text-primary)' }}
-                      placeholder={t('contact.email_placeholder', 'e.g. sarah@company.com')}
-                      required
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="text-[11px] font-mono tracking-wider block mb-1.5 uppercase" style={{ color: 'var(--text-tertiary)' }}>
-                    {t('contact.subject_label', 'SUBJECT')}
-                  </label>
-                  <input
-                    type="text"
-                    value={form.subject}
-                    onChange={e => setForm({...form, subject: e.target.value})}
-                    className="w-full px-4 py-2.5 rounded-lg border text-sm outline-none transition-colors"
-                    style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-color)', color: 'var(--text-primary)' }}
-                    placeholder={t('contact.subject_placeholder', 'Junior Developer Opportunity / Project Inquiry')}
-                  />
-                </div>
-                <div>
-                  <label className="text-[11px] font-mono tracking-wider block mb-1.5 uppercase" style={{ color: 'var(--text-tertiary)' }}>
-                    {t('contact.message_label', 'MESSAGE')}
-                  </label>
-                  <textarea
-                    value={form.message}
-                    onChange={e => setForm({...form, message: e.target.value})}
-                    className="w-full px-4 py-2.5 rounded-lg border text-sm outline-none transition-colors min-h-[140px] resize-none"
-                    style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-color)', color: 'var(--text-primary)' }}
-                    placeholder={t('contact.message_placeholder', "Tell me about your team, role opening, or what you'd like to build...")}
-                    required
-                  />
-                </div>
-                <button
-                  type="submit"
-                  disabled={sending || !form.name || !form.email || !form.message}
-                  className="w-full py-3 rounded-lg text-sm font-medium font-mono transition-all disabled:opacity-50 hover:opacity-90 shadow-sm"
-                  style={{ background: 'var(--accent)', color: 'var(--accent-contrast, #ffffff)' }}
+      <UntiSection>
+        <UntiCard>
+          <SectionPill label={locale === 'id' ? 'Kontak Langsung' : 'Direct Contact'} />
+          <div className="flex flex-col gap-[10px]">
+            {footerRows.map((row) => (
+              <div
+                key={row.label}
+                className="flex items-center justify-between w-full"
+                style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-photo)', padding: 20, gap: 20, border: '1px solid var(--border-subtle)' }}
+              >
+                <span className="unti-muted">{row.label}</span>
+                <a
+                  href={row.href}
+                  target={row.newTab || row.href.startsWith('http') ? '_blank' : undefined}
+                  rel={row.newTab || row.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+                  className="unti-heading truncate hover:opacity-70 transition-opacity"
+                  style={{ fontSize: 16 }}
                 >
-                  {sending ? t('contact.sending_btn', 'Sending...') : t('contact.submit_btn', 'Send Message')}
-                </button>
-              </form>
-            </div>
-
-            {/* Contact Info (5 cols) */}
-            <div className="lg:col-span-5 space-y-6">
-              {/* Availability */}
-              <div className="rounded-2xl p-6 md:p-8 border" style={{ background: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
-                <span className="font-mono text-[11px] tracking-wider uppercase block mb-3" style={{ color: 'var(--text-tertiary)' }}>
-                  {locale === 'id' ? 'Status Ketersediaan' : 'Availability Status'}
-                </span>
-                <div className="font-semibold text-[16px] mb-2" style={{ color: 'var(--text-primary)' }}>
-                  {locale === 'id' ? 'Terbuka untuk Peluang Kerja' : 'Open for Junior Opportunities'}
-                </div>
-                <p className="text-[13.5px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-                  {locale === 'id'
-                    ? 'Tersedia untuk posisi penuh waktu junior mobile, frontend, backend, atau fullstack software engineering, hybrid/remote, dan proyek kontrak produksi.'
-                    : 'Available for full-time junior mobile, frontend, backend, or fullstack software engineering positions, hybrid/remote roles, and production contract projects.'}
-                </p>
+                  {row.content}
+                </a>
               </div>
-
-              {/* Direct Channels */}
-              <div className="rounded-2xl p-6 md:p-8 border" style={{ background: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
-                <span className="font-mono text-[11px] tracking-wider uppercase block mb-4" style={{ color: 'var(--text-tertiary)' }}>
-                  {locale === 'id' ? 'Kontak Langsung' : 'Direct Contact Info'}
-                </span>
-                <div className="space-y-3">
-                  <a
-                    href="mailto:ghozyalfalah02@gmail.com"
-                    className="flex items-center justify-between p-3.5 rounded-xl border transition-colors hover:bg-[var(--bg-secondary)]"
-                    style={{ borderColor: 'var(--border-subtle)' }}
-                  >
-                    <span className="font-mono text-xs sm:text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                      ghozyalfalah02@gmail.com
-                    </span>
-                    <span className="font-mono text-xs" style={{ color: 'var(--text-tertiary)' }}>Email</span>
-                  </a>
-
-                  <a
-                    href="tel:+6285784269105"
-                    className="flex items-center justify-between p-3.5 rounded-xl border transition-colors hover:bg-[var(--bg-secondary)]"
-                    style={{ borderColor: 'var(--border-subtle)' }}
-                  >
-                    <span className="font-mono text-xs sm:text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                      (+62) 85784269105
-                    </span>
-                    <span className="font-mono text-xs" style={{ color: 'var(--text-tertiary)' }}>Call / WA</span>
-                  </a>
-
-                  <a
-                    href="https://www.linkedin.com/in/adamghazy"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-between p-3.5 rounded-xl border transition-colors hover:bg-[var(--bg-secondary)]"
-                    style={{ borderColor: 'var(--border-subtle)' }}
-                  >
-                    <span className="font-mono text-xs sm:text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                      linkedin.com/in/adamghazy
-                    </span>
-                    <span className="font-mono text-xs" style={{ color: 'var(--text-tertiary)' }}>LinkedIn</span>
-                  </a>
-
-                  <div
-                    className="flex items-center justify-between p-3.5 rounded-xl border"
-                    style={{ borderColor: 'var(--border-subtle)' }}
-                  >
-                    <span className="font-mono text-xs sm:text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                      Madiun, Indonesia
-                    </span>
-                    <span className="font-mono text-xs" style={{ color: 'var(--text-tertiary)' }}>Location</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
+            ))}
           </div>
-        </section>
-      </main>
-
-      <Footer settings={settings} background="primary" />
-      <StatusBar settings={settings} />
-    </div>
+        </UntiCard>
+      </UntiSection>
+    </UntiPage>
   );
 }

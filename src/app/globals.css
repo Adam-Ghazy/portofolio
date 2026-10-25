@@ -2,26 +2,12 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* ---------------------------------------------------------------------------
-   Theme tokens
-   - Public site: runtime vars (--bg-*, --text-*, --border-*, --accent, ...) in
-     :root / .dark, consumed via inline `var()` styles.
-   - Admin ("Industrial Governance", see DESIGN.md): static design tokens below,
-     consumed through Tailwind utilities (bg-card, text-muted-foreground, ...).
-     The palette is monochrome with exactly one accent (#222222 light / #F1F3F4
-     dark) and colour appears only inside status pills. Both palettes live in
-     this file: the light values in `@theme`, their dark counterparts in the
-     `.dark` block right below it. The admin is authored light-first, so `.dark`
-     reaches it only when the operator asks for it (see lib/theme.ts).
---------------------------------------------------------------------------- */
+/* Public site: runtime vars in :root/.dark (inline var() styles).
+   Admin: static @theme tokens via Tailwind utilities (DESIGN.md). */
 @theme {
-  --font-display: "Plus Jakarta Sans", system-ui, sans-serif;
-  --font-body: "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-display: "Geist", system-ui, sans-serif;
+  --font-body: "Geist", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
-
-  /* Industrial Governance — canvas, structure, ink */
-  /* Admin type uses the same family as the public site (Plus Jakarta Sans via
-     --font-body); no second typeface is loaded. */
 
   --color-background: #f8f8f8;
   --color-surface: #ffffff;
@@ -40,7 +26,6 @@
   --color-on-primary: #ffffff;
   --color-destructive: #c5221f;
 
-  /* Lifecycle status — the only permitted colour application */
   --color-status-active-bg: #e6f4ea;
   --color-status-active-text: #137333;
   --color-status-pending-bg: #fef7e0;
@@ -50,7 +35,6 @@
   --color-status-draft-bg: #f1f3f4;
   --color-status-draft-text: #5f6368;
 
-  /* Semantic aliases used by the admin primitives */
   --color-foreground: #2d3436;
   --color-card: #ffffff;
   --color-card-foreground: #2d3436;
@@ -64,16 +48,10 @@
   --color-accent: #f1f3f4;
   --color-accent-foreground: #2d3436;
   --color-destructive-foreground: #ffffff;
-  /* Inputs are control outlines that must read as interactive — DESIGN.md
-     reserves #DFDFDF for exactly that, not for the structural hairline. */
   --color-input: #dfdfdf;
   --color-ring: #222222;
-  /* Placeholder sits ~3.1:1 on white: clearly lighter than a real value
-     (12.7:1), so an empty field never reads as a filled one. */
   --color-placeholder: #8a9497;
 
-  /* Type scale — size / leading / weight / tracking in one utility.
-     Tuned for a dense operational surface: row text never drops below 13px. */
   --text-headline-lg: 22px;
   --text-headline-lg--line-height: 30px;
   --text-headline-lg--font-weight: 600;
@@ -108,51 +86,19 @@
   --text-tabular-numeric--line-height: 20px;
   --text-tabular-numeric--font-weight: 500;
 
-  /* Shape — the only two radii this system consumes as bare utilities.
-     `rounded-sm` (8px) is the compact trigger; `rounded-md` (12px) is the
-     workhorse for containers and controls.
-
-     Deliberately NOT defined: `--radius-lg` / `--radius-xl`. The public site
-     owns those at Tailwind's defaults (8px / 12px), and re-pointing them here
-     would re-round every public button and card. Admin therefore never uses a
-     bare `rounded-lg`/`rounded-xl`; it uses explicit `rounded-[12px]`, and
-     `rounded-[8px]` for compact icon triggers.
-
-     Trap: `rounded-md` (12px) is LARGER than `rounded-lg` (8px). Reaching for
-     `rounded-lg` expecting a bigger radius silently gives you a smaller one. */
+  /* Admin-only: never use bare rounded-lg/xl here (public site owns those).
+     Note rounded-md (12px) is LARGER than rounded-lg (8px). */
   --radius-sm: 8px;
   --radius-md: 12px;
 
-  /* Elevation — restrained, low diffusion. Only the alpha is themed: Tailwind
-     inlines `--shadow-*` into the `shadow-*` utility, so overriding the token in
-     `.dark` would be dead code. The indirection through `--elevation-*-alpha`
-     keeps one geometry and lets the ink density flip with the palette. */
+  /* Alpha is themed via --elevation-*-alpha; geometry stays fixed. */
   --shadow-card: 0 2px 8px rgb(0 0 0 / var(--elevation-card-alpha, 0.04));
   --shadow-layer: 0 4px 16px rgb(0 0 0 / var(--elevation-layer-alpha, 0.06));
   --shadow-modal: 0 12px 32px rgb(0 0 0 / var(--elevation-modal-alpha, 0.08));
 }
 
-/* ---------------------------------------------------------------------------
-   Admin dark palette — the same system, inverted.
-   Inversion is structural, not literal: the canvas drops below the panels
-   instead of above them (background #0F1115 < sidebar #14171B < surface
-   #1A1D23), and the sole accent flips from near-black to near-white so it keeps
-   carrying active navigation, primary buttons and focus rings.
-
-   Ratios are matched to the light palette they replace (see DESIGN.md § Colors),
-   measured against `surface`:
-     text-primary     15.3:1  (light 12.7:1)     placeholder      3.7:1 (3.1:1)
-     text-secondary    5.9:1  ( 5.2:1)           border           1.17:1 (1.15:1)
-     accent/primary   15.2:1  (15.9:1)           border-strong    1.63:1 (1.33:1)
-   The two hairlines keep the documented "barely perceptible boundary" trade-off;
-   `border-strong` runs slightly hotter than light mode because a 1.33:1 outline
-   on a dark surface reads as no outline at all, and it is the token that makes an
-   input look interactive. Status pill pairs stay at or above WCAG AA:
-     active 5.2:1 · pending 5.9:1 · expired 5.7:1 · draft 5.4:1
-   Shadows gain alpha: black-on-near-black has to work harder to read as depth.
---------------------------------------------------------------------------- */
+/* Admin dark palette — structural inversion (canvas below panels). */
 .dark {
-  /* Native chrome (scrollbars, autofill, date pickers) follows the palette. */
   color-scheme: dark;
 
   --color-background: #0f1115;
@@ -172,7 +118,6 @@
   --color-on-primary: #16181c;
   --color-destructive: #f2857f;
 
-  /* Lifecycle status — deep tint, bright glyph */
   --color-status-active-bg: #10281a;
   --color-status-active-text: #5fb37c;
   --color-status-pending-bg: #2c2210;
@@ -182,7 +127,6 @@
   --color-status-draft-bg: #22262d;
   --color-status-draft-text: #949ca1;
 
-  /* Semantic aliases used by the admin primitives */
   --color-foreground: #f2f4f5;
   --color-card: #1a1d23;
   --color-card-foreground: #f2f4f5;
@@ -198,33 +142,36 @@
   --color-destructive-foreground: #2a1210;
   --color-input: #3a4149;
   --color-ring: #e8eaed;
-  /* Same 4.1x gap to a real value that the light palette holds (3.1:1 vs 12.7:1),
-     so an empty field never reads as a filled one. */
   --color-placeholder: #6e777c;
 
-  /* Elevation ink: black-on-near-black has to work harder to read as depth, and
-     the light-mode alpha is invisible on #0F1115. */
   --elevation-card-alpha: 0.5;
   --elevation-layer-alpha: 0.6;
   --elevation-modal-alpha: 0.7;
 }
 
 :root {
-  --bg-primary: #F8F9FA;
-  --bg-secondary: #EDF0F3;
+  /* Public-site tokens (from the Unti Framer template). */
+  --bg-primary: #F0F0F0;
+  --bg-secondary: #EAEAEA;
   --bg-card: #FFFFFF;
   --bg-card-hover: #F4F6F8;
-  --text-primary: #0F172A;
-  --text-secondary: rgba(15, 23, 42, 0.7);
-  --text-tertiary: rgba(15, 23, 42, 0.45);
-  --border-color: rgba(15, 23, 42, 0.08);
+  --text-primary: #141414;
+  --text-secondary: #505050;
+  --text-tertiary: #747474;
+  --border-color: #EAEAEA;
   --border-subtle: rgba(15, 23, 42, 0.04);
 
-  --accent: #0F172A;
-  --accent-hover: #1E293B;
+  --accent: #111111;
+  --accent-hover: #2A2A2A;
   --accent-contrast: #FFFFFF;
-  --signal: #E25327;
-  --signal-green: #10B981;
+  --signal: #09F;
+  --signal-green: #07E64A;
+
+  --radius-card: 32px;
+  --radius-project: 22px;
+  --radius-photo: 20px;
+  --radius-pill: 10px;
+  --radius-cta: 50px;
 
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
   --shadow-md: 0 4px 12px rgba(0,0,0,0.07);
@@ -238,21 +185,21 @@
 }
 
 .dark {
-  --bg-primary: #0B0D11;
-  --bg-secondary: #13171F;
-  --bg-card: #1A1F29;
-  --bg-card-hover: #222834;
-  --text-primary: #F8FAFC;
-  --text-secondary: rgba(248, 250, 252, 0.7);
-  --text-tertiary: rgba(248, 250, 252, 0.45);
-  --border-color: rgba(255, 255, 255, 0.08);
+  --bg-primary: #141414;
+  --bg-secondary: #303030;
+  --bg-card: #1F1F1F;
+  --bg-card-hover: #262626;
+  --text-primary: #FFFFFF;
+  --text-secondary: #BFBFBF;
+  --text-tertiary: #999999;
+  --border-color: #303030;
   --border-subtle: rgba(255, 255, 255, 0.04);
 
-  --accent: #F8FAFC;
-  --accent-hover: #E2E8F0;
-  --accent-contrast: #0B0D11;
-  --signal: #F97316;
-  --signal-green: #22C55E;
+  --accent: #F0F0F0;
+  --accent-hover: #FFFFFF;
+  --accent-contrast: #141414;
+  --signal: #39A0FF;
+  --signal-green: #07E64A;
 
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.4);
   --shadow-md: 0 4px 12px rgba(0,0,0,0.5);
@@ -263,8 +210,7 @@
 }
 
 html {
-  /* Light is the floor; `.dark` (equal specificity, class) must not be beaten by
-     a later `:root` declaration, so this lives on the element selector. */
+  /* Element selector so `.dark` (same specificity, later file order) wins. */
   color-scheme: light;
   scroll-behavior: smooth;
 }
@@ -274,6 +220,397 @@ body {
   color: var(--text-primary);
   font-family: var(--font-body);
   transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Public-site primitives: 760px column, 10px gaps, cards r32/p20. */
+.unti-shell {
+  max-width: 1200px;
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0 10px 80px;
+}
+
+.unti-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-card);
+  padding: 20px;
+  max-width: 760px;
+  width: 100%;
+  margin-inline: auto;
+}
+
+.unti-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-pill);
+  padding: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1.2;
+  color: var(--text-primary);
+}
+
+.unti-card-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-pill);
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  color: var(--text-primary);
+  transition: opacity 0.15s ease;
+}
+
+.unti-card-btn:hover {
+  opacity: 0.7;
+}
+
+.unti-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  background: var(--accent);
+  color: var(--accent-contrast);
+  border-radius: var(--radius-cta);
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  transition: opacity 0.15s ease;
+}
+
+.unti-cta:hover {
+  opacity: 0.85;
+}
+
+.unti-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 10px;
+  background: var(--signal-green);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+.unti-title {
+  font-size: 46px;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: var(--text-primary);
+}
+
+.unti-heading {
+  font-size: 22px;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--text-primary);
+}
+
+.unti-body {
+  font-size: 16px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  line-height: 1.4;
+  color: var(--text-primary);
+}
+
+.unti-muted {
+  font-size: 16px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  color: var(--text-secondary);
+}
+
+.unti-meta {
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+  color: var(--text-secondary);
+}
+
+.unti-meta-sm {
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: -0.01px;
+  line-height: 1.2;
+  color: var(--text-tertiary);
+}
+
+@keyframes unti-appear {
+  from { opacity: 0.001; transform: translateY(150px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.unti-appear {
+  animation: unti-appear 1s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .unti-appear {
+    animation: none;
+  }
+}
+
+@media (max-width: 809px) {
+  .unti-shell {
+    max-width: 100%;
+    padding: 0 10px 10px;
+  }
+  .unti-title {
+    font-size: 32px;
+  }
+  .unti-heading {
+    font-size: 18px;
+  }
+}
+
+/* Header: floating pill on scroll (fixed past 180px, auto-hides when idle). */
+.site-nav {
+  position: relative;
+  z-index: 60;
+  height: 84px;
+}
+
+.site-nav-inner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 760px;
+  height: 84px;
+  margin-inline: auto;
+  padding: 0 10px;
+}
+
+.site-logo {
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--text-primary);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.site-desktop-links {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-inline: auto;
+}
+
+.site-desktop-links a {
+  font-size: 14px;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+  color: var(--text-secondary);
+  text-decoration: none;
+  padding: 8px 12px;
+  border-radius: var(--radius-pill);
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.site-desktop-links a:hover {
+  color: var(--text-primary);
+  background: var(--bg-secondary);
+}
+
+.site-desktop-links a[aria-current='page'] {
+  color: var(--text-primary);
+  background: var(--bg-secondary);
+}
+
+.site-nav-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--accent);
+  color: var(--accent-contrast);
+  border-radius: var(--radius-cta);
+  padding: 10px 20px;
+  font-size: 14px;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  text-decoration: none;
+  transition: opacity 0.15s ease;
+}
+
+.site-nav-cta:hover {
+  opacity: 0.85;
+}
+
+.site-menu-toggle {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-pill);
+  background: var(--bg-secondary);
+  cursor: pointer;
+}
+
+.site-menu-toggle span {
+  display: block;
+  width: 16px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--text-primary);
+  transition: transform 0.25s ease, opacity 0.25s ease;
+}
+
+.site-menu-toggle[aria-expanded='true'] span:first-child {
+  transform: translateY(3.5px) rotate(45deg);
+}
+
+.site-menu-toggle[aria-expanded='true'] span:last-child {
+  transform: translateY(-3.5px) rotate(-45deg);
+}
+
+/* Centered via margin-inline: auto so first appearance never drifts sideways. */
+.site-nav.is-scrolled .site-nav-inner {
+  position: fixed;
+  top: 16px;
+  left: 0;
+  right: 0;
+  margin-inline: auto;
+  width: max-content;
+  max-width: calc(100% - 32px);
+  height: 60px;
+  padding: 12px 30px 12px 38px;
+  gap: 30px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-cta);
+  box-shadow: 0 4px 20px rgba(20, 20, 20, 0.08);
+  animation: site-nav-in 0.24s ease-out;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+/* Idle: fade out slowly; returns fast on scroll, focus, or pointer near top. */
+.site-nav.is-scrolled.is-idle .site-nav-inner {
+  transform: translateY(-16px);
+  opacity: 0;
+  transition: transform 0.5s ease, opacity 0.5s ease;
+  pointer-events: none;
+}
+
+.site-nav.is-scrolled.is-idle:focus-within .site-nav-inner {
+  transform: translateY(0);
+  opacity: 1;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  pointer-events: auto;
+}
+
+@keyframes site-nav-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.site-mobile-menu {
+  position: fixed;
+  top: 76px;
+  left: 16px;
+  right: 16px;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(20, 20, 20, 0.08);
+  padding: 12px;
+  overflow: hidden;
+}
+
+.site-mobile-menu a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 16px;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+  color: var(--text-primary);
+  text-decoration: none;
+  padding: 12px;
+  border-radius: var(--radius-pill);
+}
+
+.site-mobile-menu a[aria-current='page'] {
+  background: var(--bg-secondary);
+}
+
+.site-mobile-menu.site-mobile-closed {
+  height: 0;
+  opacity: 0;
+  padding-block: 0;
+  border-width: 0;
+  pointer-events: none;
+}
+
+.site-mobile-menu {
+  transition: height 0.25s ease, opacity 0.25s ease;
+}
+
+@media (max-width: 809px) {
+  .site-desktop-links,
+  .site-nav-cta,
+  .site-nav-clock {
+    display: none;
+  }
+
+  .site-menu-toggle {
+    display: flex;
+    margin-left: auto;
+  }
+
+  .site-nav-inner,
+  .site-nav.is-scrolled .site-nav-inner {
+    max-width: calc(100% - 32px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-menu-toggle span,
+  .site-mobile-menu,
+  .site-desktop-links a,
+  .site-nav-cta {
+    transition: none;
+  }
+
+  /* Motion-free environments keep the pill visible and static. */
+  .site-nav.is-scrolled.is-idle .site-nav-inner {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .site-nav.is-scrolled .site-nav-inner {
+    animation: none;
+  }
 }
 
 @keyframes fadeInUp {
@@ -387,10 +724,6 @@ a:focus-visible, button:focus-visible {
   outline-offset: 2px;
 }
 
-/* Selection tint must survive every surface. `--accent` flips with the theme, so
-   the highlight does too, and no explicit `color` is set: the surface's own ink
-   stays legible over it in both directions (7.0:1 on light, 6.4:1 on dark).
-   The mix percentage is load-bearing — at 20% the dark highlight disappears. */
 ::selection {
   background: color-mix(in srgb, var(--accent) 28%, transparent);
 }
