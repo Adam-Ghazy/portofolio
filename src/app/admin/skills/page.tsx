@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from "react"
-import { AdminLayout } from "@/components/admin/layout-wrapper"
+import { AdminShell } from "@/components/admin/admin-shell"
 import { AutoTranslateButton, LangTabs } from "@/components/admin/lang-tabs"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -137,7 +137,7 @@ export default function SkillsPage() {
   }
 
   return (
-    <AdminLayout>
+    <AdminShell>
       <div className="mx-auto max-w-[1400px] space-y-6">
         <p className="text-body-md text-muted-foreground">{skills.length} records</p>
 
@@ -308,6 +308,6 @@ export default function SkillsPage() {
           </AlertDialogContent>
         </AlertDialog>
       </div>
-    </AdminLayout>
+    </AdminShell>
   )
 }

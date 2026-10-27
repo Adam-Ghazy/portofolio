@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { AdminLayout } from '@/components/admin/layout-wrapper'
+import { AdminShell } from '@/components/admin/admin-shell'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -90,7 +90,7 @@ export default function AdminDashboard() {
   ]
 
   return (
-    <AdminLayout>
+    <AdminShell>
       <div className="mx-auto max-w-[1400px] space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-body-md text-muted-foreground">
@@ -165,6 +165,6 @@ export default function AdminDashboard() {
           </Card>
         </div>
       </div>
-    </AdminLayout>
+    </AdminShell>
   )
 }

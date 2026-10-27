@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { AdminLayout } from '@/components/admin/layout-wrapper'
+import { AdminShell } from '@/components/admin/admin-shell'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -310,7 +310,7 @@ export default function ProjectsPage() {
       : null
 
   return (
-    <AdminLayout>
+    <AdminShell>
       <div className="mx-auto max-w-[1400px] space-y-6">
         <p className="text-body-md text-muted-foreground">{projects.length} records</p>
 
@@ -709,6 +709,6 @@ export default function ProjectsPage() {
           </AlertDialogContent>
         </AlertDialog>
       </div>
-    </AdminLayout>
+    </AdminShell>
   )
 }

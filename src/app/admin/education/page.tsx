@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { AdminLayout } from '@/components/admin/layout-wrapper'
+import { AdminShell } from '@/components/admin/admin-shell'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -299,7 +299,7 @@ export default function EducationAdminPage() {
   }
 
   return (
-    <AdminLayout>
+    <AdminShell>
       <div className="mx-auto max-w-[1400px] space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-body-md text-muted-foreground">
@@ -781,6 +781,6 @@ export default function EducationAdminPage() {
           </AlertDialogContent>
         </AlertDialog>
       </div>
-    </AdminLayout>
+    </AdminShell>
   )
 }
