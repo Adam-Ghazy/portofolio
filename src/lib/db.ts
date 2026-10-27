@@ -22,7 +22,7 @@ function ensureColumn(table: string, column: string, type: string = 'TEXT') {
     if (!cols.includes(column)) {
       db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${type}`);
     }
-  } catch (e) {
+  } catch {
     // ignore
   }
 }

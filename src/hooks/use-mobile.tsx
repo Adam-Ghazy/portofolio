@@ -11,8 +11,12 @@ export function useIsMobile() {
       setIsMobile(mql.matches)
     }
     mql.addEventListener("change", onChange)
-    setIsMobile(mql.matches)
-    return () => mql.removeEventListener("change", onChange)
+    // Defer the initial sync out of the effect body (react-hooks/set-state-in-effect).
+    const raf = requestAnimationFrame(onChange)
+    return () => {
+      cancelAnimationFrame(raf)
+      mql.removeEventListener("change", onChange)
+    }
   }, [])
 
   return isMobile
