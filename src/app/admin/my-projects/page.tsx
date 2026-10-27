@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Pencil, Trash2, ExternalLink, Upload, ArrowUp, ArrowDown, Images, Film } from 'lucide-react'
+import {ArrowDown, ArrowUp, Briefcase, ExternalLink, Film, Images, Pencil, Trash2, Upload} from 'lucide-react'
 import { toast } from 'sonner'
 import {
   AlertDialog,
@@ -631,7 +631,11 @@ export default function ProjectsPage() {
               {loading ? (
                 <p className="py-12 text-center text-body-md text-muted-foreground">Loading...</p>
               ) : projects.length === 0 ? (
-                <p className="py-12 text-center text-body-md text-muted-foreground">No projects yet</p>
+                <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
+                  <Briefcase className="h-10 w-10 text-muted-foreground" strokeWidth={1.5} />
+                  <p className="text-sm font-medium text-foreground">No projects yet</p>
+                  <p className="text-sm text-muted-foreground">Add your first project case study.</p>
+                </div>
               ) : (
                 <ul className="divide-y divide-border">
                   {projects.map((p) => (

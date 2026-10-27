@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Pencil, Trash2, Upload, Image as ImageIcon } from 'lucide-react'
+import {FileText, Image as ImageIcon, Pencil, Trash2, Upload} from 'lucide-react'
 import { toast } from 'sonner'
 import {
   AlertDialog,
@@ -433,7 +433,11 @@ export default function SectionsPage() {
               {loading ? (
                 <p className="py-12 text-center text-body-md text-muted-foreground">Loading...</p>
               ) : sections.length === 0 ? (
-                <p className="py-12 text-center text-body-md text-muted-foreground">No sections found</p>
+                <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
+                  <FileText className="h-10 w-10 text-muted-foreground" strokeWidth={1.5} />
+                  <p className="text-sm font-medium text-foreground">No sections found</p>
+                  <p className="text-sm text-muted-foreground">Add your first section to structure the portfolio.</p>
+                </div>
               ) : (
                 <ul className="divide-y divide-border">
                   {sections.map((section) => (

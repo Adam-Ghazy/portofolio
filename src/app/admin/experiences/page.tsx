@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Pencil, Trash2, Plus, Layers } from 'lucide-react'
+import {Building2, Layers, Pencil, Plus, Trash2} from 'lucide-react'
 import { toast } from 'sonner'
 import { LangTabs, AutoTranslateButton } from '@/components/admin/lang-tabs'
 import { Badge } from '@/components/ui/badge'
@@ -586,7 +586,11 @@ export default function ExperiencesPage() {
               {loading ? (
                 <p className="py-12 text-center text-body-md text-muted-foreground">Loading...</p>
               ) : experiences.length === 0 ? (
-                <p className="py-12 text-center text-body-md text-muted-foreground">No experience entries found.</p>
+                <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
+                  <Building2 className="h-10 w-10 text-muted-foreground" strokeWidth={1.5} />
+                  <p className="text-sm font-medium text-foreground">No experience entries found.</p>
+                  <p className="text-sm text-muted-foreground">Add your first work or internship experience.</p>
+                </div>
               ) : (
                 <ul className="divide-y divide-border">
                   {experiences.map((exp) => {

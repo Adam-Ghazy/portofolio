@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Pencil, Trash2, TrendingUp } from 'lucide-react'
+import {BarChart3, Pencil, Trash2, TrendingUp} from 'lucide-react'
 import { toast } from 'sonner'
 import {
   AlertDialog,
@@ -218,7 +218,11 @@ export default function StatsPage() {
               {loading ? (
                 <p className="py-12 text-center text-body-md text-muted-foreground">Loading...</p>
               ) : stats.length === 0 ? (
-                <p className="py-12 text-center text-body-md text-muted-foreground">No stats yet</p>
+                <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
+                  <BarChart3 className="h-10 w-10 text-muted-foreground" strokeWidth={1.5} />
+                  <p className="text-sm font-medium text-foreground">No stats yet</p>
+                  <p className="text-sm text-muted-foreground">Add your first statistic to highlight achievements.</p>
+                </div>
               ) : (
                 <ul className="divide-y divide-border">
                   {stats.map((stat) => (

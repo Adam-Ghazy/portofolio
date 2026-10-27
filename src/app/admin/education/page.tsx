@@ -477,7 +477,11 @@ export default function EducationAdminPage() {
                   {loadingEdu ? (
                     <p className="py-12 text-center text-body-md text-muted-foreground">Loading education records...</p>
                   ) : educationList.length === 0 ? (
-                    <p className="py-12 text-center text-body-md text-muted-foreground">No academic records found.</p>
+                    <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
+                  <GraduationCap className="h-10 w-10 text-muted-foreground" strokeWidth={1.5} />
+                  <p className="text-sm font-medium text-foreground">No academic records found.</p>
+                  <p className="text-sm text-muted-foreground">Add your first degree or academic record.</p>
+                </div>
                   ) : (
                     <ul className="divide-y divide-border">
                       {educationList.map((edu) => (
@@ -686,7 +690,11 @@ export default function EducationAdminPage() {
                   {loadingCerts ? (
                     <p className="py-12 text-center text-body-md text-muted-foreground">Loading certifications...</p>
                   ) : certList.length === 0 ? (
-                    <p className="py-12 text-center text-body-md text-muted-foreground">No certifications found.</p>
+                    <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
+                  <Award className="h-10 w-10 text-muted-foreground" strokeWidth={1.5} />
+                  <p className="text-sm font-medium text-foreground">No certifications found.</p>
+                  <p className="text-sm text-muted-foreground">Add your first certification or credential.</p>
+                </div>
                   ) : (
                     <ul className="divide-y divide-border">
                       {certList.map((cert) => (

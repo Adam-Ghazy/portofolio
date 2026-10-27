@@ -283,7 +283,11 @@ export default function ApproachesAdminPage() {
               {loading ? (
                 <p className="text-body-md text-muted-foreground text-center py-12">Loading approach steps...</p>
               ) : approaches.length === 0 ? (
-                <p className="text-body-md text-muted-foreground text-center py-12">No approach steps found.</p>
+                <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
+                  <Workflow className="h-10 w-10 text-muted-foreground" strokeWidth={1.5} />
+                  <p className="text-sm font-medium text-foreground">No approach steps found.</p>
+                  <p className="text-sm text-muted-foreground">Add the first step of your engineering approach.</p>
+                </div>
               ) : (
                 <div className="grid gap-4 sm:grid-cols-2">
                   {approaches.map((item, idx) => (
