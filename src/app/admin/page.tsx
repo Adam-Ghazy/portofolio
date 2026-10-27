@@ -2,18 +2,20 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { AdminShell } from '@/components/admin/admin-shell'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import {
   BarChart3,
   Briefcase,
   Building2,
   FileText,
   GraduationCap,
+  TrendingUp,
   Workflow,
   Wrench,
 } from 'lucide-react'
+
+import { AdminPageHeader, AdminShell } from '@/components/admin/admin-shell'
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 interface DashboardStats {
   sections: number
@@ -77,88 +79,86 @@ export default function AdminDashboard() {
     { title: 'Stats', description: 'About statistics', value: stats.stats, icon: BarChart3, href: '/admin/stats' },
   ]
 
-  const quickActions = [
-    { title: 'Education & Certifications', description: 'Academic degrees, GPAs, and national certifications', href: '/admin/education', icon: GraduationCap },
-    { title: 'Work Experience', description: 'Professional roles and systems delivered', href: '/admin/experiences', icon: Building2 },
-    { title: 'Projects & Case Studies', description: 'Problem, solution, and impact write-ups', href: '/admin/my-projects', icon: Briefcase },
-  ]
-
-  const systemInfo = [
-    { label: 'Framework', value: 'Next.js App Router' },
-    { label: 'Database', value: 'SQLite (WAL)' },
-    { label: 'Auth', value: 'JWT + httpOnly cookie' },
-  ]
+  // Activity feed is derived from the record counts already fetched above —
+  // no extra API. Highest-traffic surfaces first, most recently edited unknown.
+  const activity = [
+    { label: 'Projects library', detail: `${stats.projects} case studies under management`, href: '/admin/my-projects' },
+    { label: 'Experience timeline', detail: `${stats.experiences} roles tracked`, href: '/admin/experiences' },
+    { label: 'Education & certifications', detail: `${stats.education} degrees · ${stats.certifications} certifications`, href: '/admin/education' },
+  ].filter(Boolean)
 
   return (
     <AdminShell>
       <div className="mx-auto max-w-[1400px] space-y-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-body-md text-muted-foreground">
-            Overview of every managed record in the portfolio.
-          </p>
-          <Badge variant={loading ? 'pending' : 'active'}>
-            {loading ? 'Syncing' : 'In sync'}
-          </Badge>
+        <AdminPageHeader
+          title="Dashboard"
+          description="Overview of every managed record in the portfolio."
+          actions={<Badge variant={loading ? 'pending' : 'active'}>{loading ? 'Syncing' : 'In sync'}</Badge>}
+        />
+
+        {/* Stat cards — staggered fade-up entry */}
+        <div className="admin-stagger grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {cards.map((card) => (
+            <Link key={card.title} href={card.href} className="group outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-lg">
+              <Card className="h-full cursor-pointer rounded-lg border border-border bg-card p-6 transition-shadow duration-200 hover:shadow-md">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-medium text-muted-foreground">{card.title}</p>
+                  <card.icon className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
+                </div>
+                <div className="mt-2 text-3xl font-bold tracking-tight tabular-nums text-foreground">
+                  {loading ? '—' : card.value}
+                </div>
+                <p className="mt-1 text-sm text-muted-foreground">{card.description}</p>
+                <p className="mt-3 flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                  <TrendingUp className="h-3.5 w-3.5" strokeWidth={1.5} />
+                  Active content
+                </p>
+              </Card>
+            </Link>
+          ))}
         </div>
 
-        <section aria-labelledby="kpi-heading" className="space-y-3">
-          <h2 id="kpi-heading" className="text-label-section uppercase text-muted-foreground">
-            Record counts
-          </h2>
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {cards.map((card) => (
-              <Link key={card.title} href={card.href} className="group">
-                <Card className="h-full transition-colors group-hover:border-border-strong">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-body-md text-muted-foreground">{card.title}</CardTitle>
-                    <card.icon className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-headline-lg tabular-nums text-foreground">
-                      {loading ? '—' : card.value}
-                    </div>
-                    <p className="mt-1 text-label-md text-muted-foreground">{card.description}</p>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
-        </section>
-
         <div className="grid gap-4 xl:grid-cols-2">
-          <Card>
+          {/* Recent activity / last-edited areas, from the same fetched counts */}
+          <Card className="rounded-lg border border-border bg-card">
             <CardHeader>
-              <CardTitle>Quick actions</CardTitle>
+              <CardTitle className="text-base font-semibold">Recent activity</CardTitle>
+              <CardDescription>Areas with live content under management</CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
-              {quickActions.map((action) => (
+              {activity.map((item) => (
                 <Link
-                  key={action.href}
-                  href={action.href}
-                  className="flex items-center gap-4 rounded-[12px] border border-border px-4 py-3 transition-colors hover:bg-sidebar hover:border-border-strong"
+                  key={item.href}
+                  href={item.href}
+                  className="flex items-center gap-4 rounded-md border border-border px-4 py-3 transition-colors duration-200 hover:bg-accent"
                 >
-                  <action.icon className="h-5 w-5 shrink-0 text-foreground" strokeWidth={1.5} />
+                  <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-500" aria-hidden />
                   <div className="min-w-0">
-                    <p className="text-headline-sm text-foreground">{action.title}</p>
-                    <p className="text-label-md text-muted-foreground">{action.description}</p>
+                    <p className="truncate text-sm font-medium text-foreground">{item.label}</p>
+                    <p className="truncate text-xs text-muted-foreground">{item.detail}</p>
                   </div>
                 </Link>
               ))}
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="rounded-lg border border-border bg-card">
             <CardHeader>
-              <CardTitle>System</CardTitle>
+              <CardTitle className="text-base font-semibold">System</CardTitle>
+              <CardDescription>Platform the admin runs on</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-0">
-              {systemInfo.map((row) => (
+            <CardContent>
+              {[
+                { label: 'Framework', value: 'Next.js App Router' },
+                { label: 'Database', value: 'SQLite (WAL)' },
+                { label: 'Auth', value: 'JWT + httpOnly cookie' },
+              ].map((row) => (
                 <div
                   key={row.label}
                   className="flex items-center justify-between border-b border-border py-3 last:border-b-0"
                 >
-                  <span className="text-label-md text-muted-foreground">{row.label}</span>
-                  <span className="text-body-md text-foreground">{row.value}</span>
+                  <span className="text-sm text-muted-foreground">{row.label}</span>
+                  <span className="text-sm font-medium text-foreground">{row.value}</span>
                 </div>
               ))}
             </CardContent>
