@@ -23,7 +23,8 @@ export async function POST(request: NextRequest) {
 
   const db = getDb();
   const body = await request.json();
-  let { slug, title, title_id, subtitle, subtitle_id, content, content_id, image_url, sort_order } = body;
+  const { slug, content, content_id, image_url, sort_order } = body;
+  let { title, title_id, subtitle, subtitle_id } = body;
 
   if (title && !title_id) title_id = await autoTranslate(title, 'en', 'id');
   if (title_id && !title) title = await autoTranslate(title_id, 'id', 'en');
@@ -55,7 +56,8 @@ export async function PUT(request: NextRequest) {
 
   const db = getDb();
   const body = await request.json();
-  let { id, slug, title, title_id, subtitle, subtitle_id, content, content_id, image_url, sort_order, is_active } = body;
+  const { id, slug, content, content_id, image_url, sort_order, is_active } = body;
+  let { title, title_id, subtitle, subtitle_id } = body;
 
   if (title && !title_id) title_id = await autoTranslate(title, 'en', 'id');
   if (title_id && !title) title = await autoTranslate(title_id, 'id', 'en');

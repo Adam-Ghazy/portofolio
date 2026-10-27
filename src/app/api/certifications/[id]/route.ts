@@ -13,17 +13,14 @@ export async function PUT(
   const db = getDb();
   const { id } = await params;
   const body = await request.json();
-  let {
-    title,
-    title_id,
+  const {
     issuer,
     location,
     issue_date,
-    credential_info,
-    credential_info_id,
     sort_order,
     is_active,
   } = body;
+  let { title, title_id, credential_info, credential_info_id } = body;
 
   if (title && !title_id) title_id = await autoTranslate(title, 'en', 'id');
   if (title_id && !title) title = await autoTranslate(title_id, 'id', 'en');

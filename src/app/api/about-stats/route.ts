@@ -15,7 +15,8 @@ export async function POST(request: NextRequest) {
 
   const db = getDb();
   const body = await request.json();
-  let { value, label, label_id, sort_order } = body;
+  const { value, sort_order } = body;
+  let { label, label_id } = body;
 
   if (label && !label_id) label_id = await autoTranslate(label, 'en', 'id');
   if (label_id && !label) label = await autoTranslate(label_id, 'id', 'en');
@@ -33,7 +34,8 @@ export async function PUT(request: NextRequest) {
 
   const db = getDb();
   const body = await request.json();
-  let { id, value, label, label_id, sort_order, is_active } = body;
+  const { id, value, sort_order, is_active } = body;
+  let { label, label_id } = body;
 
   if (label && !label_id) label_id = await autoTranslate(label, 'en', 'id');
   if (label_id && !label) label = await autoTranslate(label_id, 'id', 'en');

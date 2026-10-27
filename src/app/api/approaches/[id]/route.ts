@@ -13,7 +13,8 @@ export async function PUT(
   const db = getDb();
   const { id } = await params;
   const body = await request.json();
-  let { step_number, title, title_id, description, description_id, sort_order, is_active } = body;
+  const { step_number, sort_order, is_active } = body;
+  let { title, title_id, description, description_id } = body;
 
   if (!title && !title_id) {
     return NextResponse.json({ error: 'Title is required' }, { status: 400 });

@@ -13,18 +13,20 @@ export async function PUT(
   const db = getDb();
   const { id } = await params;
   const body = await request.json();
-  let {
-    degree,
-    degree_id,
+  const {
     institution,
     location,
     period,
     gpa,
-    description,
-    description_id,
     sort_order,
     is_active,
   } = body;
+  let {
+    degree,
+    degree_id,
+    description,
+    description_id,
+} = body;
 
   if (degree && !degree_id) degree_id = await autoTranslate(degree, 'en', 'id');
   if (degree_id && !degree) degree = await autoTranslate(degree_id, 'id', 'en');

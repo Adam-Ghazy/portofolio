@@ -13,7 +13,8 @@ export async function PUT(
   const db = getDb();
   const { id } = await params;
   const body = await request.json();
-  let { title, description, description_id, icon, sort_order, is_active } = body;
+  const { title, icon, sort_order, is_active } = body;
+  let { description, description_id } = body;
 
   if (description && !description_id) description_id = await autoTranslate(description, 'en', 'id');
   if (description_id && !description) description = await autoTranslate(description_id, 'id', 'en');

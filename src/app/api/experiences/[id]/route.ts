@@ -13,16 +13,10 @@ export async function PUT(
   const db = getDb();
   const { id } = await params;
   const body = await request.json();
-  let {
+  const {
     company,
-    position,
-    position_id,
-    program,
-    program_id,
     location,
     period,
-    description,
-    description_id,
     systems,
     systems_id,
     technologies,
@@ -31,6 +25,14 @@ export async function PUT(
     sort_order,
     is_active,
   } = body;
+  let {
+    position,
+    position_id,
+    program,
+    program_id,
+    description,
+    description_id,
+} = body;
 
   if (position && !position_id) position_id = await autoTranslate(position, 'en', 'id');
   if (position_id && !position) position = await autoTranslate(position_id, 'id', 'en');

@@ -15,7 +15,8 @@ export async function POST(request: NextRequest) {
 
   const db = getDb();
   const body = await request.json();
-  let { step_number, title, title_id, description, description_id, sort_order, is_active } = body;
+  const { step_number, sort_order, is_active } = body;
+  let { title, title_id, description, description_id } = body;
 
   if (!title && !title_id) {
     return NextResponse.json({ error: 'Title is required' }, { status: 400 });
@@ -49,7 +50,8 @@ export async function PUT(request: NextRequest) {
 
   const db = getDb();
   const body = await request.json();
-  let { id, step_number, title, title_id, description, description_id, sort_order, is_active } = body;
+  const { id, step_number, sort_order, is_active } = body;
+  let { title, title_id, description, description_id } = body;
 
   if (!id) {
     return NextResponse.json({ error: 'ID is required' }, { status: 400 });
