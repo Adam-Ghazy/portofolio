@@ -53,4 +53,5 @@ next-env.d.ts
 REFACTOR_SUMMARY.md
 CLAUDE.md
 DESIGN.md
+DASHBOARD_PROMPT.md
 .framer-spec.json
