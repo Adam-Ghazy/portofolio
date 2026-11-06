@@ -9,7 +9,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Pencil, Trash2, Workflow } from 'lucide-react'
+import { FormModal } from '@/components/admin/form-modal'
+import { Pencil, Plus, Trash2, Workflow } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   AlertDialog,
@@ -38,6 +39,7 @@ export default function ApproachesAdminPage() {
   const [editing, setEditing] = useState<Approach | null>(null)
   const [formData, setFormData] = useState(emptyForm)
   const [deleteId, setDeleteId] = useState<number | null>(null)
+  const [formOpen, setFormOpen] = useState(false)
   const [activeLangTab, setActiveLangTab] = useState<'id' | 'en'>('id')
   const [isTranslating, setIsTranslating] = useState(false)
 
@@ -146,200 +148,209 @@ export default function ApproachesAdminPage() {
       description_id: item.description_id ?? '',
       sort_order: item.sort_order || 0,
     })
+    setFormOpen(true)
   }
 
   function handleCancel() {
     setEditing(null)
     setFormData(emptyForm)
+    setFormOpen(false)
   }
 
   return (
     <AdminShell>
       <div className="mx-auto max-w-[1400px] space-y-6">
-        <p className="text-body-md text-muted-foreground">{approaches.length} steps configured</p>
-
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,480px)_minmax(0,1fr)]">
-          {/* Approach Form */}
-          <Card className="h-fit">
-            <CardHeader>
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <Workflow className="h-5 w-5 text-primary" strokeWidth={1.5} />
-                    {editing ? 'Edit Approach Step' : 'Add Approach Step'}
-                  </CardTitle>
-                  <CardDescription>
-                    {editing
-                      ? 'Update step details and methodology description'
-                      : 'Add a new step to your engineering methodology'}
-                  </CardDescription>
-                </div>
-                <LangTabs value={activeLangTab} onChange={setActiveLangTab} />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <AutoTranslateButton
-                  onClick={handleAutoTranslate}
-                  busy={isTranslating}
-                  disabled={!formData.title_id && !formData.description_id}
-                />
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-2">
-                    <Label htmlFor="app-num">Step Number</Label>
-                    <Input
-                      id="app-num"
-                      placeholder="e.g. 01"
-                      value={formData.step_number}
-                      onChange={(e) => setFormData({ ...formData, step_number: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="app-sort">Sort Order</Label>
-                    <Input
-                      id="app-sort"
-                      type="number"
-                      placeholder="1"
-                      value={formData.sort_order}
-                      onChange={(e) => setFormData({ ...formData, sort_order: Number(e.target.value) })}
-                    />
-                  </div>
-                </div>
-
-                {activeLangTab === 'id' ? (
-                  <>
-                    <div className="space-y-2">
-                      <Label htmlFor="app-title_id">Judul Tahapan (ID) *</Label>
-                      <Input
-                        id="app-title_id"
-                        placeholder="contoh: Riset Pengguna & Alur Proses"
-                        value={formData.title_id}
-                        onChange={(e) => setFormData({ ...formData, title_id: e.target.value })}
-                        required={!formData.title}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="app-desc_id">Deskripsi / Detail Eksekusi (ID)</Label>
-                      <Textarea
-                        id="app-desc_id"
-                        placeholder="Jelaskan alur kerja, tindakan nyata, dan pola pikir rekayasa..."
-                        value={formData.description_id}
-                        onChange={(e) => setFormData({ ...formData, description_id: e.target.value })}
-                        rows={4}
-                      />
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="space-y-2">
-                      <Label htmlFor="app-title">Step Title (EN) *</Label>
-                      <Input
-                        id="app-title"
-                        placeholder="e.g. User & Process Research"
-                        value={formData.title}
-                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                        required={!formData.title_id}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="app-desc">Description / Execution Details (EN)</Label>
-                      <Textarea
-                        id="app-desc"
-                        placeholder="Describe the workflow, actions taken, and engineering mindset for this step..."
-                        value={formData.description}
-                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                        rows={4}
-                      />
-                    </div>
-                  </>
-                )}
-
-                <div className="flex gap-2 pt-2">
-                  <Button type="submit" className="flex-1">
-                    {editing ? 'Update Step' : 'Add Approach Step'}
-                  </Button>
-                  {editing && (
-                    <Button type="button" variant="outline" onClick={handleCancel}>
-                      Cancel
-                    </Button>
-                  )}
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-
-          {/* Approaches List */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Approach Steps</CardTitle>
-              <CardDescription>
-                These steps will appear in chronological sequence in the &quot;How I Build Software&quot; grid
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <p className="text-body-md text-muted-foreground text-center py-12">Loading approach steps...</p>
-              ) : approaches.length === 0 ? (
-                <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
-                  <Workflow className="h-10 w-10 text-muted-foreground" strokeWidth={1.5} />
-                  <p className="text-sm font-medium text-foreground">No approach steps found.</p>
-                  <p className="text-sm text-muted-foreground">Add the first step of your engineering approach.</p>
-                </div>
-              ) : (
-                <div className="grid gap-4 sm:grid-cols-2">
-                  {approaches.map((item, idx) => (
-                    <div
-                      key={item.id || idx}
-                      className="flex flex-col justify-between space-y-3 rounded-[12px] border border-border bg-surface p-4 transition-colors hover:border-border-strong"
-                    >
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="text-headline-md tabular-nums text-foreground">
-                            {item.step_number || String(idx + 1).padStart(2, '0')}
-                          </div>
-                          <Badge variant="secondary">Order {item.sort_order ?? 0}</Badge>
-                        </div>
-
-                        <h3 className="text-headline-sm text-foreground">{item.title}</h3>
-                        {item.title_id && item.title_id !== item.title && (
-                          <p className="text-label-md text-muted-foreground">ID: {item.title_id}</p>
-                        )}
-
-                        {item.description && (
-                          <p className="pt-1 text-body-sm text-muted-foreground">{item.description}</p>
-                        )}
-                      </div>
-
-                      <div className="flex items-center justify-end gap-1 border-t border-border pt-2">
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={() => handleEdit(item)}
-                          className="h-8 w-8 rounded-[8px]"
-                          aria-label="Edit approach step"
-                        >
-                          <Pencil className="h-4 w-4" strokeWidth={1.5} />
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={() => setDeleteId(item.id!)}
-                          className="h-8 w-8 rounded-[8px] text-destructive hover:text-destructive"
-                          aria-label="Delete approach step"
-                        >
-                          <Trash2 className="h-4 w-4" strokeWidth={1.5} />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+        <div className="flex items-center justify-between">
+          <p className="text-body-md text-muted-foreground">{approaches.length} steps configured</p>
+          <Button
+            onClick={() => {
+              setEditing(null)
+              setFormData(emptyForm)
+              setFormOpen(true)
+            }}
+          >
+            <Plus className="h-4 w-4" strokeWidth={1.5} />
+            Add Approach Step
+          </Button>
         </div>
+
+        {/* Approach Form Modal */}
+        <FormModal
+          open={formOpen}
+          onOpenChange={(open) => {
+            if (open) setFormOpen(true)
+            else handleCancel()
+          }}
+          title={editing ? 'Edit Approach Step' : 'Add Approach Step'}
+          description={
+            editing
+              ? 'Update step details and methodology description'
+              : 'Add a new step to your engineering methodology'
+          }
+          headerExtra={
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <LangTabs value={activeLangTab} onChange={setActiveLangTab} />
+              <AutoTranslateButton
+                onClick={handleAutoTranslate}
+                busy={isTranslating}
+                disabled={!formData.title_id && !formData.description_id}
+              />
+            </div>
+          }
+          footer={
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" className="flex-1" onClick={handleCancel}>
+                Cancel
+              </Button>
+              <Button type="submit" form="approach-form" className="flex-1">
+                {editing ? 'Update Step' : 'Add Approach Step'}
+              </Button>
+            </div>
+          }
+        >
+          <form id="approach-form" onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="app-num">Step Number</Label>
+                <Input
+                  id="app-num"
+                  placeholder="e.g. 01"
+                  value={formData.step_number}
+                  onChange={(e) => setFormData({ ...formData, step_number: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="app-sort">Sort Order</Label>
+                <Input
+                  id="app-sort"
+                  type="number"
+                  placeholder="1"
+                  value={formData.sort_order}
+                  onChange={(e) => setFormData({ ...formData, sort_order: Number(e.target.value) })}
+                />
+              </div>
+            </div>
+
+            {activeLangTab === 'id' ? (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="app-title_id">Judul Tahapan (ID) *</Label>
+                  <Input
+                    id="app-title_id"
+                    placeholder="contoh: Riset Pengguna & Alur Proses"
+                    value={formData.title_id}
+                    onChange={(e) => setFormData({ ...formData, title_id: e.target.value })}
+                    required={!formData.title}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="app-desc_id">Deskripsi / Detail Eksekusi (ID)</Label>
+                  <Textarea
+                    id="app-desc_id"
+                    placeholder="Jelaskan alur kerja, tindakan nyata, dan pola pikir rekayasa..."
+                    value={formData.description_id}
+                    onChange={(e) => setFormData({ ...formData, description_id: e.target.value })}
+                    rows={4}
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="app-title">Step Title (EN) *</Label>
+                  <Input
+                    id="app-title"
+                    placeholder="e.g. User & Process Research"
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    required={!formData.title_id}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="app-desc">Description / Execution Details (EN)</Label>
+                  <Textarea
+                    id="app-desc"
+                    placeholder="Describe the workflow, actions taken, and engineering mindset for this step..."
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    rows={4}
+                  />
+                </div>
+              </>
+            )}
+          </form>
+        </FormModal>
+
+        {/* Approaches List */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Approach Steps</CardTitle>
+            <CardDescription>
+              These steps will appear in chronological sequence in the &quot;How I Build Software&quot; grid
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <p className="text-body-md text-muted-foreground text-center py-12">Loading approach steps...</p>
+            ) : approaches.length === 0 ? (
+              <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
+                <Workflow className="h-10 w-10 text-muted-foreground" strokeWidth={1.5} />
+                <p className="text-sm font-medium text-foreground">No approach steps found.</p>
+                <p className="text-sm text-muted-foreground">Add the first step of your engineering approach.</p>
+              </div>
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2">
+                {approaches.map((item, idx) => (
+                  <div
+                    key={item.id || idx}
+                    className="flex flex-col justify-between space-y-3 rounded-[12px] border border-border bg-surface p-4 transition-colors hover:border-border-strong"
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="text-headline-md tabular-nums text-foreground">
+                          {item.step_number || String(idx + 1).padStart(2, '0')}
+                        </div>
+                        <Badge variant="secondary">Order {item.sort_order ?? 0}</Badge>
+                      </div>
+
+                      <h3 className="text-headline-sm text-foreground">{item.title}</h3>
+                      {item.title_id && item.title_id !== item.title && (
+                        <p className="text-label-md text-muted-foreground">ID: {item.title_id}</p>
+                      )}
+
+                      {item.description && (
+                        <p className="pt-1 text-body-sm text-muted-foreground">{item.description}</p>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-end gap-1 border-t border-border pt-2">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => handleEdit(item)}
+                        className="h-8 w-8 rounded-[8px]"
+                        aria-label="Edit approach step"
+                      >
+                        <Pencil className="h-4 w-4" strokeWidth={1.5} />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => setDeleteId(item.id!)}
+                        className="h-8 w-8 rounded-[8px] text-destructive hover:text-destructive"
+                        aria-label="Delete approach step"
+                      >
+                        <Trash2 className="h-4 w-4" strokeWidth={1.5} />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Delete Confirmation Dialog */}
         <AlertDialog open={deleteId !== null} onOpenChange={() => setDeleteId(null)}>

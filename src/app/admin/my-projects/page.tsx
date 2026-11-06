@@ -7,7 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import {ArrowDown, ArrowUp, Briefcase, ExternalLink, Film, Images, Pencil, Trash2, Upload} from 'lucide-react'
+import {ArrowDown, ArrowUp, Briefcase, ExternalLink, Film, Images, Pencil, Plus, Trash2, Upload} from 'lucide-react'
+import { FormModal } from '@/components/admin/form-modal'
 import { toast } from 'sonner'
 import {
   AlertDialog,
@@ -81,6 +82,7 @@ export default function ProjectsPage() {
   const [editing, setEditing] = useState<Project | null>(null)
   const [deleteId, setDeleteId] = useState<number | null>(null)
   const [formData, setFormData] = useState(emptyForm)
+  const [formOpen, setFormOpen] = useState(false)
   const [uploadingMedia, setUploadingMedia] = useState(false)
   const [activeLangTab, setActiveLangTab] = useState<'id' | 'en'>('id')
   const [isTranslating, setIsTranslating] = useState(false)
@@ -186,6 +188,7 @@ export default function ProjectsPage() {
       toast.success(editing ? 'Project updated' : 'Project created')
       setFormData(emptyForm)
       setEditing(null)
+      setFormOpen(false)
       fetchProjects()
     } catch {
       toast.error('Failed to save project')
@@ -296,11 +299,13 @@ export default function ProjectsPage() {
         caption_id: m.caption_id ?? '',
       })),
     })
+    setFormOpen(true)
   }
 
   function handleCancel() {
     setEditing(null)
     setFormData(emptyForm)
+    setFormOpen(false)
   }
 
   const mediaCount = countProjectMedia(formData.media)
@@ -312,34 +317,63 @@ export default function ProjectsPage() {
   return (
     <AdminShell>
       <div className="mx-auto max-w-[1400px] space-y-6">
-        <p className="text-body-md text-muted-foreground">{projects.length} records</p>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-body-md text-muted-foreground">{projects.length} records</p>
+          <Button
+            onClick={() => {
+              setEditing(null)
+              setFormData(emptyForm)
+              setFormOpen(true)
+            }}
+          >
+            <Plus className="mr-2 h-4 w-4" strokeWidth={1.5} />
+            Add Project
+          </Button>
+        </div>
 
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,500px)_minmax(0,1fr)]">
-          <Card className="h-fit">
-            <CardHeader>
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <CardTitle>{editing ? 'Edit Project' : 'Add Project'}</CardTitle>
-                  <CardDescription>
-                    {editing ? 'Update project details and case study metrics' : 'Add a new portfolio project with bilingual details'}
-                  </CardDescription>
-                </div>
-                <LangTabs
-                  value={activeLangTab}
-                  onChange={setActiveLangTab}
-                  idLabel="Indonesian (ID)"
-                  enLabel="English (EN)"
-                />
-              </div>
+        <FormModal
+          open={formOpen}
+          onOpenChange={(open) => {
+            if (open) {
+              setFormOpen(true)
+            } else {
+              handleCancel()
+            }
+          }}
+          title={editing ? 'Edit Project' : 'Add Project'}
+          description={
+            editing
+              ? 'Update project details and case study metrics'
+              : 'Add a new portfolio project with bilingual details'
+          }
+          wide
+          headerExtra={
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <LangTabs
+                value={activeLangTab}
+                onChange={setActiveLangTab}
+                idLabel="Indonesian (ID)"
+                enLabel="English (EN)"
+              />
               <AutoTranslateButton
                 onClick={handleAutoTranslateToEn}
                 busy={isTranslating}
                 disabled={isTranslating || (!formData.title_id && !formData.description_id)}
               />
-            </CardHeader>
-
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-4">
+            </div>
+          }
+          footer={
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" className="flex-1" onClick={handleCancel}>
+                Cancel
+              </Button>
+              <Button type="submit" form="project-form" className="flex-1" disabled={!!mediaError}>
+                {editing ? 'Update Project' : 'Add Project'}
+              </Button>
+            </div>
+          }
+        >
+        <form id="project-form" onSubmit={handleSubmit} className="space-y-4">
                 {activeLangTab === 'id' ? (
                   <>
                     <div className="space-y-2">
@@ -613,16 +647,10 @@ export default function ProjectsPage() {
                     </div>
                   ))}
                 </div>
-
-                <div className="flex gap-2 pt-2">
-                  <Button type="submit" className="flex-1" disabled={!!mediaError}>{editing ? 'Update Project' : 'Add Project'}</Button>
-                  {editing && <Button type="button" variant="outline" onClick={handleCancel}>Cancel</Button>}
-                </div>
               </form>
-            </CardContent>
-          </Card>
+        </FormModal>
 
-          <Card>
+        <Card>
             <CardHeader>
               <CardTitle>Existing Projects</CardTitle>
               <CardDescription>{projects.length} projects total</CardDescription>
@@ -697,8 +725,7 @@ export default function ProjectsPage() {
                 </ul>
               )}
             </CardContent>
-          </Card>
-        </div>
+        </Card>
 
         <AlertDialog open={deleteId !== null} onOpenChange={() => setDeleteId(null)}>
           <AlertDialogContent>

@@ -7,7 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import {FileText, Image as ImageIcon, Pencil, Trash2, Upload} from 'lucide-react'
+import {FileText, Image as ImageIcon, Pencil, Plus, Trash2, Upload} from 'lucide-react'
+import { FormModal } from '@/components/admin/form-modal'
 import { toast } from 'sonner'
 import {
   AlertDialog,
@@ -46,36 +47,49 @@ const emptyForm = {
   image_url: '',
 }
 
-const SECTION_GUIDES: Record<string, { label: string; desc: string; imageHint?: string }> = {
+const SECTION_GUIDES: Record<string, { label: string; desc: string }> = {
   hero: {
-    label: 'Hero Section (Header)',
-    desc: 'Main landing area at the top of the homepage. Set your headline, bio, and hero photo.',
-    imageHint: 'Profile photo displayed prominently on the right side of the hero section.',
-  },
-  problem: {
-    label: 'Problem Section',
-    desc: 'Highlights the real challenges and pain points you solve.',
+    label: 'Hero',
+    desc: 'Homepage hero: name, role line, and profile photo.',
   },
   about: {
-    label: 'About Section',
-    desc: 'Overview story and stats introducing who you are and what you do.',
-  },
-  work: {
-    label: 'Projects Section',
-    desc: 'Header and subtitle for your web & mobile projects showcase.',
+    label: 'About (Overview)',
+    desc: 'Overview paragraphs on the homepage under the hero.',
   },
   projects: {
-    label: 'Projects Section',
-    desc: 'Header and subtitle for your web & mobile projects showcase.',
+    label: 'Projects',
+    desc: 'Heading + description for the Projects block on the homepage.',
+  },
+  experience: {
+    label: 'Experience',
+    desc: 'Heading + description for the Experience block on the homepage.',
+  },
+  education: {
+    label: 'Education & Certifications',
+    desc: 'Heading for Education, description doubles as the Certification block label on the homepage.',
   },
   skills: {
-    label: 'Skills Section',
-    desc: 'Header and subtitle for your technical stack & skills grid.',
+    label: 'Skills',
+    desc: 'Heading + description for the Skills page and Tools block on the homepage.',
   },
   contact: {
-    label: 'Contact CTA Section',
-    desc: 'Final call-to-action area with availability info.',
+    label: 'Contact',
+    desc: 'Heading + subtitle on the contact page.',
   },
+}
+
+/**
+ * Which fields the frontend actually renders per slug. Keeps the CMS form in
+ * sync with what is displayed — no dead inputs for fields that are never read.
+ */
+const SECTION_FIELDS: Record<string, { title: boolean; subtitle: boolean; content: boolean; image: boolean }> = {
+  hero: { title: true, subtitle: false, content: true, image: true },
+  about: { title: true, subtitle: true, content: true, image: false },
+  projects: { title: true, subtitle: true, content: false, image: false },
+  experience: { title: true, subtitle: true, content: false, image: false },
+  education: { title: true, subtitle: false, content: true, image: false },
+  skills: { title: true, subtitle: true, content: false, image: false },
+  contact: { title: true, subtitle: true, content: false, image: false },
 }
 
 export default function SectionsPage() {
@@ -85,6 +99,7 @@ export default function SectionsPage() {
   const [deleteId, setDeleteId] = useState<number | null>(null)
   const [uploading, setUploading] = useState(false)
   const [formData, setFormData] = useState(emptyForm)
+  const [formOpen, setFormOpen] = useState(false)
   const [activeLangTab, setActiveLangTab] = useState<'id' | 'en'>('id')
   const [isTranslating, setIsTranslating] = useState(false)
 
@@ -195,6 +210,7 @@ export default function SectionsPage() {
       toast.success(editing ? 'Section updated' : 'Section created')
       setFormData(emptyForm)
       setEditing(null)
+      setFormOpen(false)
       fetchSections()
     } catch {
       toast.error('Failed to save section')
@@ -227,11 +243,13 @@ export default function SectionsPage() {
       content_id: section.content_id ?? '',
       image_url: section.image_url ?? '',
     })
+    setFormOpen(true)
   }
 
   function handleCancel() {
     setEditing(null)
     setFormData(emptyForm)
+    setFormOpen(false)
   }
 
   const activeGuide = formData.slug ? SECTION_GUIDES[formData.slug] : null
@@ -239,44 +257,66 @@ export default function SectionsPage() {
   return (
     <AdminShell>
       <div className="mx-auto max-w-[1400px] space-y-6">
-        <p className="text-body-md text-muted-foreground">{sections.length} records</p>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-body-md text-muted-foreground">{sections.length} records</p>
+          <Button
+            onClick={() => {
+              setEditing(null)
+              setFormData(emptyForm)
+              setFormOpen(true)
+            }}
+          >
+            <Plus className="mr-2 h-4 w-4" strokeWidth={1.5} />
+            Add Section
+          </Button>
+        </div>
 
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,460px)_minmax(0,1fr)]">
-          <Card>
-            <CardHeader>
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <CardTitle>{editing ? `Edit: ${formData.slug || 'Section'}` : 'Add Section'}</CardTitle>
-                  <CardDescription>
-                    {activeGuide ? activeGuide.desc : 'Configure section content, titles, and media'}
-                  </CardDescription>
-                </div>
-                <LangTabs value={activeLangTab} onChange={setActiveLangTab} />
-              </div>
-
-              <div className="pt-2">
-                <AutoTranslateButton
-                  onClick={handleAutoTranslateToEn}
-                  busy={isTranslating}
-                  disabled={isTranslating || (!formData.title_id && !formData.subtitle_id)}
-                />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-4">
+        <FormModal
+          open={formOpen}
+          onOpenChange={(open) => {
+            if (open) {
+              setFormOpen(true)
+            } else {
+              handleCancel()
+            }
+          }}
+          title={editing ? `Edit: ${formData.slug || 'Section'}` : 'Add Section'}
+          description={activeGuide ? activeGuide.desc : 'Configure section content, titles, and media'}
+          headerExtra={
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <LangTabs value={activeLangTab} onChange={setActiveLangTab} />
+              <AutoTranslateButton
+                onClick={handleAutoTranslateToEn}
+                busy={isTranslating}
+                disabled={isTranslating || (!formData.title_id && !formData.subtitle_id)}
+              />
+            </div>
+          }
+          footer={
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" className="flex-1" onClick={handleCancel}>
+                Cancel
+              </Button>
+              <Button type="submit" form="section-form" className="flex-1">
+                {editing ? 'Update Section' : 'Add Section'}
+              </Button>
+            </div>
+          }
+        >
+          <form id="section-form" onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="slug">Section Identifier (Slug) *</Label>
                   <Input
                     id="slug"
                     value={formData.slug}
                     onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().trim() })}
-                    placeholder="hero, problem, about, contact..."
+                    placeholder="hero, about, projects, experience, education, skills, contact..."
                     required
                     disabled={!!editing}
                   />
                   {!editing && (
                     <div className="flex flex-wrap gap-1.5 pt-1">
-                      {['hero', 'problem', 'about', 'projects', 'skills', 'contact'].map((s) => (
+                      {Object.keys(SECTION_FIELDS).map((s) => (
                         <button
                           key={s}
                           type="button"
@@ -290,139 +330,155 @@ export default function SectionsPage() {
                   )}
                 </div>
 
-                {activeLangTab === 'id' ? (
-                  <>
-                    <div className="space-y-2">
-                      <Label htmlFor="title_id">
-                        {formData.slug === 'hero' ? 'Nama / Judul Utama (ID) *' : 'Judul Seksi (ID) *'}
-                      </Label>
-                      <Input
-                        id="title_id"
-                        value={formData.title_id}
-                        onChange={(e) => setFormData({ ...formData, title_id: e.target.value })}
-                        placeholder="contoh: Adam Ghazy Al Falah"
-                        required={!formData.title}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="subtitle_id">
-                        {formData.slug === 'hero' ? 'Ringkasan Bio / Subjudul (ID)' : 'Subjudul / Tagline (ID)'}
-                      </Label>
-                      <Textarea
-                        id="subtitle_id"
-                        value={formData.subtitle_id}
-                        onChange={(e) => setFormData({ ...formData, subtitle_id: e.target.value })}
-                        placeholder="Teks deskripsi ringkas..."
-                        rows={3}
-                      />
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="space-y-2">
-                      <Label htmlFor="title">
-                        {formData.slug === 'hero' ? 'Headline / Main Title (EN) *' : 'Section Title (EN) *'}
-                      </Label>
-                      <Input
-                        id="title"
-                        value={formData.title}
-                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                        placeholder="e.g. Adam Ghazy Al Falah"
-                        required={!formData.title_id}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="subtitle">
-                        {formData.slug === 'hero' ? 'Bio / Subtitle Description (EN)' : 'Subtitle / Tagline (EN)'}
-                      </Label>
-                      <Textarea
-                        id="subtitle"
-                        value={formData.subtitle}
-                        onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
-                        placeholder="Short descriptive text..."
-                        rows={3}
-                      />
-                    </div>
-                  </>
+                {formData.slug && !SECTION_FIELDS[formData.slug] && (
+                  <div className="rounded-[12px] border px-3 py-2 text-body-sm" style={{ background: 'var(--color-status-pending-bg)', borderColor: 'var(--color-status-pending-text)', color: 'var(--color-status-pending-text)' }}>
+                    Slug &quot;{formData.slug}&quot; is not rendered by the frontend. Use one of the quick-fill slugs
+                    above so the content actually shows up on the site.
+                  </div>
                 )}
 
-                <div className="space-y-2">
-                  <Label htmlFor="image_url">
-                    {formData.slug === 'hero' ? 'Hero Profile Photo' : 'Section Image / Media'}
-                  </Label>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <label className="flex-1">
-                        <Button variant="outline" className="w-full pointer-events-none" disabled={uploading} asChild>
-                          <span className="cursor-pointer">
-                            <Upload className="mr-2 h-4 w-4" strokeWidth={1.5} />
-                            {uploading ? 'Uploading...' : 'Choose photo to upload'}
-                          </span>
-                        </Button>
-                        <input type="file" onChange={handleFileUpload} className="hidden" accept="image/*" />
-                      </label>
-                      {formData.image_url && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setFormData({ ...formData, image_url: '' })}
-                        >
-                          Remove
-                        </Button>
-                      )}
-                    </div>
-
-                    {formData.image_url && (
-                      <div className="relative flex items-center gap-3 overflow-hidden rounded-[12px] border bg-muted/20 p-2">
-                        <img
-                          src={formData.image_url}
-                          alt="preview"
-                          className="h-16 w-16 rounded-[12px] border object-cover"
-                        />
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-label-md text-muted-foreground">{formData.image_url}</p>
-                          <Badge variant="active">Active</Badge>
+                {(() => {
+                  const fields = SECTION_FIELDS[formData.slug]
+                  const titleLabels: Record<'id' | 'en', string> = {
+                    id: 'Judul Seksi (ID) *',
+                    en: 'Section Title (EN) *',
+                  }
+                  const subLabels: Record<'id' | 'en', string> = {
+                    id: 'Deskripsi (ID)',
+                    en: 'Description (EN)',
+                  }
+                  const contentLabels: Record<'id' | 'en', string> = {
+                    id: formData.slug === 'hero' ? 'Role / Posisi (ID)' : formData.slug === 'education' ? 'Label Blok Sertifikasi (ID)' : 'Paragraf (ID)',
+                    en: formData.slug === 'hero' ? 'Role / Position Line (EN)' : formData.slug === 'education' ? 'Certification Block Label (EN)' : 'Paragraph (EN)',
+                  }
+                  return (
+                    <>
+                      {fields?.title !== false && (
+                        <div className="space-y-2">
+                          <Label htmlFor={activeLangTab === 'id' ? 'title_id' : 'title'}>
+                            {activeLangTab === 'id' ? titleLabels.id : titleLabels.en}
+                            {formData.slug === 'hero' && (activeLangTab === 'id' ? ' — Nama Lengkap (ID) *' : ' — Full Name (EN) *')}
+                          </Label>
+                          {activeLangTab === 'id' ? (
+                            <Input
+                              id="title_id"
+                              value={formData.title_id}
+                              onChange={(e) => setFormData({ ...formData, title_id: e.target.value })}
+                              placeholder={formData.slug === 'hero' ? 'contoh: Adam Ghazy Al Falah' : 'contoh: Projects & Case Studies'}
+                              required={!formData.title}
+                            />
+                          ) : (
+                            <Input
+                              id="title"
+                              value={formData.title}
+                              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                              placeholder={formData.slug === 'hero' ? 'e.g. Adam Ghazy Al Falah' : 'e.g. Projects & Case Studies'}
+                              required={!formData.title_id}
+                            />
+                          )}
                         </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
+                      )}
 
-                <div className="space-y-2">
-                  <Label htmlFor="content">
-                    {formData.slug === 'contact' ? 'Availability Tag / Note' : 'Extra Content / Data'}
-                  </Label>
-                  <Textarea
-                    id="content"
-                    value={activeLangTab === 'id' ? formData.content_id || formData.content : formData.content || formData.content_id}
-                    onChange={(e) => {
-                      if (activeLangTab === 'id') {
-                        setFormData({ ...formData, content_id: e.target.value, content: formData.content || e.target.value })
-                      } else {
-                        setFormData({ ...formData, content: e.target.value, content_id: formData.content_id || e.target.value })
-                      }
-                    }}
-                    placeholder={formData.slug === 'contact' ? 'e.g. Open to junior developer roles & projects' : 'Optional content...'}
-                    rows={formData.slug === 'problem' ? 5 : 2}
-                  />
-                </div>
+                      {fields?.subtitle && (
+                        <div className="space-y-2">
+                          <Label htmlFor={activeLangTab === 'id' ? 'subtitle_id' : 'subtitle'}>
+                            {activeLangTab === 'id' ? subLabels.id : subLabels.en}
+                          </Label>
+                          {activeLangTab === 'id' ? (
+                            <Textarea
+                              id="subtitle_id"
+                              value={formData.subtitle_id}
+                              onChange={(e) => setFormData({ ...formData, subtitle_id: e.target.value })}
+                              placeholder="Teks deskripsi ringkas..."
+                              rows={3}
+                            />
+                          ) : (
+                            <Textarea
+                              id="subtitle"
+                              value={formData.subtitle}
+                              onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
+                              placeholder="Short descriptive text..."
+                              rows={3}
+                            />
+                          )}
+                        </div>
+                      )}
 
-                <div className="flex gap-2 pt-2">
-                  <Button type="submit" className="flex-1">
-                    {editing ? 'Update Section' : 'Add Section'}
-                  </Button>
-                  {editing && (
-                    <Button type="button" variant="outline" onClick={handleCancel}>
-                      Cancel
-                    </Button>
-                  )}
-                </div>
-              </form>
-            </CardContent>
-          </Card>
+                      {fields?.content && (
+                        <div className="space-y-2">
+                          <Label htmlFor="content">
+                            {activeLangTab === 'id' ? contentLabels.id : contentLabels.en}
+                          </Label>
+                          <Textarea
+                            id="content"
+                            value={activeLangTab === 'id' ? formData.content_id || formData.content : formData.content || formData.content_id}
+                            onChange={(e) => {
+                              if (activeLangTab === 'id') {
+                                setFormData({ ...formData, content_id: e.target.value, content: formData.content || e.target.value })
+                              } else {
+                                setFormData({ ...formData, content: e.target.value, content_id: formData.content_id || e.target.value })
+                              }
+                            }}
+                            placeholder={
+                              formData.slug === 'hero'
+                                ? 'e.g. Mobile, Frontend & Backend Developer'
+                                : formData.slug === 'education'
+                                  ? 'e.g. Certification'
+                                  : 'Optional second paragraph...'
+                            }
+                            rows={2}
+                          />
+                        </div>
+                      )}
+
+                      {fields?.image && (
+                        <div className="space-y-2">
+                          <Label htmlFor="image_url">Hero Profile Photo</Label>
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-3">
+                              <label className="flex-1">
+                                <Button variant="outline" className="w-full pointer-events-none" disabled={uploading} asChild>
+                                  <span className="cursor-pointer">
+                                    <Upload className="mr-2 h-4 w-4" strokeWidth={1.5} />
+                                    {uploading ? 'Uploading...' : 'Choose photo to upload'}
+                                  </span>
+                                </Button>
+                                <input type="file" onChange={handleFileUpload} className="hidden" accept="image/*" />
+                              </label>
+                              {formData.image_url && (
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => setFormData({ ...formData, image_url: '' })}
+                                >
+                                  Remove
+                                </Button>
+                              )}
+                            </div>
+
+                            {formData.image_url && (
+                              <div className="relative flex items-center gap-3 overflow-hidden rounded-[12px] border bg-muted/20 p-2">
+                                <img
+                                  src={formData.image_url}
+                                  alt="preview"
+                                  className="h-16 w-16 rounded-[12px] border object-cover"
+                                />
+                                <div className="min-w-0 flex-1">
+                                  <p className="truncate text-label-md text-muted-foreground">{formData.image_url}</p>
+                                  <Badge variant="active">Active</Badge>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )
+                })()}
+
+          </form>
+        </FormModal>
 
           <Card>
             <CardHeader>
@@ -503,7 +559,6 @@ export default function SectionsPage() {
               )}
             </CardContent>
           </Card>
-        </div>
 
         <AlertDialog open={deleteId !== null} onOpenChange={() => setDeleteId(null)}>
           <AlertDialogContent>

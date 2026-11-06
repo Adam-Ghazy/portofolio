@@ -7,7 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import {Building2, Layers, Pencil, Plus, Trash2} from 'lucide-react'
+import { Building2, Layers, Pencil, Plus, Trash2 } from 'lucide-react'
+import { FormModal } from '@/components/admin/form-modal'
 import { toast } from 'sonner'
 import { LangTabs, AutoTranslateButton } from '@/components/admin/lang-tabs'
 import { Badge } from '@/components/ui/badge'
@@ -74,6 +75,7 @@ export default function ExperiencesPage() {
   const [editing, setEditing] = useState<Experience | null>(null)
   const [deleteId, setDeleteId] = useState<number | null>(null)
   const [formData, setFormData] = useState(emptyForm)
+  const [formOpen, setFormOpen] = useState(false)
   const [systemsList, setSystemsList] = useState<SystemItem[]>([])
   const [activeLangTab, setActiveLangTab] = useState<'id' | 'en'>('id')
   const [isTranslating, setIsTranslating] = useState(false)
@@ -191,7 +193,10 @@ export default function ExperiencesPage() {
 
       if (!res.ok) throw new Error()
       toast.success(editing ? 'Experience updated' : 'Experience created')
-      handleCancel()
+      setEditing(null)
+      setFormData(emptyForm)
+      setSystemsList([])
+      setFormOpen(false)
       fetchExperiences()
     } catch {
       toast.error('Failed to save experience')
@@ -253,49 +258,77 @@ export default function ExperiencesPage() {
     } catch {
       setSystemsList([])
     }
+    setFormOpen(true)
   }
 
   function handleCancel() {
     setEditing(null)
     setFormData(emptyForm)
     setSystemsList([])
+    setFormOpen(false)
   }
 
   return (
     <AdminShell>
       <div className="mx-auto max-w-[1400px] space-y-6">
-        <p className="text-body-md text-muted-foreground">{experiences.length} records</p>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-body-md text-muted-foreground">{experiences.length} records</p>
+          <Button
+            onClick={() => {
+              setEditing(null)
+              setFormData(emptyForm)
+              setSystemsList([])
+              setFormOpen(true)
+            }}
+          >
+            <Plus className="mr-2 h-4 w-4" strokeWidth={1.5} />
+            Add Experience
+          </Button>
+        </div>
 
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,520px)_minmax(0,1fr)]">
-          {/* Left Form */}
-          <Card className="h-fit">
-            <CardHeader>
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <CardTitle>{editing ? 'Edit Experience' : 'Add Experience'}</CardTitle>
-                  <CardDescription>
-                    {editing ? 'Update experience and system responsibilities' : 'Add a new work experience record'}
-                  </CardDescription>
-                </div>
-                <LangTabs
-                  value={activeLangTab}
-                  onChange={setActiveLangTab}
-                  idLabel="Indonesian (ID)"
-                  enLabel="English (EN)"
-                />
-              </div>
-
-              <div className="pt-2">
-                <AutoTranslateButton
-                  onClick={handleAutoTranslateToEn}
-                  busy={isTranslating}
-                  disabled={!formData.position_id && !formData.description_id}
-                />
-              </div>
-            </CardHeader>
-
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-4">
+        <FormModal
+          open={formOpen}
+          onOpenChange={(open) => {
+            if (open) {
+              setFormOpen(true)
+            } else {
+              handleCancel()
+            }
+          }}
+          title={editing ? 'Edit Experience' : 'Add Experience'}
+          description={
+            editing
+              ? 'Update experience and system responsibilities'
+              : 'Add a new work experience record'
+          }
+          headerExtra={
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <LangTabs
+                value={activeLangTab}
+                onChange={setActiveLangTab}
+                idLabel="Indonesian (ID)"
+                enLabel="English (EN)"
+              />
+              <AutoTranslateButton
+                onClick={handleAutoTranslateToEn}
+                busy={isTranslating}
+                disabled={!formData.position_id && !formData.description_id}
+              />
+            </div>
+          }
+          footer={
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" className="flex-1" onClick={handleCancel}>
+                Cancel
+              </Button>
+              <Button type="submit" form="experience-form" className="flex-1">
+                {editing ? 'Update Experience' : 'Add Experience'}
+              </Button>
+            </div>
+          }
+          wide
+        >
+          <form id="experience-form" onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="company">Company / Organization *</Label>
                   <Input
@@ -562,21 +595,9 @@ export default function ExperiencesPage() {
                   )}
                 </div>
 
-                <div className="flex gap-2 pt-2">
-                  <Button type="submit" className="flex-1">
-                    {editing ? 'Update Experience' : 'Add Experience'}
-                  </Button>
-                  {editing && (
-                    <Button type="button" variant="outline" onClick={handleCancel}>
-                      Cancel
-                    </Button>
-                  )}
-                </div>
               </form>
-            </CardContent>
-          </Card>
+        </FormModal>
 
-          {/* Right List */}
           <Card>
             <CardHeader>
               <CardTitle>Existing Experience</CardTitle>
@@ -704,7 +725,6 @@ export default function ExperiencesPage() {
               )}
             </CardContent>
           </Card>
-        </div>
 
         {/* Delete Dialog */}
         <AlertDialog open={deleteId !== null} onOpenChange={() => setDeleteId(null)}>

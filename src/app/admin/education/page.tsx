@@ -10,7 +10,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { AutoTranslateButton, LangTabs } from '@/components/admin/lang-tabs'
-import { Pencil, Trash2, GraduationCap, Award, Calendar, MapPin } from 'lucide-react'
+import { FormModal } from '@/components/admin/form-modal'
+import { Pencil, Plus, Trash2, GraduationCap, Award, Calendar, MapPin } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   AlertDialog,
@@ -58,6 +59,7 @@ export default function EducationAdminPage() {
   const [deleteEduId, setDeleteEduId] = useState<number | null>(null)
   const [eduLangTab, setEduLangTab] = useState<'id' | 'en'>('id')
   const [isTranslatingEdu, setIsTranslatingEdu] = useState(false)
+  const [eduFormOpen, setEduFormOpen] = useState(false)
 
   // Certifications state
   const [certList, setCertList] = useState<Certification[]>([])
@@ -67,6 +69,7 @@ export default function EducationAdminPage() {
   const [deleteCertId, setDeleteCertId] = useState<number | null>(null)
   const [certLangTab, setCertLangTab] = useState<'id' | 'en'>('id')
   const [isTranslatingCert, setIsTranslatingCert] = useState(false)
+  const [certFormOpen, setCertFormOpen] = useState(false)
 
   useEffect(() => {
     fetchEducation()
@@ -192,6 +195,7 @@ export default function EducationAdminPage() {
       if (!res.ok) throw new Error()
       toast.success(editingEdu ? 'Education record updated' : 'Education record added')
       handleEduCancel()
+      setEduFormOpen(false)
       fetchEducation()
     } catch {
       toast.error('Failed to save education record')
@@ -226,11 +230,13 @@ export default function EducationAdminPage() {
       description_id: item.description_id || '',
       sort_order: item.sort_order || 0,
     })
+    setEduFormOpen(true)
   }
 
   function handleEduCancel() {
     setEditingEdu(null)
     setEduFormData(emptyEduForm)
+    setEduFormOpen(false)
   }
 
   // Handle Certifications Submit
@@ -258,6 +264,7 @@ export default function EducationAdminPage() {
       if (!res.ok) throw new Error()
       toast.success(editingCert ? 'Certification updated' : 'Certification added')
       handleCertCancel()
+      setCertFormOpen(false)
       fetchCertifications()
     } catch {
       toast.error('Failed to save certification')
@@ -291,11 +298,13 @@ export default function EducationAdminPage() {
       credential_info_id: item.credential_info_id || '',
       sort_order: item.sort_order || 0,
     })
+    setCertFormOpen(true)
   }
 
   function handleCertCancel() {
     setEditingCert(null)
     setCertFormData(emptyCertForm)
+    setCertFormOpen(false)
   }
 
   return (
@@ -326,30 +335,39 @@ export default function EducationAdminPage() {
           </TabsList>
 
           <TabsContent value="education" className="space-y-6">
-            <div className="grid gap-6 xl:grid-cols-[minmax(0,460px)_minmax(0,1fr)]">
-              <Card className="h-fit">
-                <CardHeader>
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <CardTitle className="flex items-center gap-2">
-                        <GraduationCap className="h-5 w-5" strokeWidth={1.5} />
-                        {editingEdu ? 'Edit Education' : 'Add Education'}
-                      </CardTitle>
-                      <CardDescription>
-                        {editingEdu ? 'Update degree and academic institution details' : 'Add a degree or educational qualification'}
-                      </CardDescription>
-                    </div>
-                    <LangTabs value={eduLangTab} onChange={setEduLangTab} />
-                  </div>
+            <FormModal
+              open={eduFormOpen}
+              onOpenChange={(open) => {
+                if (open) {
+                  setEduFormOpen(true)
+                } else {
+                  handleEduCancel()
+                }
+              }}
+              title={editingEdu ? 'Edit Education' : 'Add Education'}
+              description={editingEdu ? 'Update degree and academic institution details' : 'Add a degree or educational qualification'}
+              headerExtra={
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <LangTabs value={eduLangTab} onChange={setEduLangTab} />
                   <AutoTranslateButton
                     onClick={handleAutoTranslateEdu}
                     busy={isTranslatingEdu}
                     disabled={!eduFormData.degree_id && !eduFormData.description_id}
                   />
-                </CardHeader>
-
-                <CardContent>
-                  <form onSubmit={handleEduSubmit} className="space-y-4">
+                </div>
+              }
+              footer={
+                <div className="flex gap-2">
+                  <Button type="button" variant="outline" className="flex-1" onClick={handleEduCancel}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" form="education-form" className="flex-1">
+                    {editingEdu ? 'Update Education' : 'Add Education'}
+                  </Button>
+                </div>
+              }
+            >
+              <form id="education-form" onSubmit={handleEduSubmit} className="space-y-4">
                     {eduLangTab === 'id' ? (
                       <>
                         <div className="space-y-2">
@@ -453,25 +471,26 @@ export default function EducationAdminPage() {
                         />
                       </div>
                     </div>
-
-                    <div className="flex gap-2 pt-2">
-                      <Button type="submit" className="flex-1">
-                        {editingEdu ? 'Update Education' : 'Add Education Record'}
-                      </Button>
-                      {editingEdu && (
-                        <Button type="button" variant="outline" onClick={handleEduCancel}>
-                          Cancel
-                        </Button>
-                      )}
-                    </div>
                   </form>
-                </CardContent>
-              </Card>
+                </FormModal>
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Academic Records</CardTitle>
-                  <CardDescription>{educationList.length} education entries recorded</CardDescription>
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <CardTitle>Academic Records</CardTitle>
+                      <CardDescription>{educationList.length} education entries recorded</CardDescription>
+                    </div>
+                    <Button
+                      onClick={() => {
+                        handleEduCancel()
+                        setEduFormOpen(true)
+                      }}
+                    >
+                      <Plus className="mr-2 h-4 w-4" strokeWidth={1.5} />
+                      Add Education
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   {loadingEdu ? (
@@ -546,34 +565,42 @@ export default function EducationAdminPage() {
                   )}
                 </CardContent>
               </Card>
-            </div>
           </TabsContent>
 
           <TabsContent value="certifications" className="space-y-6">
-            <div className="grid gap-6 xl:grid-cols-[minmax(0,460px)_minmax(0,1fr)]">
-              <Card className="h-fit">
-                <CardHeader>
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <CardTitle className="flex items-center gap-2">
-                        <Award className="h-5 w-5" strokeWidth={1.5} />
-                        {editingCert ? 'Edit Certification' : 'Add Certification'}
-                      </CardTitle>
-                      <CardDescription>
-                        {editingCert ? 'Update certification and credential details' : 'Add a professional or national certification'}
-                      </CardDescription>
-                    </div>
-                    <LangTabs value={certLangTab} onChange={setCertLangTab} />
-                  </div>
+            <FormModal
+              open={certFormOpen}
+              onOpenChange={(open) => {
+                if (open) {
+                  setCertFormOpen(true)
+                } else {
+                  handleCertCancel()
+                }
+              }}
+              title={editingCert ? 'Edit Certification' : 'Add Certification'}
+              description={editingCert ? 'Update certification and credential details' : 'Add a professional or national certification'}
+              headerExtra={
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <LangTabs value={certLangTab} onChange={setCertLangTab} />
                   <AutoTranslateButton
                     onClick={handleAutoTranslateCert}
                     busy={isTranslatingCert}
                     disabled={!certFormData.title_id && !certFormData.credential_info_id}
                   />
-                </CardHeader>
-
-                <CardContent>
-                  <form onSubmit={handleCertSubmit} className="space-y-4">
+                </div>
+              }
+              footer={
+                <div className="flex gap-2">
+                  <Button type="button" variant="outline" className="flex-1" onClick={handleCertCancel}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" form="certification-form" className="flex-1">
+                    {editingCert ? 'Update Certification' : 'Add Certification'}
+                  </Button>
+                </div>
+              }
+            >
+              <form id="certification-form" onSubmit={handleCertSubmit} className="space-y-4">
                     {certLangTab === 'id' ? (
                       <>
                         <div className="space-y-2">
@@ -666,25 +693,26 @@ export default function EducationAdminPage() {
                         onChange={(e) => setCertFormData({ ...certFormData, location: e.target.value })}
                       />
                     </div>
-
-                    <div className="flex gap-2 pt-2">
-                      <Button type="submit" className="flex-1">
-                        {editingCert ? 'Update Certification' : 'Add Certification'}
-                      </Button>
-                      {editingCert && (
-                        <Button type="button" variant="outline" onClick={handleCertCancel}>
-                          Cancel
-                        </Button>
-                      )}
-                    </div>
-                  </form>
-                </CardContent>
-              </Card>
+              </form>
+            </FormModal>
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Professional Certifications</CardTitle>
-                  <CardDescription>{certList.length} certifications recorded</CardDescription>
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <CardTitle>Professional Certifications</CardTitle>
+                      <CardDescription>{certList.length} certifications recorded</CardDescription>
+                    </div>
+                    <Button
+                      onClick={() => {
+                        handleCertCancel()
+                        setCertFormOpen(true)
+                      }}
+                    >
+                      <Plus className="mr-2 h-4 w-4" strokeWidth={1.5} />
+                      Add Certification
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   {loadingCerts ? (
@@ -755,7 +783,6 @@ export default function EducationAdminPage() {
                   )}
                 </CardContent>
               </Card>
-            </div>
           </TabsContent>
         </Tabs>
 
