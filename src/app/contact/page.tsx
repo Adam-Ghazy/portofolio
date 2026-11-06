@@ -18,16 +18,22 @@ const inputStyle = {
 } as const;
 
 export default function ContactPage() {
-  const { t, locale } = useLanguage();
+  const { t, l, locale } = useLanguage();
   const [settings, setSettings] = useState<Record<string, string>>({});
+  const [section, setSection] = useState<Record<string, unknown>>({});
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
 
   useEffect(() => {
-    fetch('/api/settings')
-      .then((r) => (r.ok ? r.json() : {}))
-      .then(setSettings)
+    Promise.all([
+      fetch('/api/settings').then((r) => (r.ok ? r.json() : {})),
+      fetch('/api/sections?slug=contact').then((r) => (r.ok ? r.json() : {})),
+    ])
+      .then(([settingsData, sectionData]) => {
+        setSettings(settingsData || {});
+        setSection(sectionData || {});
+      })
       .catch(() => {});
   }, []);
 
@@ -70,12 +76,15 @@ export default function ContactPage() {
       <UntiSection>
         <UntiCard>
           <StatusPill label={locale === 'id' ? 'Terbuka untuk kerja' : 'Available for Work'} />
-          <h1 className="unti-title m-0 text-balance">{t('contact.title', "Let's Connect")}</h1>
+          <h1 className="unti-title m-0 text-balance">
+            {l(section, 'title') || t('contact.title', "Let's Connect")}
+          </h1>
           <p className="unti-body m-0 text-pretty">
-            {t(
-              'contact.subtitle',
-              'Whether you have an entry-level software engineering role, a mobile application project, or simply want to connect - feel free to reach out.'
-            )}
+            {l(section, 'subtitle') ||
+              t(
+                'contact.subtitle',
+                'Whether you have an entry-level software engineering role, a mobile application project, or simply want to connect - feel free to reach out.'
+              )}
           </p>
         </UntiCard>
       </UntiSection>

@@ -94,16 +94,19 @@ export default function ExperiencePage() {
   const { t, l, locale } = useLanguage();
   const [settings, setSettings] = useState<Record<string, string>>({});
   const [experiences, setExperiences] = useState<ExperienceItem[]>([]);
+  const [section, setSection] = useState<Record<string, unknown>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     Promise.all([
       fetch('/api/experiences').then((r) => (r.ok ? r.json() : [])),
       fetch('/api/settings').then((r) => (r.ok ? r.json() : {})),
+      fetch('/api/sections?slug=experience').then((r) => (r.ok ? r.json() : {})),
     ])
-      .then(([expData, settingsData]) => {
+      .then(([expData, settingsData, sectionData]) => {
         setExperiences(Array.isArray(expData) && expData.length > 0 ? expData : DEFAULT_EXPERIENCES);
         setSettings(settingsData || {});
+        setSection(sectionData || {});
       })
       .catch(() => setExperiences(DEFAULT_EXPERIENCES))
       .finally(() => setLoading(false));
@@ -124,11 +127,14 @@ export default function ExperiencePage() {
     >
       <UntiSection>
         <UntiCard>
-          <h1 className="unti-title m-0 text-balance">{t('nav.experience', 'Experience')}</h1>
+          <h1 className="unti-title m-0 text-balance">
+            {l(section, 'title') || t('nav.experience', 'Experience')}
+          </h1>
           <p className="unti-body m-0 text-pretty">
-            {locale === 'id'
-              ? 'Pengalaman kerja, sistem produksi yang dikerjakan, dan teknologi yang digunakan.'
-              : 'Work experience, production systems built, and the technologies behind them.'}
+            {l(section, 'subtitle') ||
+              (locale === 'id'
+                ? 'Pengalaman kerja, sistem produksi yang dikerjakan, dan teknologi yang digunakan.'
+                : 'Work experience, production systems built, and the technologies behind them.')}
           </p>
         </UntiCard>
       </UntiSection>

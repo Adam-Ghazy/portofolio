@@ -54,19 +54,22 @@ function isSoftSkill(skill: SkillItem): boolean {
 }
 
 export default function SkillsPage() {
-  const { t, locale } = useLanguage();
+  const { t, l, locale } = useLanguage();
   const [skills, setSkills] = useState<SkillItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [settings, setSettings] = useState<Record<string, string>>({});
+  const [section, setSection] = useState<Record<string, unknown>>({});
 
   useEffect(() => {
     Promise.all([
       fetch('/api/skills').then((r) => (r.ok ? r.json() : [])),
       fetch('/api/settings').then((r) => (r.ok ? r.json() : {})),
+      fetch('/api/sections?slug=skills').then((r) => (r.ok ? r.json() : {})),
     ])
-      .then(([skillsData, settingsData]) => {
+      .then(([skillsData, settingsData, sectionData]) => {
         setSkills(skillsData || []);
         setSettings(settingsData || {});
+        setSection(sectionData || {});
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -111,11 +114,12 @@ export default function SkillsPage() {
     >
       <UntiSection>
         <UntiCard>
-          <h1 className="unti-title m-0 text-balance">{t('nav.skills', 'Skills')}</h1>
+          <h1 className="unti-title m-0 text-balance">{l(section, 'title') || t('nav.skills', 'Skills')}</h1>
           <p className="unti-body m-0 text-pretty">
-            {locale === 'id'
-              ? 'Stack teknis dan praktik pengembangan yang dipakai di sistem produksi.'
-              : 'Technical stack and development practices used across production systems.'}
+            {l(section, 'subtitle') ||
+              (locale === 'id'
+                ? 'Stack teknis dan praktik pengembangan yang dipakai di sistem produksi.'
+                : 'Technical stack and development practices used across production systems.')}
           </p>
         </UntiCard>
       </UntiSection>

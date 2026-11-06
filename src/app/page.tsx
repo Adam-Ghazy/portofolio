@@ -62,6 +62,11 @@ export default function UntiHome() {
 
   const hero = findSection('hero');
   const about = findSection('about');
+  const projectsRow = findSection('projects');
+  const experienceRow = findSection('experience');
+  const educationRow = findSection('education');
+  const skillsRow = findSection('skills');
+  const contactRow = findSection('contact');
   const name: string = (hero.title as string) || 'Adam Ghazy Al Falah';
   const role: string = (hero.content as string) || 'Mobile, Frontend & Backend Developer';
 
@@ -98,13 +103,13 @@ export default function UntiHome() {
       />
 
       <UntiOverview
-        title={t('sections.about_title', 'Overview')}
+        title={l(projectsRow, 'title') || t('sections.projects_title', 'Projects')}
         paragraphs={[l(about, 'subtitle'), l(about, 'content')].filter(Boolean) as string[]}
       />
 
       <UntiSection>
         <UntiCard>
-          <SectionPill label={t('sections.projects_title', 'Projects')} />
+          <SectionPill label={l(projectsRow, 'title') || t('sections.projects_title', 'Projects')} />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-[10px]">
             {projects.map((project) => (
               <UntiProjectCard
@@ -127,7 +132,7 @@ export default function UntiHome() {
 
       <UntiSection>
         <UntiCard>
-          <SectionPill label={t('sections.experience_title', 'Experience')} />
+          <SectionPill label={l(experienceRow, 'title') || t('sections.experience_title', 'Experience')} />
           <div className="flex flex-col gap-[10px]">
             {experiences.map((exp) => (
               <UntiInfoCard
@@ -145,7 +150,7 @@ export default function UntiHome() {
 
       <UntiSection>
         <UntiCard>
-          <SectionPill label={t('sections.education_title', 'Education')} />
+          <SectionPill label={l(educationRow, 'title') || t('sections.education_title', 'Education')} />
           <div className="flex flex-col gap-[10px]">
             {education.map((edu) => (
               <UntiInfoCard
@@ -163,7 +168,7 @@ export default function UntiHome() {
 
       <UntiSection>
         <UntiCard>
-          <SectionPill label={t('sections.certification_title', 'Certification')} />
+          <SectionPill label={l(educationRow, 'content') || t('sections.certification_title', 'Certification')} />
           <div className="flex flex-col gap-[10px]">
             {certifications.map((cert) => (
               <UntiCertCard
@@ -178,7 +183,7 @@ export default function UntiHome() {
 
       <UntiSection>
         <UntiCard>
-          <SectionPill label={t('sections.skills_title', 'Tools')} />
+          <SectionPill label={l(skillsRow, 'title') || t('sections.skills_title', 'Tools')} />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-[10px]">
             {skills.map((skill) => (
               <UntiToolCard
