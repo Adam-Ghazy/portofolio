@@ -1,7 +1,6 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
 import {
   BarChart3,
   Briefcase,
@@ -11,19 +10,15 @@ import {
   GraduationCap,
   LayoutDashboard,
   Settings,
-  Workflow,
   Wrench,
 } from 'lucide-react'
 
-import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 
 interface AdminNavItem {
   name: string
   href: string
   icon: typeof LayoutDashboard
-  /** Optional live counter badge, fed from `useNavCounts`. */
-  countKey?: NavCountKey
 }
 
 interface AdminNavSection {
@@ -31,19 +26,6 @@ interface AdminNavSection {
   items: AdminNavItem[]
 }
 
-type NavCountKey =
-  | 'sections'
-  | 'experiences'
-  | 'projects'
-  | 'education'
-  | 'certifications'
-  | 'approaches'
-  | 'skills'
-  | 'stats'
-
-type NavCounts = Record<NavCountKey, number>
-
-/** One nav config drives the sidebar, the breadcrumb title, and the ⌘K palette. */
 export const adminNavigation: AdminNavSection[] = [
   {
     label: 'Overview',
@@ -52,23 +34,17 @@ export const adminNavigation: AdminNavSection[] = [
   {
     label: 'Content',
     items: [
-      { name: 'Sections', href: '/admin/sections', icon: FileText, countKey: 'sections' },
-      { name: 'Experience', href: '/admin/experiences', icon: Building2, countKey: 'experiences' },
-      { name: 'Projects', href: '/admin/my-projects', icon: Briefcase, countKey: 'projects' },
-      {
-        name: 'Education & Certs',
-        href: '/admin/education',
-        icon: GraduationCap,
-        countKey: 'education',
-      },
-      { name: 'Approach', href: '/admin/approaches', icon: Workflow, countKey: 'approaches' },
+      { name: 'Sections', href: '/admin/sections', icon: FileText },
+      { name: 'Experience', href: '/admin/experiences', icon: Building2 },
+      { name: 'Projects', href: '/admin/my-projects', icon: Briefcase },
+      { name: 'Education & Certs', href: '/admin/education', icon: GraduationCap },
     ],
   },
   {
     label: 'Library',
     items: [
-      { name: 'Skills', href: '/admin/skills', icon: Wrench, countKey: 'skills' },
-      { name: 'Stats', href: '/admin/stats', icon: BarChart3, countKey: 'stats' },
+      { name: 'Skills', href: '/admin/skills', icon: Wrench },
+      { name: 'Stats', href: '/admin/stats', icon: BarChart3 },
     ],
   },
   {
@@ -91,77 +67,6 @@ function isActive(pathname: string, href: string) {
   return href === '/admin' ? pathname === '/admin' : pathname.startsWith(href)
 }
 
-/**
- * Counters for the sidebar badges. Calls the same list APIs the dashboard uses
- * (no new endpoints) and caches in sessionStorage for 60s so navigation between
- * admin pages stays request-free.
- */
-const countEndpoints: [NavCountKey, string][] = [
-  ['sections', '/api/sections'],
-  ['experiences', '/api/experiences'],
-  ['projects', '/api/projects'],
-  ['education', '/api/education'],
-  ['certifications', '/api/certifications'],
-  ['approaches', '/api/approaches'],
-  ['skills', '/api/skills'],
-  ['stats', '/api/about-stats'],
-]
-
-const COUNTS_CACHE_KEY = 'admin-nav-counts'
-const COUNTS_TTL_MS = 60_000
-
-function readCachedCounts(): NavCounts | null {
-  try {
-    const raw = sessionStorage.getItem(COUNTS_CACHE_KEY)
-    if (!raw) return null
-    const parsed = JSON.parse(raw) as { at: number; counts: NavCounts }
-    if (Date.now() - parsed.at > COUNTS_TTL_MS) return null
-    return parsed.counts
-  } catch {
-    return null
-  }
-}
-
-function cacheCounts(counts: NavCounts) {
-  try {
-    sessionStorage.setItem(COUNTS_CACHE_KEY, JSON.stringify({ at: Date.now(), counts }))
-  } catch {
-    // Cache is an optimization; fetch again next mount.
-  }
-}
-
-function useNavCounts() {
-  // Lazy init reads the session cache synchronously; the admin shell only
-  // renders this component after mount, so SSR never sees a divergent value.
-  const [counts, setCounts] = useState<NavCounts | null>(() => readCachedCounts())
-
-  useEffect(() => {
-    if (counts) return
-    let cancelled = false
-    Promise.all(
-      countEndpoints.map(([, url]) =>
-        fetch(url)
-          .then((r) => (r.ok ? r.json() : []))
-          .catch(() => [])
-      )
-    ).then((responses) => {
-      if (cancelled) return
-      const next = Object.fromEntries(
-        countEndpoints.map(([key], i) => [key, Array.isArray(responses[i]) ? responses[i].length : 0])
-      ) as NavCounts
-      // Education & Certs is one nav item, so its badge carries the combined total.
-      next.education = next.education + next.certifications
-      setCounts(next)
-      cacheCounts(next)
-    })
-    return () => {
-      cancelled = true
-    }
-  }, [counts])
-
-  return counts
-}
-
 export function AdminSidebarNav({
   pathname,
   onNavigate,
@@ -170,7 +75,6 @@ export function AdminSidebarNav({
   /** Called after a link click so the mobile sheet can close. */
   onNavigate?: () => void
 }) {
-  const counts = useNavCounts()
   return (
     <div className="flex h-full flex-col">
       {/* Brand */}
@@ -194,7 +98,6 @@ export function AdminSidebarNav({
             <ul className="space-y-0.5">
               {section.items.map((item) => {
                 const active = isActive(pathname, item.href)
-                const count = item.countKey ? counts?.[item.countKey] : undefined
                 return (
                   <li key={item.href}>
                     <Link
@@ -211,14 +114,6 @@ export function AdminSidebarNav({
                     >
                       <item.icon className="h-4 w-4 shrink-0" strokeWidth={1.5} />
                       <span className="truncate">{item.name}</span>
-                      {typeof count === 'number' && (
-                        <Badge
-                          variant="secondary"
-                          className="ml-auto h-5 min-w-5 justify-center rounded-full px-1.5 tabular-nums"
-                        >
-                          {count}
-                        </Badge>
-                      )}
                     </Link>
                   </li>
                 )

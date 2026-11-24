@@ -153,18 +153,6 @@ function initTables() {
       sort_order INTEGER DEFAULT 0,
       is_active INTEGER DEFAULT 1
     );
-    CREATE TABLE IF NOT EXISTS approaches (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      step_number TEXT,
-      title TEXT NOT NULL,
-      title_id TEXT,
-      description TEXT,
-      description_id TEXT,
-      sort_order INTEGER DEFAULT 0,
-      is_active INTEGER DEFAULT 1,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    );
     CREATE TABLE IF NOT EXISTS admin_users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       username TEXT UNIQUE NOT NULL,
@@ -217,20 +205,12 @@ function initTables() {
 
   ensureColumn('about_stats', 'label_id');
 
-  ensureColumn('approaches', 'title_id');
-  ensureColumn('approaches', 'description_id');
-
   const expCount = db.prepare('SELECT COUNT(*) as c FROM experiences').get() as { c: number };
   const eduCount = db.prepare('SELECT COUNT(*) as c FROM education').get() as { c: number };
   const secCount = db.prepare("SELECT COUNT(*) as c FROM sections WHERE slug = 'experience'").get() as { c: number };
-  const appCount = db.prepare('SELECT COUNT(*) as c FROM approaches').get() as { c: number };
 
   if (expCount.c === 0 || eduCount.c === 0 || secCount.c === 0) {
     seedDefaults();
-  }
-
-  if (appCount.c === 0) {
-    seedApproaches();
   }
 
   // Populate default Indonesian translations for initial seed if missing
@@ -388,35 +368,6 @@ function seedIndonesianTranslations() {
     db.prepare("UPDATE about_stats SET label_id = 'Pengguna Aktif Dilayani' WHERE id = 3 AND (label_id IS NULL OR label_id = '')").run();
     db.prepare("UPDATE about_stats SET label_id = 'Aplikasi Play Store Rilis' WHERE id = 4 AND (label_id IS NULL OR label_id = '')").run();
 
-    // Update approaches in Indonesian
-    db.prepare(`
-      UPDATE approaches 
-      SET title_id = 'Riset Pengguna & Alur Proses',
-          description_id = 'Mengidentifikasi titik friksi operasional dan mewawancarai pengguna langsung sebelum menulis kode.'
-      WHERE id = 1 AND (title_id IS NULL OR title_id = '')
-    `).run();
-
-    db.prepare(`
-      UPDATE approaches 
-      SET title_id = 'Arsitektur Modular & Terstruktur',
-          description_id = 'Merancang modul aplikasi mobile yang decoupled, manajemen state bersih dengan Provider, dan REST API andal dengan Laravel.'
-      WHERE id = 2 AND (title_id IS NULL OR title_id = '')
-    `).run();
-
-    db.prepare(`
-      UPDATE approaches 
-      SET title_id = 'Sinkronisasi Real-Time & QA',
-          description_id = 'Menerapkan koneksi WebSocket, penanganan latensi jaringan, serta pengujian edge case untuk memastikan nol galat pencatatan.'
-      WHERE id = 3 AND (title_id IS NULL OR title_id = '')
-    `).run();
-
-    db.prepare(`
-      UPDATE approaches 
-      SET title_id = 'Penyebaran Produksi & Iterasi',
-          description_id = 'Publikasi ke Google Play Store, pemantauan umpan balik pengguna, dan iterasi cepat dengan sprint Agile Scrum.'
-      WHERE id = 4 AND (title_id IS NULL OR title_id = '')
-    `).run();
-
     // Update sections in Indonesian
     db.prepare(`
       UPDATE sections
@@ -564,57 +515,6 @@ function seedIndonesianTranslations() {
   }
 }
 
-function seedApproaches() {
-  const insApp = db.prepare(`
-    INSERT OR REPLACE INTO approaches (id, step_number, title, title_id, description, description_id, sort_order, is_active)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-  `);
-
-  insApp.run(
-    1,
-    '01',
-    'User & Process Research',
-    'Riset Pengguna & Alur Proses',
-    'Identify real friction points in daily workflows and interview end users and operators before writing code.',
-    'Mengidentifikasi titik friksi operasional dan mewawancarai pengguna langsung sebelum menulis kode.',
-    1,
-    1
-  );
-
-  insApp.run(
-    2,
-    '02',
-    'Modular Architecture',
-    'Arsitektur Modular & Terstruktur',
-    'Architect decoupled mobile modules, clean state management with Provider, and robust REST APIs with Laravel.',
-    'Merancang modul aplikasi mobile yang decoupled, manajemen state bersih dengan Provider, dan REST API andal dengan Laravel.',
-    2,
-    1
-  );
-
-  insApp.run(
-    3,
-    '03',
-    'Real-Time Sync & QA',
-    'Sinkronisasi Real-Time & QA',
-    'Implement WebSocket connections, handle network fallbacks, and test edge cases to ensure zero recording errors.',
-    'Menerapkan koneksi WebSocket, penanganan latensi jaringan, serta pengujian edge case untuk memastikan nol galat pencatatan.',
-    3,
-    1
-  );
-
-  insApp.run(
-    4,
-    '04',
-    'Production Deployment',
-    'Penyebaran Produksi & Iterasi',
-    'Publish to Google Play Store, monitor user feedback, and iterate quickly using Agile Scrum sprints.',
-    'Publikasi ke Google Play Store, pemantauan umpan balik pengguna, dan iterasi cepat dengan sprint Agile Scrum.',
-    4,
-    1
-  );
-}
-
 export function seedDefaults(force = false) {
   if (force) {
     db.exec(`
@@ -625,7 +525,6 @@ export function seedDefaults(force = false) {
       DELETE FROM certifications;
       DELETE FROM skills;
       DELETE FROM about_stats;
-      DELETE FROM approaches;
     `);
   }
 
@@ -743,8 +642,8 @@ export function seedDefaults(force = false) {
 
   insSec.run(
     'education',
-    'Education & Certifications',
-    'Pendidikan & Sertifikasi',
+    'Education',
+    'Pendidikan',
     'Academic degrees in Informatics Engineering from PENS and national technical certification from BNSP.',
     'Gelar akademik Teknik Informatika dari PENS dan sertifikasi kompetensi teknis nasional dari BNSP.',
     '',

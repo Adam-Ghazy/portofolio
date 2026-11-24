@@ -120,19 +120,6 @@ export interface AboutStat {
   is_active: number;
 }
 
-export interface Approach {
-  id?: number;
-  step_number?: string;
-  title: string;
-  title_id?: string;
-  description: string;
-  description_id?: string;
-  sort_order: number;
-  is_active: number;
-  created_at?: string;
-  updated_at?: string;
-}
-
 export interface Settings {
   site_title: string;
   site_title_id?: string;
@@ -151,7 +138,7 @@ export interface Settings {
   [key: string]: string | undefined;
 }
 
-export type AdminData = Section | Project | Experience | Education | Certification | Skill | AboutStat | Approach;
+export type AdminData = Section | Project | Experience | Education | Certification | Skill | AboutStat;
 
 export interface FormErrors {
   [key: string]: string;

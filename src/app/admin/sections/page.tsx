@@ -65,7 +65,7 @@ const SECTION_GUIDES: Record<string, { label: string; desc: string }> = {
     desc: 'Heading + description for the Experience block on the homepage.',
   },
   education: {
-    label: 'Education & Certifications',
+    label: 'Education',
     desc: 'Heading for Education, description doubles as the Certification block label on the homepage.',
   },
   skills: {
