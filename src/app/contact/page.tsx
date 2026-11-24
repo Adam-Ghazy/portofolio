@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useLanguage } from '@/components/I18nProvider';
-import { UntiPage, UntiSection, UntiCard, SectionPill, StatusPill } from '@/components/unti/UntiPrimitives';
+import { UntiPage, UntiSection, UntiCard, SectionPill } from '@/components/unti/UntiPrimitives';
 
 const inputStyle = {
   background: 'var(--bg-secondary)',
@@ -75,7 +75,6 @@ export default function ContactPage() {
     >
       <UntiSection>
         <UntiCard>
-          <StatusPill label={locale === 'id' ? 'Terbuka untuk kerja' : 'Available for Work'} />
           <h1 className="unti-title m-0 text-balance">
             {l(section, 'title') || t('contact.title', "Let's Connect")}
           </h1>
@@ -158,32 +157,6 @@ export default function ContactPage() {
               {sending ? t('contact.sending_btn', 'Sending...') : t('contact.submit_btn', 'Send Message')}
             </button>
           </form>
-        </UntiCard>
-      </UntiSection>
-
-      <UntiSection>
-        <UntiCard>
-          <SectionPill label={locale === 'id' ? 'Kontak Langsung' : 'Direct Contact'} />
-          <div className="flex flex-col gap-[10px]">
-            {footerRows.map((row) => (
-              <div
-                key={row.label}
-                className="flex items-center justify-between w-full"
-                style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-photo)', padding: 20, gap: 20, border: '1px solid var(--border-subtle)' }}
-              >
-                <span className="unti-muted">{row.label}</span>
-                <a
-                  href={row.href}
-                  target={row.newTab || row.href.startsWith('http') ? '_blank' : undefined}
-                  rel={row.newTab || row.href.startsWith('http') ? 'noopener noreferrer' : undefined}
-                  className="unti-heading truncate hover:opacity-70 transition-opacity"
-                  style={{ fontSize: 16 }}
-                >
-                  {row.content}
-                </a>
-              </div>
-            ))}
-          </div>
         </UntiCard>
       </UntiSection>
     </UntiPage>

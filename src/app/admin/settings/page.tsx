@@ -27,6 +27,10 @@ export default function SettingsPage() {
     status_left_id: '',
     status_right: '',
     status_right_id: '',
+    email: '',
+    phone: '',
+    linkedin: '',
+    location: '',
   })
 
   useEffect(() => {
@@ -45,6 +49,10 @@ export default function SettingsPage() {
           status_left_id: data.status_left_id ?? '',
           status_right: data.status_right ?? '',
           status_right_id: data.status_right_id ?? '',
+          email: data.email ?? '',
+          phone: data.phone ?? '',
+          linkedin: data.linkedin ?? '',
+          location: data.location ?? '',
         })
       })
       .catch(() => toast.error('Failed to load settings'))
@@ -102,6 +110,10 @@ export default function SettingsPage() {
         status_left_id: formData.status_left_id || formData.status_left,
         status_right: formData.status_right || formData.status_right_id,
         status_right_id: formData.status_right_id || formData.status_right,
+        email: formData.email,
+        phone: formData.phone,
+        linkedin: formData.linkedin,
+        location: formData.location,
       }
 
       const res = await fetch('/api/settings', {
@@ -268,6 +280,51 @@ export default function SettingsPage() {
                         value={formData.status_right}
                         onChange={(e) => setFormData({ ...formData, status_right: e.target.value })}
                       />
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 rounded-[12px] border border-border p-3">
+                    <p className="text-label-section uppercase text-muted-foreground">Contact Info</p>
+                    <p className="text-label-md text-muted-foreground">Shown in the site footer and on the contact page.</p>
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="email">E-mail</Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          placeholder="you@example.com"
+                          value={formData.email}
+                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="phone">Phone</Label>
+                        <Input
+                          id="phone"
+                          placeholder="(+62) 8xx-xxxx-xxxx"
+                          value={formData.phone}
+                          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="linkedin">LinkedIn URL</Label>
+                        <Input
+                          id="linkedin"
+                          type="url"
+                          placeholder="https://www.linkedin.com/in/username"
+                          value={formData.linkedin}
+                          onChange={(e) => setFormData({ ...formData, linkedin: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="location">Location</Label>
+                        <Input
+                          id="location"
+                          placeholder="City, Country"
+                          value={formData.location}
+                          onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                        />
+                      </div>
                     </div>
                   </div>
 

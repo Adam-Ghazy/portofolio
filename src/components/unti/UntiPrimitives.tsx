@@ -53,17 +53,6 @@ export function SectionPill({ label }: { label: string }) {
   );
 }
 
-export function StatusPill({ label }: { label: string }) {
-  return (
-    <span className="inline-flex items-center gap-[5px]">
-      <span className="unti-status-dot" aria-hidden />
-      <span className="unti-meta" style={{ color: 'var(--text-secondary)' }}>
-        {label}
-      </span>
-    </span>
-  );
-}
-
 // Server renders a blank; fills after mount to keep hydration identical.
 export function TimeClock() {
   const [time, setTime] = useState<string | null>(null);
