@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useLanguage } from '../I18nProvider';
-import { StatusPill, UntiCard, UntiSection, SectionPill } from './UntiPrimitives';
+import { UntiCard, UntiSection, SectionPill } from './UntiPrimitives';
 
 export function ArrowButton({ href, external, as = 'a' }: { href: string; external?: boolean; as?: 'a' | 'span' }) {
   const icon = (
@@ -64,13 +64,11 @@ export function UntiHero({
   role,
   photoUrl,
   cvUrl,
-  statusLabel,
 }: {
   name: string;
   role: string;
   photoUrl?: string;
   cvUrl?: string;
-  statusLabel: string;
 }) {
   return (
     <UntiSection>
@@ -106,7 +104,6 @@ export function UntiHero({
         )}
 
         <div className="flex flex-col gap-[20px] flex-1 min-w-0">
-          <StatusPill label={statusLabel} />
           <div className="flex flex-col gap-[5px]">
             <h1 className="unti-title m-0 text-balance">{name}</h1>
             <p className="unti-heading m-0" style={{ color: 'var(--text-secondary)' }}>
@@ -143,6 +140,7 @@ export interface UntiProjectCardData {
   industry?: string;
   imageUrl?: string;
   href?: string;
+  showArrow?: boolean;
 }
 
 export function UntiProjectCard({ project }: { project: UntiProjectCardData }) {
@@ -179,7 +177,9 @@ export function UntiProjectCard({ project }: { project: UntiProjectCardData }) {
           <h2 className="unti-heading m-0 text-balance">{project.title}</h2>
           <p className="unti-meta m-0">{project.industry}</p>
         </div>
-        <ArrowButton href={project.href || '#'} external={project.href?.startsWith('http')} as={linked ? 'span' : 'a'} />
+        {project.showArrow !== false && (
+          <ArrowButton href={project.href || '#'} external={project.href?.startsWith('http')} as={linked ? 'span' : 'a'} />
+        )}
       </div>
     </div>
   );

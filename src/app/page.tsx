@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useLanguage } from '@/components/I18nProvider';
 import { UntiPage, UntiSection, UntiCard, SectionPill } from '@/components/unti/UntiPrimitives';
 import { UntiHero, UntiOverview, UntiProjectCard, UntiInfoCard, UntiCertCard, UntiToolCard } from '@/components/unti/UntiSections';
@@ -99,7 +100,6 @@ export default function UntiHome() {
         name={name}
         role={role}
         photoUrl={hero.image_url as string}
-        statusLabel={t('hero.available', 'Available for Work')}
       />
 
       <UntiOverview
@@ -109,7 +109,19 @@ export default function UntiHome() {
 
       <UntiSection>
         <UntiCard>
-          <SectionPill label={l(projectsRow, 'title') || t('sections.projects_title', 'Projects')} />
+          <div className="flex items-center justify-between gap-[10px]">
+            <SectionPill label={l(projectsRow, 'title') || t('sections.projects_title', 'Projects')} />
+            <Link
+              href="/projects"
+              className="inline-flex items-center gap-[5px] transition-opacity hover:opacity-70"
+              style={{ fontSize: 14, fontWeight: 500, lineHeight: 1.2, color: 'var(--text-secondary)' }}
+            >
+              {t('common.see_all', 'See All')}
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <path d="M7 17L17 7M7 7h10v10" />
+              </svg>
+            </Link>
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-[10px]">
             {projects.map((project) => (
               <UntiProjectCard
@@ -123,6 +135,7 @@ export default function UntiHome() {
                     (project.image_url as string) ||
                     undefined,
                   href: '/projects',
+                  showArrow: false,
                 }}
               />
             ))}
@@ -184,16 +197,24 @@ export default function UntiHome() {
       <UntiSection>
         <UntiCard>
           <SectionPill label={l(skillsRow, 'title') || t('sections.skills_title', 'Tools')} />
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-[10px]">
-            {skills.map((skill) => (
-              <UntiToolCard
-                key={skill.id as number}
-                name={skill.title as string}
-                description={((skill.description as string) || undefined) ?? undefined}
-                iconUrl={(skill.icon as string) || undefined}
-              />
-            ))}
-          </div>
+          {categories.map((category) => (
+            <div key={category} className="flex flex-col gap-[10px]">
+              <h3 className="unti-heading m-0" style={{ fontSize: 16, color: 'var(--text-secondary)' }}>
+                {category}
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-[10px]">
+                {skills
+                  .filter((skill) => ((skill.description as string) || 'Other') === category)
+                  .map((skill) => (
+                    <UntiToolCard
+                      key={skill.id as number}
+                      name={skill.title as string}
+                      iconUrl={(skill.icon as string) || undefined}
+                    />
+                  ))}
+              </div>
+            </div>
+          ))}
         </UntiCard>
       </UntiSection>
     </UntiPage>
