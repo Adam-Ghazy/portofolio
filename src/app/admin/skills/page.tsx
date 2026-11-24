@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Pencil, Plus, Trash2, Wrench } from "lucide-react";
+import { ArrowDown, ArrowUp, Pencil, Plus, Trash2, Wrench } from "lucide-react";
 import { FormModal } from "@/components/admin/form-modal";
 import { toast } from "sonner";
 import {
@@ -49,6 +49,30 @@ export default function SkillsPage() {
   });
   const [activeLangTab, setActiveLangTab] = useState<"id" | "en">("id");
   const [isTranslating, setIsTranslating] = useState(false);
+  const [uploadingIcon, setUploadingIcon] = useState(false);
+
+  async function handleIconUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingIcon(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Upload failed");
+      }
+      const data = await res.json();
+      setFormData((prev) => ({ ...prev, icon: data.url }));
+      toast.success("Icon uploaded");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to upload icon");
+    } finally {
+      setUploadingIcon(false);
+      e.target.value = "";
+    }
+  }
 
   useEffect(() => {
     fetchSkills();
@@ -138,6 +162,26 @@ export default function SkillsPage() {
     }
   }
 
+  async function moveSkill(index: number, dir: -1 | 1) {
+    const target = index + dir;
+    if (target < 0 || target >= skills.length) return;
+    const next = [...skills];
+    [next[index], next[target]] = [next[target], next[index]];
+    setSkills(next);
+    try {
+      const updates = next.map((skill, i) => ({ id: skill.id, sort_order: i }));
+      const res = await fetch("/api/skills/reorder", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items: updates }),
+      });
+      if (!res.ok) throw new Error();
+    } catch {
+      toast.error("Failed to save order");
+      fetchSkills();
+    }
+  }
+
   function handleEdit(skill: Skill) {
     setEditing(skill);
     setFormData({
@@ -221,6 +265,34 @@ export default function SkillsPage() {
           }
         >
           <form id="skill-form" onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label>Icon</Label>
+              <div className="flex items-center gap-3">
+                <div className="flex h-14 w-20 shrink-0 items-center justify-center overflow-hidden rounded-[10px] border bg-muted">
+                  {formData.icon ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={formData.icon} alt="Icon preview" className="max-h-full max-w-full object-contain" />
+                  ) : (
+                    <Wrench className="h-5 w-5 text-muted-foreground" strokeWidth={1.5} />
+                  )}
+                </div>
+                <div className="flex flex-1 flex-wrap gap-2">
+                  <Button type="button" variant="outline" disabled={uploadingIcon} asChild>
+                    <label className="cursor-pointer">
+                      {uploadingIcon ? "Uploading..." : "Upload icon"}
+                      <input type="file" accept=".jpg,.jpeg,.png,.webp,.gif,.svg,image/*" className="hidden" onChange={handleIconUpload} disabled={uploadingIcon} />
+                    </label>
+                  </Button>
+                  {formData.icon && (
+                    <Button type="button" variant="ghost" onClick={() => setFormData({ ...formData, icon: "" })}>
+                      Remove
+                    </Button>
+                  )}
+                </div>
+              </div>
+              <p className="text-label-md text-muted-foreground">PNG, SVG, atau WEBP. Ditampilkan di kartu skill pada beranda.</p>
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="title">Skill Name *</Label>
               <Input
@@ -335,7 +407,7 @@ export default function SkillsPage() {
               </div>
             ) : (
               <ul className="divide-y divide-border">
-                {skills.map((skill) => (
+                {skills.map((skill, index) => (
                   <li
                     key={skill.id}
                     className="flex items-start justify-between gap-4 py-4 transition-colors hover:bg-sidebar"
@@ -355,6 +427,26 @@ export default function SkillsPage() {
                       </p>
                     </div>
                     <div className="flex shrink-0 gap-1">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8 rounded-[8px]"
+                        onClick={() => moveSkill(index, -1)}
+                        disabled={index === 0}
+                        aria-label="Move skill up"
+                      >
+                        <ArrowUp className="h-4 w-4" strokeWidth={1.5} />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8 rounded-[8px]"
+                        onClick={() => moveSkill(index, 1)}
+                        disabled={index === skills.length - 1}
+                        aria-label="Move skill down"
+                      >
+                        <ArrowDown className="h-4 w-4" strokeWidth={1.5} />
+                      </Button>
                       <Button
                         size="icon"
                         variant="ghost"

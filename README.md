@@ -227,10 +227,13 @@ See [DEPLOYMENT.md](./DEPLOYMENT.md) for full instructions covering:
 ## Changelog
 
 ### Unreleased
-
+- Project cards on the homepage link to `/projects`; cards in that listing open `/projects/:id` for the selected project's details.
 - Admin dashboard now has a dark palette, toggled from the header (and the login screen) and
   persisted separately from the public site's preference. Pre-paint bootstrap in `src/lib/theme.ts`
   means neither surface flashes the wrong theme on load.
+- Public content GET responses use short-lived cache headers; admin-cookie requests bypass caching.
+- The contact form validates bounded input and limits repeated submissions per server process.
+- Auto-translation requests require an authenticated admin session.
 
 ### v2.0 — July 2026
 
