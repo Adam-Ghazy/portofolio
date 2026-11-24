@@ -11,7 +11,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { AutoTranslateButton, LangTabs } from '@/components/admin/lang-tabs'
 import { FormModal } from '@/components/admin/form-modal'
-import { Pencil, Plus, Trash2, GraduationCap, Award, Calendar, MapPin } from 'lucide-react'
+import { Pencil, Plus, Trash2, GraduationCap, Award, Calendar, MapPin, ArrowDown, ArrowUp } from 'lucide-react'
+import { useReorder } from '@/components/admin/use-reorder'
 import { toast } from 'sonner'
 import {
   AlertDialog,
@@ -54,6 +55,7 @@ export default function EducationAdminPage() {
   // Education state
   const [educationList, setEducationList] = useState<Education[]>([])
   const [loadingEdu, setLoadingEdu] = useState(true)
+  const { move: moveEdu } = useReorder('education', educationList, setEducationList, fetchEducation)
   const [editingEdu, setEditingEdu] = useState<Education | null>(null)
   const [eduFormData, setEduFormData] = useState(emptyEduForm)
   const [deleteEduId, setDeleteEduId] = useState<number | null>(null)
@@ -64,6 +66,7 @@ export default function EducationAdminPage() {
   // Certifications state
   const [certList, setCertList] = useState<Certification[]>([])
   const [loadingCerts, setLoadingCerts] = useState(true)
+  const { move: moveCert } = useReorder('certifications', certList, setCertList, fetchCertifications)
   const [editingCert, setEditingCert] = useState<Certification | null>(null)
   const [certFormData, setCertFormData] = useState(emptyCertForm)
   const [deleteCertId, setDeleteCertId] = useState<number | null>(null)
@@ -503,7 +506,7 @@ export default function EducationAdminPage() {
                 </div>
                   ) : (
                     <ul className="divide-y divide-border">
-                      {educationList.map((edu) => (
+                      {educationList.map((edu, index) => (
                         <li key={edu.id} className="space-y-3 py-4 transition-colors hover:bg-sidebar">
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0 space-y-1">
@@ -533,6 +536,28 @@ export default function EducationAdminPage() {
                             </div>
 
                             <div className="flex shrink-0 items-center gap-1">
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-8 w-8 rounded-[8px]"
+                                onClick={() => moveEdu(index, -1)}
+                                disabled={index === 0}
+                                title="Move up"
+                                aria-label="Move education up"
+                              >
+                                <ArrowUp className="h-4 w-4" strokeWidth={1.5} />
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-8 w-8 rounded-[8px]"
+                                onClick={() => moveEdu(index, 1)}
+                                disabled={index === educationList.length - 1}
+                                title="Move down"
+                                aria-label="Move education down"
+                              >
+                                <ArrowDown className="h-4 w-4" strokeWidth={1.5} />
+                              </Button>
                               <Button
                                 size="icon"
                                 variant="ghost"
@@ -725,7 +750,7 @@ export default function EducationAdminPage() {
                 </div>
                   ) : (
                     <ul className="divide-y divide-border">
-                      {certList.map((cert) => (
+                      {certList.map((cert, index) => (
                         <li key={cert.id} className="space-y-3 py-4 transition-colors hover:bg-sidebar">
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0 space-y-1">
@@ -748,6 +773,28 @@ export default function EducationAdminPage() {
                             </div>
 
                             <div className="flex shrink-0 items-center gap-1">
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-8 w-8 rounded-[8px]"
+                                onClick={() => moveCert(index, -1)}
+                                disabled={index === 0}
+                                title="Move up"
+                                aria-label="Move certification up"
+                              >
+                                <ArrowUp className="h-4 w-4" strokeWidth={1.5} />
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-8 w-8 rounded-[8px]"
+                                onClick={() => moveCert(index, 1)}
+                                disabled={index === certList.length - 1}
+                                title="Move down"
+                                aria-label="Move certification down"
+                              >
+                                <ArrowDown className="h-4 w-4" strokeWidth={1.5} />
+                              </Button>
                               <Button
                                 size="icon"
                                 variant="ghost"

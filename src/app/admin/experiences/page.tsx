@@ -8,7 +8,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Building2, Layers, Pencil, Plus, Trash2 } from 'lucide-react'
+import { ArrowDown, ArrowUp } from 'lucide-react'
 import { FormModal } from '@/components/admin/form-modal'
+import { useReorder } from '@/components/admin/use-reorder'
 import { toast } from 'sonner'
 import { LangTabs, AutoTranslateButton } from '@/components/admin/lang-tabs'
 import { Badge } from '@/components/ui/badge'
@@ -72,6 +74,7 @@ const emptyForm = {
 export default function ExperiencesPage() {
   const [experiences, setExperiences] = useState<Experience[]>([])
   const [loading, setLoading] = useState(true)
+  const { move: moveExperience } = useReorder('experiences', experiences, setExperiences, fetchExperiences)
   const [editing, setEditing] = useState<Experience | null>(null)
   const [deleteId, setDeleteId] = useState<number | null>(null)
   const [formData, setFormData] = useState(emptyForm)
@@ -614,7 +617,7 @@ export default function ExperiencesPage() {
                 </div>
               ) : (
                 <ul className="divide-y divide-border">
-                  {experiences.map((exp) => {
+                  {experiences.map((exp, index) => {
                     let parsedSystems: SystemItem[] = []
                     try {
                       parsedSystems = exp.systems ? JSON.parse(exp.systems) : []
@@ -644,6 +647,28 @@ export default function ExperiencesPage() {
                           </div>
 
                           <div className="flex shrink-0 items-center gap-1">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-8 w-8 rounded-[8px]"
+                              onClick={() => moveExperience(index, -1)}
+                              disabled={index === 0}
+                              title="Move up"
+                              aria-label="Move experience up"
+                            >
+                              <ArrowUp className="h-4 w-4" strokeWidth={1.5} />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-8 w-8 rounded-[8px]"
+                              onClick={() => moveExperience(index, 1)}
+                              disabled={index === experiences.length - 1}
+                              title="Move down"
+                              aria-label="Move experience down"
+                            >
+                              <ArrowDown className="h-4 w-4" strokeWidth={1.5} />
+                            </Button>
                             <Button
                               size="icon"
                               variant="ghost"

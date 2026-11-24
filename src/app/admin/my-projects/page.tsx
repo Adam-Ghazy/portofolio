@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import {ArrowDown, ArrowUp, Briefcase, ExternalLink, Film, Images, Pencil, Plus, Trash2, Upload} from 'lucide-react'
 import { FormModal } from '@/components/admin/form-modal'
+import { useReorder } from '@/components/admin/use-reorder'
 import { toast } from 'sonner'
 import {
   AlertDialog,
@@ -79,6 +80,7 @@ const emptyForm = {
 export default function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
+  const { move: moveProject } = useReorder('projects', projects, setProjects, fetchProjects)
   const [editing, setEditing] = useState<Project | null>(null)
   const [deleteId, setDeleteId] = useState<number | null>(null)
   const [formData, setFormData] = useState(emptyForm)
@@ -666,7 +668,7 @@ export default function ProjectsPage() {
                 </div>
               ) : (
                 <ul className="divide-y divide-border">
-                  {projects.map((p) => (
+                  {projects.map((p, index) => (
                     <li key={p.id} className="space-y-3 py-4 transition-colors hover:bg-sidebar">
                       <div className="flex items-start justify-between gap-4">
                         <div className="min-w-0 space-y-1">
@@ -674,10 +676,17 @@ export default function ProjectsPage() {
                             <h3 className="text-headline-sm text-foreground">{p.title}</h3>
                             {p.title_id && p.title_id !== p.title && <span className="text-label-md text-muted-foreground">({p.title_id})</span>}
                             {p.year && <Badge variant="secondary">{p.year}</Badge>}
+                            {index < 4 && <Badge variant="outline">On homepage</Badge>}
                           </div>
                           <p className="text-label-md text-muted-foreground">{p.role || 'Developer'}</p>
                         </div>
                         <div className="flex shrink-0 items-center gap-1">
+                          <Button size="icon" variant="ghost" className="h-8 w-8 rounded-[8px]" onClick={() => moveProject(index, -1)} disabled={index === 0} title="Move up" aria-label="Move project up">
+                            <ArrowUp className="h-4 w-4" strokeWidth={1.5} />
+                          </Button>
+                          <Button size="icon" variant="ghost" className="h-8 w-8 rounded-[8px]" onClick={() => moveProject(index, 1)} disabled={index === projects.length - 1} title="Move down" aria-label="Move project down">
+                            <ArrowDown className="h-4 w-4" strokeWidth={1.5} />
+                          </Button>
                           {p.link && (
                             <Button size="icon" variant="ghost" className="h-8 w-8 rounded-[8px]" asChild title="Open Link">
                               <a href={p.link} target="_blank" rel="noopener noreferrer" aria-label="Open project link">

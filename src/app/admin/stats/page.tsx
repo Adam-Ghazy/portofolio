@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { BarChart3, Pencil, Plus, Trash2, TrendingUp } from 'lucide-react'
+import { BarChart3, Pencil, Plus, Trash2, TrendingUp, ArrowDown, ArrowUp } from 'lucide-react'
+import { useReorder } from '@/components/admin/use-reorder'
 import { toast } from 'sonner'
 import {
   AlertDialog,
@@ -34,6 +35,7 @@ const emptyForm = { value: '', label: '', label_id: '' }
 export default function StatsPage() {
   const [stats, setStats] = useState<Stat[]>([])
   const [loading, setLoading] = useState(true)
+  const { move: moveStat } = useReorder('about_stats', stats, setStats, fetchStats)
   const [editing, setEditing] = useState<Stat | null>(null)
   const [deleteId, setDeleteId] = useState<number | null>(null)
   const [formData, setFormData] = useState(emptyForm)
@@ -170,7 +172,7 @@ export default function StatsPage() {
               </div>
             ) : (
               <ul className="divide-y divide-border">
-                {stats.map((stat) => (
+                {stats.map((stat, index) => (
                   <li
                     key={stat.id}
                     className="flex items-start justify-between gap-4 py-4 transition-colors hover:bg-sidebar"
@@ -189,6 +191,26 @@ export default function StatsPage() {
                       </div>
                     </div>
                     <div className="flex shrink-0 gap-1">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8 rounded-[8px]"
+                        onClick={() => moveStat(index, -1)}
+                        disabled={index === 0}
+                        aria-label="Move stat up"
+                      >
+                        <ArrowUp className="h-4 w-4" strokeWidth={1.5} />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8 rounded-[8px]"
+                        onClick={() => moveStat(index, 1)}
+                        disabled={index === stats.length - 1}
+                        aria-label="Move stat down"
+                      >
+                        <ArrowDown className="h-4 w-4" strokeWidth={1.5} />
+                      </Button>
                       <Button
                         size="icon"
                         variant="ghost"
