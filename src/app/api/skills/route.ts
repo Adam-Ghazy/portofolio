@@ -3,10 +3,17 @@ import getDb from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
 import { autoTranslate } from '@/lib/translate';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const db = getDb();
   const items = db.prepare('SELECT * FROM skills WHERE is_active = 1 ORDER BY sort_order').all();
-  return NextResponse.json(items);
+  return NextResponse.json(items, {
+    headers: {
+      'Cache-Control': request.cookies.has('admin_token') || request.headers.has('authorization')
+        ? 'private, no-store'
+        : 'public, s-maxage=300, stale-while-revalidate=600',
+      Vary: 'Cookie, Authorization',
+    },
+  });
 }
 
 export async function POST(request: NextRequest) {

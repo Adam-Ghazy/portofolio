@@ -10,11 +10,25 @@ export async function GET(request: NextRequest) {
 
   if (slug) {
     const section = db.prepare('SELECT * FROM sections WHERE slug = ?').get(slug);
-    return NextResponse.json(section ?? null);
+    return NextResponse.json(section ?? null, {
+      headers: {
+        'Cache-Control': request.cookies.has('admin_token') || request.headers.has('authorization')
+          ? 'private, no-store'
+          : 'public, s-maxage=300, stale-while-revalidate=600',
+        Vary: 'Cookie, Authorization',
+      },
+    });
   }
 
   const sections = db.prepare('SELECT * FROM sections WHERE is_active = 1 ORDER BY sort_order').all();
-  return NextResponse.json(sections);
+  return NextResponse.json(sections, {
+    headers: {
+      'Cache-Control': request.cookies.has('admin_token') || request.headers.has('authorization')
+        ? 'private, no-store'
+        : 'public, s-maxage=300, stale-while-revalidate=600',
+      Vary: 'Cookie, Authorization',
+    },
+  });
 }
 
 export async function POST(request: NextRequest) {

@@ -35,7 +35,7 @@ function parseMetrics(raw: unknown): ProjectMetric[] {
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const db = getDb();
   const projects = db
     .prepare('SELECT * FROM projects WHERE is_active = 1 ORDER BY sort_order')
@@ -46,7 +46,15 @@ export async function GET() {
       ...p,
       metrics: parseMetrics(p.metrics),
       media: mediaMap[p.id] || [],
-    }))
+    })),
+    {
+      headers: {
+        'Cache-Control': request.cookies.has('admin_token') || request.headers.has('authorization')
+          ? 'private, no-store'
+          : 'public, s-maxage=300, stale-while-revalidate=600',
+        Vary: 'Cookie, Authorization',
+      },
+    }
   );
 }
 
