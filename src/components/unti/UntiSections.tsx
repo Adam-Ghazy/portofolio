@@ -83,13 +83,13 @@ export function UntiHero({
           width: '100%',
           marginInline: 'auto',
           display: 'flex',
-          alignItems: 'flex-start',
+          alignItems: 'center',
         }}
       >
         {photoUrl && (
           <div
             className="hidden sm:block shrink-0 overflow-hidden"
-            style={{ width: 200, height: 200, borderRadius: 'var(--radius-photo)', background: 'var(--bg-secondary)' }}
+            style={{ width: 200, height: 200, borderRadius: 12, background: 'var(--bg-secondary)' }}
           >
             { }
             <img
@@ -104,9 +104,9 @@ export function UntiHero({
         )}
 
         <div className="flex flex-col gap-[20px] flex-1 min-w-0">
-          <div className="flex flex-col gap-[5px]">
+          <div className="flex flex-col gap-[4px]">
             <h1 className="unti-title m-0 text-balance">{name}</h1>
-            <p className="unti-heading m-0" style={{ color: 'var(--text-secondary)' }}>
+            <p className="unti-heading m-0" style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>
               {role}
             </p>
           </div>

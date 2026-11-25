@@ -259,7 +259,7 @@ body {
   gap: 5px;
   background: var(--bg-secondary);
   border-radius: var(--radius-pill);
-  padding: 10px 20px;
+  padding: 12px 22px;
   font-size: 16px;
   font-weight: 400;
   letter-spacing: -0.01em;
@@ -280,7 +280,7 @@ body {
   background: var(--accent);
   color: var(--accent-contrast);
   border-radius: var(--radius-cta);
-  padding: 10px 20px;
+  padding: 12px 22px;
   font-size: 16px;
   font-weight: 400;
   letter-spacing: -0.01em;
